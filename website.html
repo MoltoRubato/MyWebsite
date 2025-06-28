@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Adventure Website</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 3px solid #16213e;
+            background: #0f0f23;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            -ms-interpolation-mode: nearest-neighbor;
+        }
+        
+        #ui {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #ffa339;
+            font-size: 12px;
+            text-shadow: 1px 1px 0px #000;
+        }
+        
+        #modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2a1810 0%, #1a0f08 100%);
+            border: 3px solid #d4af37;
+            border-radius: 8px;
+            padding: 25px;
+            width: 500px;       
+            height: 400px;       
+            overflow-y: auto;
+            color: #f4e4bc;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        #modal h2 {
+            color: #d4af37;
+            margin-top: 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #8b7355;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        #modal p {
+            margin-bottom: 12px;
+        }
+
+        #modal strong {
+            color: #e6c875;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+        }
+
+        #modal em {
+            color: #c9a96e;
+            font-style: italic;
+        }
+
+        #modal::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #modal::-webkit-scrollbar-track {
+            background: #1a0f08;
+            border-radius: 6px;
+            border: 1px solid #8b7355;
+        }
+
+        #modal::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #d4af37 0%, #b8941f 100%);
+            border-radius: 6px;
+            border: 1px solid #8b7355;
+        }
+
+        #modal::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #e6c875 0%, #d4af37 100%);
+        }
+
+        #modal {
+            scrollbar-width: thin;
+            scrollbar-color: #d4af37 #1a0f08;
+        }
+
+        #closeButton {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: none;
+            color: #d4af37;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #closeButton:hover {
+            color: #f4e4bc;
+            transform: scale(1.1);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="ui">
+            <div>Use WASD to move</div>
+            <div>Press ENTER to interact</div>
+            <div>Press ESC to close dialogs</div>
+        </div>
+
+        <div id="modal">
+            <button id="closeButton" onclick="closeModal()">×</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Disable image smoothing for pixel-perfect rendering
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.msImageSmoothingEnabled = false;
+        
+        // Input handling
+        let enterPressed = false;
+
+        // Game state
+        let player = {
+            x: 400,
+            y: 300,
+            width: 64,
+            height: 128,
+            speed: 3,
+            direction: 'down',
+            isMoving: false,
+            animationFrame: 0,
+            animationSpeed: 0.15,
+            animationTimer: 0
+        };
+        
+        // Collision objects
+        const collisionObjects = [
+            { x: 440 , y: 140, width: 180, height: 85, type: 'bench' },
+            { x: 623 , y: 100, width: 160, height: 87, type: 'bookshelf' },
+            { x: 730, y: 190, width: 50, height: 50, type: 'plant' },
+            { x: 204 , y: 124, width: 90, height: 90, type: 'fridge' },
+            { x: 621  , y: 400, width: 100, height: 90, type: 'TV' },
+            { x: 84, y: 420, width: 30, height: 30, type: 'flower_pot' },
+            { x: 150, y: 120, width: 48, height: 48, type: 'gramophone' },
+        ];
+
+        const decorativeObjects = [
+            {
+                x: 70,
+                y: 360,
+                width: 60,
+                height: 100,
+                type: 'flower',
+                sprite: 'flower'
+            }
+        ];
+
+        function getPlayerCollisionBox() {
+            return {
+                x: player.x + 16,
+                y: player.y + 64,
+                width: 32,
+                height: 48
+            };
+        }
+        
+        // Sprite handling
+        let sprites = {
+            player: null,
+            bob: null,
+            alex: null,
+            amelia: null,
+            background: null,
+            bubble: null,
+            flower: null,
+            gramophone: null  
+        };
+        let spritesLoaded = {
+            player: false,
+            bob: false,
+            alex: false,
+            amelia: false,
+            background: false,
+            bubble: false,
+            flower: false,
+            dog: false,
+            gramophone: false
+        };
+        
+        // Load all sprites
+        function loadSprites() {
+            // Load player sprite
+            sprites.player = new Image();
+            sprites.player.onload = function() {
+                spritesLoaded.player = true;
+                console.log('Player spritesheet loaded!');
+            };
+            sprites.player.src = 'Adam_16x16.png';
+            
+            // Load NPC sprites
+            sprites.bob = new Image();
+            sprites.bob.onload = function() {
+                spritesLoaded.bob = true;
+                console.log('Bob spritesheet loaded!');
+            };
+            sprites.bob.src = 'Bob_idle_anim_16x16.png';
+            
+            sprites.alex = new Image();
+            sprites.alex.onload = function() {
+                spritesLoaded.alex = true;
+                console.log('Alex spritesheet loaded!');
+            };
+            sprites.alex.src = 'Alex_idle_anim_16x16.png';
+            
+            sprites.amelia = new Image();
+            sprites.amelia.onload = function() {
+                spritesLoaded.amelia = true;
+                console.log('Amelia spritesheet loaded!');
+            };
+            sprites.amelia.src = 'Amelia_idle_anim_16x16.png';
+
+            sprites.background = new Image();
+            sprites.background.onload = function() {
+                spritesLoaded.background = true;
+                console.log('Background image loaded!');
+            };
+            sprites.background.src = 'room3.png';
+
+            sprites.bubble = new Image();
+            sprites.bubble.onload = function() {
+                spritesLoaded.bubble = true;
+                console.log('Bubble image loaded!');
+            };
+            sprites.bubble.src = 'bubble.png';
+
+            sprites.flower = new Image();
+            sprites.flower.onload = function() {
+                spritesLoaded.flower = true;
+                console.log('Flower image loaded!');
+            };
+            sprites.flower.src = 'flower.png';
+
+            sprites.dog = new Image();
+            sprites.dog.onload = function() {
+                spritesLoaded.dog = true;
+                console.log('Dog spritesheet loaded!');
+            };
+            sprites.dog.src = 'newdog.png';
+
+            sprites.cat = new Image();
+            sprites.cat.onload = function() {
+                spritesLoaded.cat = true;
+                console.log('Cat spritesheet loaded!');
+            };
+            sprites.cat.src = 'newcat.png';
+
+            sprites.gramophone = new Image();
+            sprites.gramophone.onload = function() {
+                spritesLoaded.gramophone = true;
+                console.log('Gramophone spritesheet loaded!');
+            };
+            sprites.gramophone.src = 'gramophone.png';
+        }
+        
+        // Spritesheet configuration
+        const spriteConfig = {
+            frameWidth: 16,
+            frameHeight: 32,
+            animations: {
+                player: {
+                    idle_down: { row: 1, frames: 6, startFrame: 18 },
+                    walk_down: { row: 2, frames: 6, startFrame: 18 },
+                    idle_up: { row: 1, frames: 6, startFrame: 6 },
+                    walk_up: { row: 2, frames: 6, startFrame: 6 },
+                    idle_left: { row: 1, frames: 6, startFrame: 12 },
+                    walk_left: { row: 2, frames: 6, startFrame: 12 },
+                    idle_right: { row: 1, frames: 6, startFrame: 0 },
+                    walk_right: { row: 2, frames: 6, startFrame: 0 },
+                },
+                npc: {
+                    idle_down: { row: 0, frames: 6, startFrame: 18 },
+                    idle_up: { row: 0, frames: 6, startFrame: 6 },
+                    idle_left: { row: 0, frames: 6, startFrame: 12 },
+                    idle_right: { row: 0, frames: 6, startFrame: 0 }
+                },
+                dog: {
+                    idle_sitting: { row: 0, frames: 4, startFrame: 0 },
+                    being_petted: { row: 1, frames: 4, startFrame: 0 }
+                },
+                cat: {
+                    idle: { row: 0, frames: 2, startFrame: 0 },
+                    being_petted: { row: 1, frames: 4, startFrame: 0, crossRow: true }
+                },
+                gramophone: {
+                    idle: { row: 0, frames: 1, startFrame: 0 },
+                    playing: { row: 0, frames: 4, startFrame: 0 }
+                }
+            }
+        };
+        
+        // Initialize sprite loading
+        loadSprites();
+        
+        // NPCs with sprite assignments and default directions
+        const npcs = [
+            {
+                x: 31,
+                y: 144,
+                width: 64,
+                height: 128,
+                type: 'projects',
+                name: 'Projects',
+                sprite: 'bob',
+                defaultDirection: 'down', 
+                currentDirection: 'down', 
+                interacting: false,
+                animationFrame: 0,
+                animationSpeed: 0.1,
+                animationTimer: 0,
+                turnBackTimer: 0, // Timer for turning back to default direction
+                turnBackDelay: 2000 // 2 seconds before turning back
+            },
+            {
+                x: 637,
+                y: 147,
+                width: 64,
+                height: 128,
+                type: 'about',
+                name: 'About',
+                sprite: 'alex',
+                defaultDirection: 'up', 
+                currentDirection: 'up', 
+                interacting: false,
+                animationFrame: 0,
+                animationSpeed: 0.12,
+                animationTimer: 0,
+                turnBackTimer: 0,
+                turnBackDelay: 2000
+            },
+            {
+                x: 120,
+                y: 320,
+                width: 64,
+                height: 128,
+                type: 'contact',
+                name: 'Contacts',
+                sprite: 'amelia',
+                defaultDirection: 'left', 
+                currentDirection: 'left',
+                interacting: false,
+                animationFrame: 0,
+                animationSpeed: 0.08,
+                animationTimer: 0,
+                turnBackTimer: 0,
+                turnBackDelay: 2000
+            }
+        ];
+        
+        const dog = {
+            x: 300, 
+            y: 120,
+            width: 48,
+            height: 64,
+            state: 'idle_sitting', // 'idle_sitting' or 'being_petted'
+            animationFrame: 0,
+            animationSpeed: 0.1,
+            animationTimer: 0,
+            pettingTimer: 0,
+            pettingDuration: 2000 // 2 seconds of petting animation
+        };
+
+        const cat = {
+            x: 370,
+            y: 135,
+            width: 64,
+            height: 48,
+            state: 'idle',
+            animationFrame: 0,
+            animationSpeed: 0.08,
+            animationTimer: 0,
+            pettingTimer: 0,
+            pettingDuration: 2000
+        };
+
+        const gramophone = {
+            x: 150, 
+            y: 100,
+            width: 64,
+            height: 100,
+            state: 'idle', // 'idle' or 'playing'
+            animationFrame: 0,
+            animationSpeed: 0.1,
+            animationTimer: 0,
+            currentTrack: 0, // 0 = not playing, 1-3 = track numbers
+            isPlaying: false
+        };
+
+        // Audio setup
+        const musicTracks = [
+            new Audio('track1.wav'), 
+            new Audio('track5.wav'),
+            new Audio('track3.wav')
+        ];
+
+        // Set up audio properties
+        musicTracks.forEach(track => {
+            track.loop = false;
+            track.volume = 0.7;
+        });
+
+        let currentAudio = null;
+
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter' || e.key === 'enter') {
+                enterPressed = false;
+            } else {
+                keys[e.key.toLowerCase()] = false;
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            // Add this check for Enter key
+            if (e.key === 'Enter' || e.key === 'enter') {
+                if (!enterPressed) {
+                    enterPressed = true;
+                }
+            } else {
+                keys[e.key.toLowerCase()] = true;
+            }
+            
+            // Add ESC key handling for closing modal
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Content for each section
+        const content = {
+            projects: {
+                title: "My Projects",
+                text: `
+                <h2>My Projects</h2>
+                
+                <p><strong>🃏 Pinochle </strong><br>
+                Optimised Pinochle card game running on a GUI interface, including a smart computer player.</p>
+
+                <p><strong>📦 Drone-Delivery Simulation </strong><br>
+                An optimised drone-based parcel delivery simulation system.</p>
+                
+                <p><strong>🎮 Cyclops Crashout </strong><br>
+                A Unity-based two-player fighting game where a wandering knight faces off against a monstrous Cyclops warrior in an epic duel.</p>
+                
+                <p><strong>🌐 Bookstore Data Processing & Recommendation System </strong><br>
+                A recommendation system built using a publicly sourced BX-Books dataset. </p>
+                
+                <p><strong>♟️ Chessformer Puzzle Solver </strong><br>
+                An AI solver for "Chessformer" Puzzles using using optimized search algorithms with hash-based duplication detection.</p>
+                
+                <p><em>Each project combines technical skill with creative vision!</em></p>
+                `
+            },
+            about: {
+                title: "👋 About Me",
+                text: `
+                <h2>Hey there, I'm Ryan!</h2>
+                <p>Welcome to my little lounge! I hope it becomes a place where code, creativity, and curiosity collide.</p>
+                
+                <p><strong>🎯 What I Do:</strong><br>
+                I'm a Computing & Software Systems student at the University of Melbourne, blending technical skills with creative problem-solving. Whether it's building software, crafting games, or exploring AI, I love turning ideas into interactive, meaningful experiences.</p>
+                
+                <p><strong>💻 Skills & Tools:</strong><br>
+                Python 🐍, Java, C, JavaScript 🕸, SQL 🗃️, Unity, Machine Learning 🤖, Data Visualization 📈, UI/UX Design, GitHub, GarageBand 🎵 and many more!</p>
+                
+                <p><strong>🎮 Beyond the Code:</strong><br>
+                Game developer, music creator, and lifelong learner. I believe code is a tool for storytelling, and every project is an opportunity to build something that resonates.</p>
+                
+                <p><strong>🌟 A Little Extra:</strong><br>
+                - Events Director @ UniMelb Game Makers 🎲<br>
+                - Published my first game, Cyclops Crashout 🎮<br>
+                - Currently exploring data-driven development and AI 🤖<br>
+                - Always down for tech chats, game dev talk, or a chess match ♟️</p>
+                
+                <p>If you're into building cool projects, solving real-world problems, or geeking out over games and music — let's connect!</p>
+                `
+            },
+            contact: {
+                title: "📬 Contact Me",
+                text: `
+                <h2>Let's Connect!</h2>
+                <p>Ready to embark on a digital adventure together? I'd love to hear from you!</p>
+                
+                <p><strong>📧 Email:</strong> ryanhuang1234567890@gmail.com</p>
+                <p><strong>💼 LinkedIn:</strong> <a href="https://www.linkedin.com/in/kerui-huang/" target="_blank" style="color: inherit; text-decoration: none;">kerui-huang</a></p>
+                <p><strong>🐙 GitHub:</strong> <a href="https://github.com/MoltoRubato" target="_blank" style="color: inherit; text-decoration: none;">MoltoRubato</a></p>
+                <p><strong>📸 Instagram:</strong> <a href="https://www.instagram.com/itsryianx/" target="_blank" style="color: inherit; text-decoration: none;">@itsryianx</a></p>
+                
+                <p><strong>💼 Work Inquiries:</strong><br>
+                I'm always interested in creative projects, development opportunities, and collaborative adventures!</p>
+                
+                <p><em>Drop me a message and let's create something amazing together!</em></p>
+                `
+            }
+        };
+        
+        // Function to determine which direction NPC should face to look at player
+        function getDirectionTowardsPlayer(npc) {
+            const playerCenterX = player.x + player.width / 2;
+            const playerCenterY = player.y + player.height / 2;
+            const npcCenterX = npc.x + npc.width / 2;
+            const npcCenterY = npc.y + npc.height / 2;
+            
+            const deltaX = playerCenterX - npcCenterX;
+            const deltaY = playerCenterY - npcCenterY;
+            
+            // Determine direction based on largest difference
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                return deltaX > 0 ? 'right' : 'left';
+            } else {
+                return deltaY > 0 ? 'down' : 'up';
+            }
+        }
+        
+        // Collision detection function
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+        
+        // Check if player would collide with any collision objects
+        function wouldCollideWithObjects(newX, newY) {
+            const playerRect = {
+                x: newX + 16,
+                y: newY + 64,
+                width: 32,
+                height: 48
+            };
+            
+            // Check collision with static objects
+            for (let obj of collisionObjects) {
+                if (checkCollision(playerRect, obj)) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // Helper functions
+        function drawPixelCharacter(x, y, color, type = 'player', spriteKey = null, animationFrame = 0, direction = 'down') {
+            if (type === 'player' && spritesLoaded.player) {
+                // Use spritesheet for player
+                drawSpriteFrame(x, y, 'player', animationFrame);
+            } else if (type === 'npc' && spriteKey && spritesLoaded[spriteKey]) {
+                // Use spritesheet for NPC
+                drawNPCSpriteFrame(x, y, spriteKey, animationFrame, direction);
+            } 
+        }
+        
+        function drawSpriteFrame(x, y, characterType) {
+            // Determine current animation
+            let animationName = `${player.isMoving ? 'walk' : 'idle'}_${player.direction}`;
+            let animation = spriteConfig.animations[characterType][animationName];
+            
+            if (!animation) {
+                animationName = 'idle_down';
+                animation = spriteConfig.animations[characterType][animationName];
+            }
+            
+            // Calculate source position in spritesheet using player's actual animation frame
+            const frameIndex = Math.floor(player.animationFrame) % animation.frames;
+            const sourceX = (animation.startFrame + frameIndex) * spriteConfig.frameWidth;
+            const sourceY = animation.row * spriteConfig.frameHeight;
+            
+            // Draw the sprite frame with pixel-perfect scaling
+            // Use Math.floor to ensure pixel alignment
+            ctx.drawImage(
+                sprites.player,
+                sourceX, sourceY,
+                spriteConfig.frameWidth, spriteConfig.frameHeight,
+                Math.floor(x), Math.floor(y),
+                player.width, player.height
+            );
+        }
+        
+        function drawNPCSpriteFrame(x, y, spriteKey, animationFrame, direction) {
+            // Get the animation for the NPC's current direction
+            const animationName = `idle_${direction}`;
+            const animation = spriteConfig.animations.npc[animationName];
+            
+            if (!animation) {
+                // Fallback to idle_down if direction doesn't exist
+                animation = spriteConfig.animations.npc.idle_down;
+            }
+            
+            // Calculate source position in spritesheet
+            const frameIndex = Math.floor(animationFrame) % animation.frames;
+            const sourceX = (animation.startFrame + frameIndex) * spriteConfig.frameWidth;
+            const sourceY = animation.row * spriteConfig.frameHeight;
+            
+            // Draw the sprite frame with pixel-perfect scaling
+            // Use Math.floor to ensure pixel alignment
+            ctx.drawImage(
+                sprites[spriteKey],
+                sourceX, sourceY,
+                spriteConfig.frameWidth, spriteConfig.frameHeight,
+                Math.floor(x), Math.floor(y),
+                64, 128
+            );
+        }
+
+        function drawDogSpriteFrame(x, y, state, animationFrame) {
+            const animation = spriteConfig.animations.dog[state];
+            
+            if (!animation) return;
+            
+            const frameIndex = Math.floor(animationFrame) % animation.frames;
+            const sourceX = (animation.startFrame + frameIndex) * 230; 
+            const sourceY = animation.row * 340; 
+            
+            ctx.drawImage(
+                sprites.dog,
+                sourceX, sourceY,
+                230, 340, // Source dimensions 
+                Math.floor(x), Math.floor(y),
+                48, 64 // Destination dimensions
+            );
+        }
+
+        function drawCatSpriteFrame(x, y, state, animationFrame) {
+            const animation = spriteConfig.animations.cat[state];
+            
+            if (!animation) return;
+            
+            let sourceX, sourceY;
+            
+            if (state === 'being_petted' && animation.crossRow) {
+                // Handle cross-row animation: frames 0-1 on row 1, frames 2-3 on row 2
+                const frameIndex = Math.floor(animationFrame) % animation.frames;
+                if (frameIndex < 2) {
+                    sourceX = frameIndex * 425;
+                    sourceY = 325; // Row 1
+                } else {
+                    sourceX = (frameIndex - 2) * 425;
+                    sourceY = 650; // Row 2
+                }
+            } else {
+                // Normal animation (idle)
+                const frameIndex = Math.floor(animationFrame) % animation.frames;
+                sourceX = frameIndex * 425;
+                sourceY = animation.row * 325;
+            }
+            
+            ctx.drawImage(
+                sprites.cat,
+                sourceX, sourceY,
+                425, 325,
+                Math.floor(x), Math.floor(y),
+                64, 48
+            );
+        }
+
+        function drawGramophoneSpriteFrame(x, y, state, animationFrame) {
+            const animation = spriteConfig.animations.gramophone[state];
+            
+            if (!animation) return;
+            
+            const frameIndex = Math.floor(animationFrame) % animation.frames;
+            const sourceX = (animation.startFrame + frameIndex) * 330; 
+            const sourceY = animation.row * 509; 
+            
+            ctx.drawImage(
+                sprites.gramophone,
+                sourceX, sourceY,
+                330, 509, // Source dimensions 
+                Math.floor(x), Math.floor(y),
+                64, 100 // Destination dimensions
+            );
+        }
+        
+        function updatePlayerAnimation() {
+            if (player.isMoving) {
+                player.animationTimer += player.animationSpeed;
+                if (player.animationTimer >= 1) {
+                    player.animationFrame = (player.animationFrame + 1);
+                    player.animationTimer = 0;
+                }
+            } else {
+                player.animationFrame = 0;
+                player.animationTimer = 0;
+            }
+        }
+        
+        function updateNPCAnimations() {
+            npcs.forEach(npc => {
+                // Update animation frame
+                npc.animationTimer += npc.animationSpeed;
+                if (npc.animationTimer >= 1) {
+                    npc.animationFrame = (npc.animationFrame + 1);
+                    npc.animationTimer = 0;
+                }
+                
+                // Handle turning back to default direction
+                if (npc.currentDirection !== npc.defaultDirection && npc.turnBackTimer > 0) {
+                    npc.turnBackTimer -= 16; // Approximate frame time
+                    if (npc.turnBackTimer <= 0) {
+                        npc.currentDirection = npc.defaultDirection;
+                    }
+                }
+            });
+        }
+        
+        function findNearestNPC() {
+            for (let npc of npcs) {
+                const distance = Math.sqrt(
+                    Math.pow(player.x - npc.x, 2) + Math.pow(player.y - npc.y, 2)
+                );
+                if (distance < 100) {
+                    return npc;
+                }
+            }
+            return null;
+        }
+        
+        function showModal(type) {
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = content[type].text;
+            modal.style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+        
+        function update() {
+            // Track if player is moving
+            player.isMoving = false;
+            
+            // Handle movement with collision detection
+            let newX = player.x;
+            let newY = player.y;
+            
+            if (keys['w'] || keys['arrowup']) {
+                newY -= player.speed;
+                player.direction = 'up';
+                // Check collision before moving
+                if (!wouldCollideWithObjects(player.x, newY)) {
+                    player.y = newY;
+                    player.isMoving = true;
+                }
+            }
+            if (keys['s'] || keys['arrowdown']) {
+                newY += player.speed;
+                player.direction = 'down';
+                // Check collision before moving
+                if (!wouldCollideWithObjects(player.x, newY)) {
+                    player.y = newY;
+                    player.isMoving = true;
+                }
+            }
+            if (keys['a'] || keys['arrowleft']) {
+                newX -= player.speed;
+                player.direction = 'left';
+                // Check collision before moving
+                if (!wouldCollideWithObjects(newX, player.y)) {
+                    player.x = newX;
+                    player.isMoving = true;
+                }
+            }
+            if (keys['d'] || keys['arrowright']) {
+                newX += player.speed;
+                player.direction = 'right';
+                // Check collision before moving
+                if (!wouldCollideWithObjects(newX, player.y)) {
+                    player.x = newX;
+                    player.isMoving = true;
+                }
+            }
+            
+            const wallSpace = {
+                leftBoundary: 20,
+                rightBoundary: canvas.width - 20,
+                topBoundary: 60,
+                bottomBoundary: canvas.height - 80
+            }
+
+            // Boundary checking
+            if (player.x < wallSpace.leftBoundary) player.x = wallSpace.leftBoundary;
+            if (player.x > wallSpace.rightBoundary - player.width) player.x = wallSpace.rightBoundary - player.width;
+            if (player.y < wallSpace.topBoundary) player.y = wallSpace.topBoundary;
+            if (player.y > wallSpace.bottomBoundary - player.height) player.y = wallSpace.bottomBoundary - player.height;
+            
+            // Update animations
+            updatePlayerAnimation();
+            updateNPCAnimations();
+            
+            // Update dog animation
+            dog.animationTimer += dog.animationSpeed;
+            if (dog.animationTimer >= 1) {
+                dog.animationFrame = (dog.animationFrame + 1);
+                dog.animationTimer = 0;
+            }
+
+            // Handle dog petting state
+            if (dog.state === 'being_petted') {
+                dog.pettingTimer -= 16; // Approximate frame time
+                if (dog.pettingTimer <= 0) {
+                    dog.state = 'idle_sitting';
+                    dog.animationFrame = 0;
+                }
+            }
+
+            // Update cat animation
+            cat.animationTimer += cat.animationSpeed;
+            if (cat.animationTimer >= 1) {
+                cat.animationFrame = (cat.animationFrame + 1);
+                cat.animationTimer = 0;
+            }
+
+            // Handle cat petting state
+            if (cat.state === 'being_petted') {
+                cat.pettingTimer -= 16;
+                if (cat.pettingTimer <= 0) {
+                    cat.state = 'idle';
+                    cat.animationFrame = 0;
+                }
+            }
+
+            // Update gramophone animation
+            gramophone.animationTimer += gramophone.animationSpeed;
+            if (gramophone.animationTimer >= 1) {
+                gramophone.animationFrame = (gramophone.animationFrame + 1);
+                gramophone.animationTimer = 0;
+            }
+
+            // Check if current track ended
+            if (currentAudio && currentAudio.ended) {
+                gramophone.state = 'idle';
+                gramophone.isPlaying = false;
+                currentAudio = null;
+            }
+
+            // Handle interaction
+            if (enterPressed) {
+
+                // Reset the enter state immediately to prevent holding
+                enterPressed = false;
+                
+                // Check dog interaction first
+                const dogDistance = Math.sqrt(
+                    Math.pow(player.x - dog.x, 2) + Math.pow(player.y - dog.y, 2)
+                );
+                
+                if (dogDistance < 30 && dog.state === 'idle_sitting') {
+                    dog.state = 'being_petted';
+                    dog.animationFrame = 0;
+                    dog.pettingTimer = dog.pettingDuration;
+                } 
+                 // Check cat interaction
+                const catDistance = Math.sqrt(
+                    Math.pow(player.x - cat.x, 2) + Math.pow(player.y - cat.y, 2)
+                );
+                
+                if (catDistance < 30 && cat.state === 'idle') {
+                    cat.state = 'being_petted';
+                    cat.animationFrame = 0;
+                    cat.pettingTimer = cat.pettingDuration;
+                } 
+
+                
+                // Check gramophone interaction
+                const gramophoneDistance = Math.sqrt(
+                    Math.pow(player.x - gramophone.x, 2) + Math.pow(player.y - gramophone.y, 2)
+                );
+
+                if (gramophoneDistance < 40) {
+                    if (gramophone.isPlaying) {
+                        // Stop current track and advance to next
+                        if (currentAudio) {
+                            currentAudio.pause();
+                            currentAudio.currentTime = 0;
+                        }
+                        gramophone.currentTrack++;
+                        
+                        if (gramophone.currentTrack > 3) {
+                            // Stop playing after 3 tracks
+                            gramophone.currentTrack = 0;
+                            gramophone.state = 'idle';
+                            gramophone.isPlaying = false;
+                            currentAudio = null;
+                        } else {
+                            // Play next track
+                            currentAudio = musicTracks[gramophone.currentTrack - 1];
+                            currentAudio.play();
+                            gramophone.state = 'playing';
+                        }
+                    } else {
+                        // Start playing first track
+                        gramophone.currentTrack = 1;
+                        gramophone.state = 'playing';
+                        gramophone.isPlaying = true;
+                        currentAudio = musicTracks[0];
+                        currentAudio.play();
+                    }
+                } else {
+                    // Check for NPC interaction
+                    const nearestNPC = findNearestNPC();
+                    if (nearestNPC && !nearestNPC.interacting) {
+                        nearestNPC.interacting = true;
+                        
+                        // Make NPC turn towards player
+                        const directionToPlayer = getDirectionTowardsPlayer(nearestNPC);
+                        nearestNPC.currentDirection = directionToPlayer;
+                        nearestNPC.turnBackTimer = nearestNPC.turnBackDelay;
+                        
+                        showModal(nearestNPC.type);
+                        setTimeout(() => {
+                            nearestNPC.interacting = false;
+                        }, 300);
+                    }
+                }
+            }
+        }
+        
+        function draw() {
+            // Clear canvas with fallback color
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background image if loaded
+            if (spritesLoaded.background) {
+                ctx.drawImage(sprites.background, 0, 0, canvas.width, canvas.height);
+            }
+            
+            // Collect all drawable objects with their y positions for sorting
+            let drawableObjects = [];
+            
+            // Add player
+            drawableObjects.push({
+                type: 'player',
+                y: player.y + player.height,
+                draw: () => {
+                    drawPixelCharacter(player.x, player.y, '#00ff00', 'player');
+                }
+            });
+
+            // Add dog
+            drawableObjects.push({
+                type: 'dog',
+                y: dog.y + dog.height,
+                draw: () => {
+                    if (spritesLoaded.dog) {
+                        drawDogSpriteFrame(dog.x, dog.y, dog.state, dog.animationFrame);
+                    }
+                    // Show interaction prompt
+                    const dogDistance = Math.sqrt(
+                        Math.pow(player.x - dog.x, 2) + Math.pow(player.y - dog.y, 2)
+                    );
+                    if (dogDistance < 30 && dog.state === 'idle_sitting') {
+                        ctx.fillStyle = '#FFD700';
+                        ctx.font = '12px Pixelify Sans';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Pet me!', dog.x + dog.width/2, dog.y - 10);
+                    }
+                }
+            });
+
+            // Add cat
+            drawableObjects.push({
+                type: 'cat',
+                y: cat.y + cat.height,
+                draw: () => {
+                    if (spritesLoaded.cat) {
+                        drawCatSpriteFrame(cat.x, cat.y, cat.state, cat.animationFrame);
+                    }
+                    // Show interaction prompt
+                    const catDistance = Math.sqrt(
+                        Math.pow(player.x - cat.x, 2) + Math.pow(player.y - cat.y, 2)
+                    );
+                    if (catDistance < 30 && cat.state === 'idle') {
+                        ctx.fillStyle = '#FFD700';
+                        ctx.font = '12px Pixelify Sans';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Pet me!', cat.x + cat.width/2, cat.y - 10);
+                    }
+                }
+            });
+
+            // Add gramophone
+            drawableObjects.push({
+                type: 'gramophone',
+                y: gramophone.y + gramophone.height,
+                draw: () => {
+                    if (spritesLoaded.gramophone) {
+                        drawGramophoneSpriteFrame(gramophone.x, gramophone.y, gramophone.state, gramophone.animationFrame);
+                    }
+                    // Show interaction prompt
+                    const gramophoneDistance = Math.sqrt(
+                        Math.pow(player.x - gramophone.x, 2) + Math.pow(player.y - gramophone.y, 2)
+                    );
+                    if (gramophoneDistance < 40) {
+                        ctx.fillStyle = '#FFD700';
+                        ctx.font = '12px Pixelify Sans';
+                        ctx.textAlign = 'center';
+                        if (gramophone.isPlaying) {
+                            ctx.fillText(`♪ Track ${gramophone.currentTrack}/3 ♪`, gramophone.x + gramophone.width/2, gramophone.y - 10);
+                        } else {
+                            ctx.fillText('Play Music!', gramophone.x + gramophone.width/2, gramophone.y - 10);
+                        }
+                    }
+                }
+            });
+            
+            // Add NPCs
+            npcs.forEach(npc => {
+                let npcColor = '#ff6b6b';
+                if (npc.type === 'projects') npcColor = '#4ecdc4';
+                if (npc.type === 'about') npcColor = '#45b7d1';
+                if (npc.type === 'contact') npcColor = '#f9ca24';
+                
+                drawableObjects.push({
+                    type: 'npc',
+                    y: npc.y + npc.height,
+                    draw: () => {
+                        drawPixelCharacter(npc.x, npc.y, npcColor, 'npc', npc.sprite, npc.animationFrame, npc.currentDirection);
+                        
+                        // Draw name below NPC
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                        ctx.font = '15px Pixelify Sans';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(npc.name, npc.x + npc.width / 2, npc.y + npc.height + 15);
+                        
+                        // Draw interaction indicator
+                        const distance = Math.sqrt(
+                            Math.pow(player.x - npc.x, 2) + Math.pow(player.y - npc.y, 2)
+                        );
+                        if (distance < 100) {
+                            if (spritesLoaded.bubble) {
+                                const bubbleSize = 40;
+                                ctx.drawImage(
+                                    sprites.bubble,
+                                    npc.x + npc.width/2 - bubbleSize/2,
+                                    npc.y - bubbleSize + 30,
+                                    bubbleSize,
+                                    bubbleSize
+                                );
+                            } else {
+                                ctx.fillStyle = '#00ff00';
+                                ctx.font = '12px Pixelify Sans';
+                                ctx.textAlign = 'center';
+                                ctx.fillText('Press ENTER', npc.x + npc.width/2, npc.y + 20);
+                            }
+                        }
+                    }
+                });
+            });
+            
+            // Add decorative objects (like flowers)
+            decorativeObjects.forEach(obj => {
+                drawableObjects.push({
+                    type: 'decorative',
+                    y: obj.y + obj.height,
+                    draw: () => {
+                        if (obj.type === 'flower' && spritesLoaded.flower) {
+                            ctx.drawImage(sprites.flower, obj.x, obj.y, obj.width, obj.height);
+                        }
+                    }
+                });
+            });
+            
+            // Sort objects by their bottom y position (objects with higher y values draw last)
+            drawableObjects.sort((a, b) => a.y - b.y);
+            
+            // Draw all objects in sorted order
+            drawableObjects.forEach(obj => obj.draw());
+        }
+        
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start the game
+        gameLoop();
+        
+        // Prevent default arrow key behavior
+        window.addEventListener('keydown', (e) => {
+            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
