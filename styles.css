@@ -1,0 +1,129 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+}
+
+#gameContainer {
+    position: relative;
+    border: 3px solid #16213e;
+    background: #0f0f23;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+canvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    -ms-interpolation-mode: nearest-neighbor;
+}
+
+#ui {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    color: #ffa339;
+    font-size: 12px;
+    text-shadow: 1px 1px 0px #000;
+}
+
+#modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #2a1810 0%, #1a0f08 100%);
+    border: 3px solid #d4af37;
+    border-radius: 8px;
+    padding: 25px;
+    width: 500px;       
+    height: 400px;       
+    overflow-y: auto;
+    color: #f4e4bc;
+    font-size: 14px;
+    line-height: 1.5;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+#modal h2 {
+    color: #d4af37;
+    margin-top: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    border-bottom: 2px solid #8b7355;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+#modal p {
+    margin-bottom: 12px;
+}
+
+#modal strong {
+    color: #e6c875;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+#modal em {
+    color: #c9a96e;
+    font-style: italic;
+}
+
+#modal::-webkit-scrollbar {
+    width: 12px;
+}
+
+#modal::-webkit-scrollbar-track {
+    background: #1a0f08;
+    border-radius: 6px;
+    border: 1px solid #8b7355;
+}
+
+#modal::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #d4af37 0%, #b8941f 100%);
+    border-radius: 6px;
+    border: 1px solid #8b7355;
+}
+
+#modal::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #e6c875 0%, #d4af37 100%);
+}
+
+#modal {
+    scrollbar-width: thin;
+    scrollbar-color: #d4af37 #1a0f08;
+}
+
+#closeButton {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    color: #d4af37;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#closeButton:hover {
+    color: #f4e4bc;
+    transform: scale(1.1);
+}
