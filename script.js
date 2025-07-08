@@ -78,7 +78,6 @@ let spritesLoaded = {
     gramophone: false
 };
 
-// Load all sprites
 function loadSprites() {
     // Load player sprite
     sprites.player = new Image();
@@ -86,7 +85,7 @@ function loadSprites() {
         spritesLoaded.player = true;
         console.log('Player spritesheet loaded!');
     };
-    sprites.player.src = 'Adam_16x16.png';
+    sprites.player.src = 'assets/images/Adam_16x16.png';
     
     // Load NPC sprites
     sprites.bob = new Image();
@@ -94,63 +93,63 @@ function loadSprites() {
         spritesLoaded.bob = true;
         console.log('Bob spritesheet loaded!');
     };
-    sprites.bob.src = 'Bob_idle_anim_16x16.png';
+    sprites.bob.src = 'assets/images/Bob_idle_anim_16x16.png';
     
     sprites.alex = new Image();
     sprites.alex.onload = function() {
         spritesLoaded.alex = true;
         console.log('Alex spritesheet loaded!');
     };
-    sprites.alex.src = 'Alex_idle_anim_16x16.png';
+    sprites.alex.src = 'assets/images/Alex_idle_anim_16x16.png';
     
     sprites.amelia = new Image();
     sprites.amelia.onload = function() {
         spritesLoaded.amelia = true;
         console.log('Amelia spritesheet loaded!');
     };
-    sprites.amelia.src = 'Amelia_idle_anim_16x16.png';
+    sprites.amelia.src = 'assets/images/Amelia_idle_anim_16x16.png';
 
     sprites.background = new Image();
     sprites.background.onload = function() {
         spritesLoaded.background = true;
         console.log('Background image loaded!');
     };
-    sprites.background.src = 'room3.png';
+    sprites.background.src = 'assets/images/room3.png';
 
     sprites.bubble = new Image();
     sprites.bubble.onload = function() {
         spritesLoaded.bubble = true;
         console.log('Bubble image loaded!');
     };
-    sprites.bubble.src = 'bubble.png';
+    sprites.bubble.src = 'assets/images/bubble.png';
 
     sprites.flower = new Image();
     sprites.flower.onload = function() {
         spritesLoaded.flower = true;
         console.log('Flower image loaded!');
     };
-    sprites.flower.src = 'flower.png';
+    sprites.flower.src = 'assets/images/flower.png';
 
     sprites.dog = new Image();
     sprites.dog.onload = function() {
         spritesLoaded.dog = true;
         console.log('Dog spritesheet loaded!');
     };
-    sprites.dog.src = 'newdog.png';
+    sprites.dog.src = 'assets/images/newdog.png';
 
     sprites.cat = new Image();
     sprites.cat.onload = function() {
         spritesLoaded.cat = true;
         console.log('Cat spritesheet loaded!');
     };
-    sprites.cat.src = 'newcat.png';
+    sprites.cat.src = 'assets/images/newcat.png';
 
     sprites.gramophone = new Image();
     sprites.gramophone.onload = function() {
         spritesLoaded.gramophone = true;
         console.log('Gramophone spritesheet loaded!');
     };
-    sprites.gramophone.src = 'gramophone.png';
+    sprites.gramophone.src = 'assets/images/gramophone.png';
 }
 
 // Spritesheet configuration
@@ -288,9 +287,9 @@ const gramophone = {
 
 // Audio setup
 const musicTracks = [
-    new Audio('track1.wav'), 
-    new Audio('track5.wav'),
-    new Audio('track3.wav')
+    new Audio('assets/audio/track1.wav'), 
+    new Audio('assets/audio/track5.wav'),
+    new Audio('assets/audio/track3.wav')
 ];
 
 // Set up audio properties
@@ -391,7 +390,7 @@ const content = {
         <p><strong>💼 LinkedIn:</strong> <a href="https://www.linkedin.com/in/kerui-huang/" target="_blank" style="color: inherit; text-decoration: none;">kerui-huang</a></p>
         <p><strong>🐙 GitHub:</strong> <a href="https://github.com/MoltoRubato" target="_blank" style="color: inherit; text-decoration: none;">MoltoRubato</a></p>
         <p><strong>📸 Instagram:</strong> <a href="https://www.instagram.com/itsryianx/" target="_blank" style="color: inherit; text-decoration: none;">@itsryianx</a></p>
-        <p><strong>📄 CV:</strong> <a href="Ryan_Huang_Project Resume.pdf" target="_blank" style="color: inherit; text-decoration: none;">Ryan-Huang-CV</a></p>    
+        <p><strong>📄 CV:</strong> <a href="assets/documents/Ryan_Huang RESUME.pdf" target="_blank" style="color: inherit; text-decoration: none;">Ryan-Huang-CV</a></p>    
 
         <p><strong>💼 Work Inquiries:</strong><br>
         I'm always interested in creative projects, development opportunities, and collaborative adventures!</p>
