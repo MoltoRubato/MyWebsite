@@ -338,22 +338,33 @@ const content = {
         text: `
         <h2>My Projects</h2>
         
-        <p><strong>🃏 Pinochle </strong><br>
+        <p><strong>💼 <a href="https://github.com/MoltoRubato/JobApplicationTailor" target="_blank" style="color: inherit; text-decoration: none;">AI Job Application Tailor</a></strong><br>
+        A smart web app that uses AI to generate personalized cover letters and CV bullet points from your resume and a job description.</p>
+
+        <p><strong>📦 <a href="https://github.com/MoltoRubato/Drone_delivery_system" target="_blank" style="color: inherit; text-decoration: none;">Drone-Delivery Simulation</a></strong><br>
+        An optimised drone-based parcel delivery simulation system.</p>
+
+        <p><strong>🌐 <a href="https://github.com/MoltoRubato/Book-data-recommendation" target="_blank" style="color: inherit; text-decoration: none;">Bookstore Data Processing & Recommendation System</a></strong><br>
+        A recommendation system built using a publicly sourced BX-Books dataset.</p>
+
+        <p><strong>🃏 <a href="https://github.com/MoltoRubato/Pinochle" target="_blank" style="color: inherit; text-decoration: none;">Pinochle</a></strong><br>
         Optimised Pinochle card game running on a GUI interface, including a smart computer player.</p>
 
-        <p><strong>📦 Drone-Delivery Simulation </strong><br>
-        An optimised drone-based parcel delivery simulation system.</p>
-        
-        <p><strong>🎮 Cyclops Crashout </strong><br>
+        <p><strong>🎮 <a href="https://github.com/MoltoRubato/CyclopsCrashout" target="_blank" style="color: inherit; text-decoration: none;">Cyclops Crashout</a></strong><br>
         A Unity-based two-player fighting game where a wandering knight faces off against a monstrous Cyclops warrior in an epic duel.</p>
         
-        <p><strong>🌐 Bookstore Data Processing & Recommendation System </strong><br>
-        A recommendation system built using a publicly sourced BX-Books dataset. </p>
+        <p><strong>♟️ <a href="https://github.com/MoltoRubato/Chessformer-Puzzle-Solver" target="_blank" style="color: inherit; text-decoration: none;">Chessformer Puzzle Solver</a></strong><br>
+        An AI solver for "Chessformer" Puzzles using optimized search algorithms with hash-based duplication detection.</p>
         
-        <p><strong>♟️ Chessformer Puzzle Solver </strong><br>
-        An AI solver for "Chessformer" Puzzles using using optimized search algorithms with hash-based duplication detection.</p>
+        <p style="font-size: 12px;"><em>... More projects incoming!</em></p>
         
-        <p><em>Each project combines technical skill with creative vision!</em></p>
+        <hr style="border: 1px solid #333; margin: 20px 0;">
+        
+        <p style="text-align: center; margin-top: 20px;">
+        <a href="https://github.com/MoltoRubato/Past-Projects" target="_blank" style="color: inherit; text-decoration: none; font-weight: bold; font-size: 12px;">
+        🔗 Click here to explore more of my past projects on GitHub
+        </a>
+        </p>
         `
     },
     about: {
