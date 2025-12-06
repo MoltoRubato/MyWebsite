@@ -10,12 +10,14 @@ ctx.msImageSmoothingEnabled = false;
 // Input handling
 let enterPressed = false;
 
+const SIZE_SCALE = 1.25; // 25% bigger, tweak to taste
+
 // Game state
 let player = {
     x: 400,
     y: 300,
-    width: 64,
-    height: 128,
+    width: 64 * SIZE_SCALE,
+    height: 128 * SIZE_SCALE,
     speed: 3,
     direction: 'down',
     isMoving: false,
@@ -39,8 +41,8 @@ const decorativeObjects = [
     {
         x: 70,
         y: 360,
-        width: 60,
-        height: 100,
+        width: 60 * SIZE_SCALE,
+        height: 100 * SIZE_SCALE,
         type: 'flower',
         sprite: 'flower'
     }
@@ -77,6 +79,10 @@ let spritesLoaded = {
     dog: false,
     gramophone: false
 };
+
+// Timing
+let lastTime = 0;
+const BASE_FRAME_TIME = 1000 / 60; // treat 60 FPS as "normal"
 
 function loadSprites() {
     // Load player sprite
@@ -196,8 +202,8 @@ const npcs = [
     {
         x: 31,
         y: 144,
-        width: 64,
-        height: 128,
+        width: 64 * SIZE_SCALE,
+        height: 128 * SIZE_SCALE,
         type: 'projects',
         name: 'Projects',
         sprite: 'bob',
@@ -213,8 +219,8 @@ const npcs = [
     {
         x: 637,
         y: 147,
-        width: 64,
-        height: 128,
+        width: 64 * SIZE_SCALE,
+        height: 128 * SIZE_SCALE,
         type: 'about',
         name: 'About',
         sprite: 'alex',
@@ -228,10 +234,10 @@ const npcs = [
         turnBackDelay: 2000
     },
     {
-        x: 120,
-        y: 320,
-        width: 64,
-        height: 128,
+        x: 135,
+        y: 312,
+        width: 64 * SIZE_SCALE,
+        height: 128 * SIZE_SCALE,
         type: 'contact',
         name: 'Contacts',
         sprite: 'amelia',
@@ -249,8 +255,8 @@ const npcs = [
 const dog = {
     x: 300, 
     y: 120,
-    width: 48,
-    height: 64,
+    width: 48 * SIZE_SCALE,
+    height: 64 * SIZE_SCALE,
     state: 'idle_sitting', // 'idle_sitting' or 'being_petted'
     animationFrame: 0,
     animationSpeed: 0.1,
@@ -260,10 +266,10 @@ const dog = {
 };
 
 const cat = {
-    x: 370,
-    y: 135,
-    width: 64,
-    height: 48,
+    x: 360,
+    y: 140,
+    width: 64 * SIZE_SCALE,
+    height: 48 * SIZE_SCALE,
     state: 'idle',
     animationFrame: 0,
     animationSpeed: 0.08,
@@ -273,10 +279,10 @@ const cat = {
 };
 
 const gramophone = {
-    x: 150, 
+    x: 125, 
     y: 100,
-    width: 64,
-    height: 100,
+    width: 64 * SIZE_SCALE,
+    height: 100 * SIZE_SCALE,
     state: 'idle', // 'idle' or 'playing'
     animationFrame: 0,
     animationSpeed: 0.1,
@@ -515,7 +521,8 @@ function drawNPCSpriteFrame(x, y, spriteKey, animationFrame, direction) {
         sourceX, sourceY,
         spriteConfig.frameWidth, spriteConfig.frameHeight,
         Math.floor(x), Math.floor(y),
-        64, 128
+        64 * SIZE_SCALE,
+        128 * SIZE_SCALE
     );
 }
 
@@ -533,7 +540,8 @@ function drawDogSpriteFrame(x, y, state, animationFrame) {
         sourceX, sourceY,
         230, 340, // Source dimensions 
         Math.floor(x), Math.floor(y),
-        48, 64 // Destination dimensions
+        dog.width,
+        dog.height
     );
 }
 
@@ -566,7 +574,8 @@ function drawCatSpriteFrame(x, y, state, animationFrame) {
         sourceX, sourceY,
         425, 325,
         Math.floor(x), Math.floor(y),
-        64, 48
+        cat.width,
+        cat.height
     );
 }
 
@@ -584,13 +593,13 @@ function drawGramophoneSpriteFrame(x, y, state, animationFrame) {
         sourceX, sourceY,
         330, 509, // Source dimensions 
         Math.floor(x), Math.floor(y),
-        64, 100 // Destination dimensions
+        64* SIZE_SCALE, 100* SIZE_SCALE // Destination dimensions
     );
 }
 
-function updatePlayerAnimation() {
+function updatePlayerAnimation(frameScale) {
     if (player.isMoving) {
-        player.animationTimer += player.animationSpeed;
+        player.animationTimer += player.animationSpeed * frameScale;
         if (player.animationTimer >= 1) {
             player.animationFrame = (player.animationFrame + 1);
             player.animationTimer = 0;
@@ -601,18 +610,16 @@ function updatePlayerAnimation() {
     }
 }
 
-function updateNPCAnimations() {
+function updateNPCAnimations(frameScale, delta) {
     npcs.forEach(npc => {
-        // Update animation frame
-        npc.animationTimer += npc.animationSpeed;
+        npc.animationTimer += npc.animationSpeed * frameScale;
         if (npc.animationTimer >= 1) {
             npc.animationFrame = (npc.animationFrame + 1);
             npc.animationTimer = 0;
         }
         
-        // Handle turning back to default direction
         if (npc.currentDirection !== npc.defaultDirection && npc.turnBackTimer > 0) {
-            npc.turnBackTimer -= 16; // Approximate frame time
+            npc.turnBackTimer -= delta; // real ms now
             if (npc.turnBackTimer <= 0) {
                 npc.currentDirection = npc.defaultDirection;
             }
@@ -644,7 +651,7 @@ function closeModal() {
     document.getElementById('modal').style.display = 'none';
 }
 
-function update() {
+function update(frameScale, delta) {
     // Track if player is moving
     player.isMoving = false;
     
@@ -653,7 +660,7 @@ function update() {
     let newY = player.y;
     
     if (keys['w'] || keys['arrowup']) {
-        newY -= player.speed;
+        newY -= player.speed * frameScale;
         player.direction = 'up';
         // Check collision before moving
         if (!wouldCollideWithObjects(player.x, newY)) {
@@ -662,7 +669,7 @@ function update() {
         }
     }
     if (keys['s'] || keys['arrowdown']) {
-        newY += player.speed;
+        newY += player.speed * frameScale;
         player.direction = 'down';
         // Check collision before moving
         if (!wouldCollideWithObjects(player.x, newY)) {
@@ -671,7 +678,7 @@ function update() {
         }
     }
     if (keys['a'] || keys['arrowleft']) {
-        newX -= player.speed;
+        newX -= player.speed * frameScale;
         player.direction = 'left';
         // Check collision before moving
         if (!wouldCollideWithObjects(newX, player.y)) {
@@ -680,7 +687,7 @@ function update() {
         }
     }
     if (keys['d'] || keys['arrowright']) {
-        newX += player.speed;
+        newX += player.speed * frameScale;
         player.direction = 'right';
         // Check collision before moving
         if (!wouldCollideWithObjects(newX, player.y)) {
@@ -703,11 +710,11 @@ function update() {
     if (player.y > wallSpace.bottomBoundary - player.height) player.y = wallSpace.bottomBoundary - player.height;
     
     // Update animations
-    updatePlayerAnimation();
-    updateNPCAnimations();
+    updatePlayerAnimation(frameScale);
+    updateNPCAnimations(frameScale, delta);
     
     // Update dog animation
-    dog.animationTimer += dog.animationSpeed;
+    dog.animationTimer += dog.animationSpeed * frameScale;
     if (dog.animationTimer >= 1) {
         dog.animationFrame = (dog.animationFrame + 1);
         dog.animationTimer = 0;
@@ -715,7 +722,7 @@ function update() {
 
     // Handle dog petting state
     if (dog.state === 'being_petted') {
-        dog.pettingTimer -= 16; // Approximate frame time
+        dog.pettingTimer -= delta ; // Approximate frame time
         if (dog.pettingTimer <= 0) {
             dog.state = 'idle_sitting';
             dog.animationFrame = 0;
@@ -723,7 +730,7 @@ function update() {
     }
 
     // Update cat animation
-    cat.animationTimer += cat.animationSpeed;
+    cat.animationTimer += cat.animationSpeed * frameScale;
     if (cat.animationTimer >= 1) {
         cat.animationFrame = (cat.animationFrame + 1);
         cat.animationTimer = 0;
@@ -731,7 +738,7 @@ function update() {
 
     // Handle cat petting state
     if (cat.state === 'being_petted') {
-        cat.pettingTimer -= 16;
+        cat.pettingTimer -= delta;
         if (cat.pettingTimer <= 0) {
             cat.state = 'idle';
             cat.animationFrame = 0;
@@ -739,7 +746,7 @@ function update() {
     }
 
     // Update gramophone animation
-    gramophone.animationTimer += gramophone.animationSpeed;
+    gramophone.animationTimer += gramophone.animationSpeed * frameScale;
     if (gramophone.animationTimer >= 1) {
         gramophone.animationFrame = (gramophone.animationFrame + 1);
         gramophone.animationTimer = 0;
@@ -987,14 +994,21 @@ function draw() {
     drawableObjects.forEach(obj => obj.draw());
 }
 
-function gameLoop() {
-    update();
+function gameLoop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+
+    const delta = timestamp - lastTime;          // ms since last frame
+    lastTime = timestamp;
+
+    const frameScale = delta / BASE_FRAME_TIME;  // 1.0 at 60 FPS
+
+    update(frameScale, delta);
     draw();
     requestAnimationFrame(gameLoop);
 }
 
 // Start the game
-gameLoop();
+requestAnimationFrame(gameLoop);
 
 // Prevent default arrow key behavior
 window.addEventListener('keydown', (e) => {
