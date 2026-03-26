@@ -340,79 +340,73 @@ document.addEventListener('keydown', (e) => {
 // Content for each section
 const content = {
     projects: {
-        title: "My Projects",
+        title: "Projects",
         text: `
-        <h2>My Projects</h2>
-        
-        <p><strong>💼 <a href="https://github.com/MoltoRubato/JobApplicationTailor" target="_blank" style="color: inherit; text-decoration: none;">AI Job Application Tailor</a></strong><br>
-        A smart web app that uses AI to generate personalized cover letters and CV bullet points from your resume and a job description.</p>
+        <h2>Selected Projects</h2>
 
-        <p><strong>📦 <a href="https://github.com/MoltoRubato/Drone_delivery_system" target="_blank" style="color: inherit; text-decoration: none;">Drone-Delivery Simulation</a></strong><br>
-        An optimised drone-based parcel delivery simulation system.</p>
+        <p><strong><a href="https://lyra-fellowship-airtable.vercel.app/" target="_blank" style="color: inherit; text-decoration: none;">Book Recommendation System</a></strong><br>
+        Airtable clone built with t3 stack</p>
 
-        <p><strong>🌐 <a href="https://github.com/MoltoRubato/Book-data-recommendation" target="_blank" style="color: inherit; text-decoration: none;">Bookstore Data Processing & Recommendation System</a></strong><br>
-        A recommendation system built using a publicly sourced BX-Books dataset.</p>
+        <p><strong><a href="https://github.com/MoltoRubato/JobApplicationTailor" target="_blank" style="color: inherit; text-decoration: none;">AI Job Application Tailor</a></strong><br>
+        AI-powered web application that generates tailored cover letters and resume bullet points from a candidate profile and job description.</p>
 
-        <p><strong>🃏 <a href="https://github.com/MoltoRubato/Pinochle" target="_blank" style="color: inherit; text-decoration: none;">Pinochle</a></strong><br>
-        Optimised Pinochle card game running on a GUI interface, including a smart computer player.</p>
+        <p><strong><a href="https://github.com/MoltoRubato/Drone_delivery_system" target="_blank" style="color: inherit; text-decoration: none;">Drone Delivery Simulation</a></strong><br>
+        Optimized parcel delivery simulation system focused on routing efficiency and system performance.</p>
 
-        <p><strong>🎮 <a href="https://github.com/MoltoRubato/CyclopsCrashout" target="_blank" style="color: inherit; text-decoration: none;">Cyclops Crashout</a></strong><br>
-        A Unity-based two-player fighting game where a wandering knight faces off against a monstrous Cyclops warrior in an epic duel.</p>
-        
-        <p><strong>♟️ <a href="https://github.com/MoltoRubato/Chessformer-Puzzle-Solver" target="_blank" style="color: inherit; text-decoration: none;">Chessformer Puzzle Solver</a></strong><br>
-        An AI solver for "Chessformer" Puzzles using optimized search algorithms with hash-based duplication detection.</p>
-        
-        <p style="font-size: 12px;"><em>... More projects incoming!</em></p>
-        
+        <p><strong><a href="https://github.com/MoltoRubato/Book-data-recommendation" target="_blank" style="color: inherit; text-decoration: none;">Book Recommendation System</a></strong><br>
+        Data processing and recommendation engine built on publicly available book datasets.</p>
+
+        <p><strong><a href="https://github.com/MoltoRubato/Pinochle" target="_blank" style="color: inherit; text-decoration: none;">Pinochle</a></strong><br>
+        Desktop card game implementation featuring GUI gameplay and an intelligent computer opponent.</p>
+
+        <p><strong><a href="https://github.com/MoltoRubato/CyclopsCrashout" target="_blank" style="color: inherit; text-decoration: none;">Cyclops Crashout</a></strong><br>
+        Unity-based two-player combat game combining gameplay systems, character design, and interactive environments.</p>
+
+        <p><strong><a href="https://github.com/MoltoRubato/Chessformer-Puzzle-Solver" target="_blank" style="color: inherit; text-decoration: none;">Chessformer Puzzle Solver</a></strong><br>
+        AI puzzle solver using optimized search techniques and duplicate-state reduction.</p>
+
         <hr style="border: 1px solid #333; margin: 20px 0;">
-        
+
         <p style="text-align: center; margin-top: 20px;">
-        <a href="https://github.com/MoltoRubato/Past-Projects" target="_blank" style="color: inherit; text-decoration: none; font-weight: bold; font-size: 12px;">
-        🔗 Click here to explore more of my past projects on GitHub
+        <a href="https://github.com/MoltoRubato" target="_blank" style="color: inherit; text-decoration: none; font-weight: bold; font-size: 12px;">
+        View additional work on GitHub
         </a>
         </p>
         `
     },
     about: {
-        title: "👋 About Me",
+        title: "About",
         text: `
-        <h2>Hey there, I'm Ryan!</h2>
-        <p>Welcome to my little lounge! I hope it becomes a place where code, creativity, and curiosity collide.</p>
-        
-        <p><strong>🎯 What I Do:</strong><br>
-        I'm a Computing & Software Systems student at the University of Melbourne, blending technical skills with creative problem-solving. Whether it's building software, crafting games, or exploring AI, I love turning ideas into interactive, meaningful experiences.</p>
-        
-        <p><strong>💻 Skills & Tools:</strong><br>
-        Python 🐍, Java, C, JavaScript 🕸, SQL 🗃️, Unity, Machine Learning 🤖, Data Visualization 📈, UI/UX Design, GitHub, GarageBand 🎵 and many more!</p>
-        
-        <p><strong>🎮 Beyond the Code:</strong><br>
-        Game developer, music creator, and lifelong learner. I believe code is a tool for storytelling, and every project is an opportunity to build something that resonates.</p>
-        
-        <p><strong>🌟 A Little Extra:</strong><br>
-        - Events Director @ UniMelb Game Makers 🎲<br>
-        - Published my first game, Cyclops Crashout 🎮<br>
-        - Currently exploring data-driven development and AI 🤖<br>
-        - Always down for tech chats, game dev talk, or a chess match ♟️</p>
-        
-        <p>If you're into building cool projects, solving real-world problems, or geeking out over games and music — let's connect!</p>
+        <h2>About Ryan</h2>
+        <p>I am a software engineer focused on building practical, high-quality products across software, data, and AI-driven systems.</p>
+
+        <p><strong>Current Work</strong><br>
+        I work as a Forward Deployed Engineer at Lyra, partnering closely with teams to turn complex problems into production-ready solutions.</p>
+
+        <p><strong>Technical Focus</strong><br>
+        Python, Java, C, JavaScript, SQL, LangGraph, machine learning, data visualization, and product-focused engineering.</p>
+
+        <p><strong>Approach</strong><br>
+        I care about clear thinking, fast iteration, and shipping work that is both useful and well executed.</p>
+
+        <p><strong>Additional Experience</strong><br>
+        I also enjoy game development, creative technology, and designing systems that balance technical depth with strong user experience.</p>
+
+        <p>I am always interested in thoughtful product work, strong engineering teams, and ambitious technical challenges.</p>
         `
     },
     contact: {
-        title: "📬 Contact Me",
+        title: "Contact",
         text: `
-        <h2>Let's Connect!</h2>
-        <p>Ready to embark on a digital adventure together? I'd love to hear from you!</p>
-        
-        <p><strong>📧 Email:</strong> ryanhuang1234567890@gmail.com</p>
-        <p><strong>💼 LinkedIn:</strong> <a href="https://www.linkedin.com/in/kerui-huang/" target="_blank" style="color: inherit; text-decoration: none;">kerui-huang</a></p>
-        <p><strong>🐙 GitHub:</strong> <a href="https://github.com/MoltoRubato" target="_blank" style="color: inherit; text-decoration: none;">MoltoRubato</a></p>
-        <p><strong>📸 Instagram:</strong> <a href="https://www.instagram.com/itsryianx/" target="_blank" style="color: inherit; text-decoration: none;">@itsryianx</a></p>
-        <p><strong>📄 CV:</strong> <a href="assets/documents/Ryan_Huang RESUME.pdf" target="_blank" style="color: inherit; text-decoration: none;">Ryan-Huang-CV</a></p>    
+        <h2>Contact</h2>
+        <p>Please feel free to reach out for product, engineering, or collaboration opportunities.</p>
 
-        <p><strong>💼 Work Inquiries:</strong><br>
-        I'm always interested in creative projects, development opportunities, and collaborative adventures!</p>
-        
-        <p><em>Drop me a message and let's create something amazing together!</em></p>
+        <p><strong>Email:</strong> ryanhuang1234567890@gmail.com</p>
+        <p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/kerui-huang/" target="_blank" style="color: inherit; text-decoration: none;">kerui-huang</a></p>
+        <p><strong>GitHub:</strong> <a href="https://github.com/MoltoRubato" target="_blank" style="color: inherit; text-decoration: none;">MoltoRubato</a></p>
+
+        <p><strong>Availability</strong><br>
+        Open to engineering discussions, client-facing product work, and new opportunities.</p>
         `
     }
 };
