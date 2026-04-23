@@ -344,7 +344,7 @@ const content = {
         text: `
         <h2>Selected Projects</h2>
 
-        <p><strong><a href="https://lyra-fellowship-airtable.vercel.app/" target="_blank" style="color: inherit; text-decoration: none;">Book Recommendation System</a></strong><br>
+        <p><strong><a href="https://lyra-fellowship-airtable.vercel.app/" target="_blank" style="color: inherit; text-decoration: none;">Airtable Clone</a></strong><br>
         Airtable clone built with t3 stack</p>
 
         <p><strong><a href="https://github.com/MoltoRubato/JobApplicationTailor" target="_blank" style="color: inherit; text-decoration: none;">AI Job Application Tailor</a></strong><br>
