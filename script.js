@@ -1,5 +1,45 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const gameContainer = document.getElementById('gameContainer');
+const touchLayoutQuery = window.matchMedia('(hover: none), (pointer: coarse), (max-width: 720px)');
+
+function updateGameSize() {
+    const visualViewport = window.visualViewport;
+    const widthCandidates = [
+        window.innerWidth,
+        window.outerWidth,
+        document.documentElement.clientWidth,
+        visualViewport ? visualViewport.width : null
+    ].filter(value => Number.isFinite(value) && value > 0);
+    const heightCandidates = [
+        window.innerHeight,
+        window.outerHeight,
+        document.documentElement.clientHeight,
+        visualViewport ? visualViewport.height : null
+    ].filter(value => Number.isFinite(value) && value > 0);
+    const viewportWidth = Math.min(...widthCandidates);
+    const viewportHeight = Math.min(...heightCandidates);
+    const touchLayout = touchLayoutQuery.matches;
+    const portrait = viewportHeight >= viewportWidth;
+    const widthPadding = touchLayout ? 16 : 24;
+    const heightReserve = touchLayout ? (portrait ? 228 : 16) : 24;
+    const availableWidth = Math.max(280, viewportWidth - widthPadding);
+    const availableHeight = Math.max(210, viewportHeight - heightReserve);
+    const displayWidth = Math.min(800, availableWidth, availableHeight * (4 / 3));
+
+    gameContainer.style.setProperty('--game-width', `${Math.floor(displayWidth)}px`);
+}
+
+updateGameSize();
+window.addEventListener('resize', updateGameSize);
+if (touchLayoutQuery.addEventListener) {
+    touchLayoutQuery.addEventListener('change', updateGameSize);
+} else {
+    touchLayoutQuery.addListener(updateGameSize);
+}
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateGameSize);
+}
 
 // Disable image smoothing for pixel-perfect rendering
 ctx.imageSmoothingEnabled = false;
@@ -309,32 +349,66 @@ let currentAudio = null;
 // Input handling
 const keys = {};
 
+function pressInteract() {
+    enterPressed = true;
+}
+
 document.addEventListener('keydown', (e) => {
-    keys[e.key.toLowerCase()] = true;
+    const key = e.key.toLowerCase();
+
+    if (key === 'enter') {
+        if (!e.repeat) {
+            pressInteract();
+        }
+        return;
+    }
+
+    if (key === 'escape') {
+        closeModal();
+        return;
+    }
+
+    keys[key] = true;
 });
 
 document.addEventListener('keyup', (e) => {
-    if (e.key === 'Enter' || e.key === 'enter') {
-        enterPressed = false;
-    } else {
-        keys[e.key.toLowerCase()] = false;
-    }
+    keys[e.key.toLowerCase()] = false;
 });
 
-document.addEventListener('keydown', (e) => {
-    // Add this check for Enter key
-    if (e.key === 'Enter' || e.key === 'enter') {
-        if (!enterPressed) {
-            enterPressed = true;
+document.querySelectorAll('#touchControls [data-key], #touchControls [data-action]').forEach(button => {
+    const key = button.dataset.key;
+    const action = button.dataset.action;
+
+    function releaseButton() {
+        if (key) {
+            keys[key] = false;
         }
-    } else {
-        keys[e.key.toLowerCase()] = true;
+        button.classList.remove('isActive');
     }
-    
-    // Add ESC key handling for closing modal
-    if (e.key === 'Escape') {
-        closeModal();
-    }
+
+    button.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (button.setPointerCapture) {
+            button.setPointerCapture(e.pointerId);
+        }
+        button.classList.add('isActive');
+
+        if (key) {
+            keys[key] = true;
+        }
+
+        if (action === 'interact') {
+            pressInteract();
+        }
+
+        if (action === 'escape') {
+            closeModal();
+        }
+    });
+
+    button.addEventListener('pointerup', releaseButton);
+    button.addEventListener('pointercancel', releaseButton);
+    button.addEventListener('lostpointercapture', releaseButton);
 });
 
 // Content for each section
@@ -639,10 +713,12 @@ function showModal(type) {
     
     modalContent.innerHTML = content[type].text;
     modal.style.display = 'block';
+    document.body.classList.add('modal-open');
 }
 
 function closeModal() {
     document.getElementById('modal').style.display = 'none';
+    document.body.classList.remove('modal-open');
 }
 
 function update(frameScale, delta) {
