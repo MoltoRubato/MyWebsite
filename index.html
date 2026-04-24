@@ -2,25 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Ryan's Lounge</title>
     <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="script.js" defer></script>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        
-        <div id="ui">
-            <div>Use WASD to move</div>
-            <div>Press ENTER to interact</div>
-            <div>Press ESC to close dialogs</div>
+    <div id="gameShell">
+        <div id="gameContainer">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+            <div id="ui">
+                <div class="keyboardHelp">Use WASD to move</div>
+                <div class="keyboardHelp">Press ENTER to interact</div>
+                <div class="keyboardHelp">Press ESC to close dialogs</div>
+                <div class="touchHelp">Use the pad to move</div>
+                <div class="touchHelp">Tap ACT to interact</div>
+            </div>
+
+            <div id="modal">
+                <button id="closeButton" onclick="closeModal()">×</button>
+                <div id="modalContent"></div>
+            </div>
         </div>
 
-        <div id="modal">
-            <button id="closeButton" onclick="closeModal()">×</button>
-            <div id="modalContent"></div>
+        <div id="touchControls" aria-label="Touch controls">
+            <div id="dpad" aria-label="Movement controls">
+                <button class="touchButton dpadButton dpadUp" type="button" data-key="w" aria-label="Move up">W</button>
+                <button class="touchButton dpadButton dpadLeft" type="button" data-key="a" aria-label="Move left">A</button>
+                <button class="touchButton dpadButton dpadDown" type="button" data-key="s" aria-label="Move down">S</button>
+                <button class="touchButton dpadButton dpadRight" type="button" data-key="d" aria-label="Move right">D</button>
+            </div>
+
+            <div id="actionPad">
+                <button class="touchButton actionButton" type="button" data-action="interact" aria-label="Interact">ACT</button>
+                <button class="touchButton escapeButton" type="button" data-action="escape" aria-label="Close dialog">ESC</button>
+            </div>
         </div>
     </div>
 </body>
