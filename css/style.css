@@ -16,7 +16,8 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;height:100%;background:var(--night);overflow:hidden;color:var(--cream)}
-body{-webkit-font-smoothing:none;touch-action:none;user-select:none;-webkit-user-select:none}
+body{-webkit-font-smoothing:none;touch-action:none;user-select:none;-webkit-user-select:none;
+  font-variant-ligatures:none;font-feature-settings:"liga" 0,"clig" 0,"dlig" 0}
 .hidden{display:none !important}
 canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
@@ -76,15 +77,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .ico{width:20px;height:20px;display:block;background:var(--cream);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 .ico-map{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15 4l-6 2-5-2v15l5 2 6-2 5 2V6l-5-2zm-6 2.2l4-1.3v12.9l-4 1.3V6.2zM5 5.8l2 .7v12.8l-2-.8V5.8zm14 12.4l-2-.7V4.7l2 .8v12.7z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15 4l-6 2-5-2v15l5 2 6-2 5 2V6l-5-2zm-6 2.2l4-1.3v12.9l-4 1.3V6.2zM5 5.8l2 .7v12.8l-2-.8V5.8zm14 12.4l-2-.7V4.7l2 .8v12.7z'/%3E%3C/svg%3E")}
 .ico-sound{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zM14 3.2v2.1a7 7 0 010 13.4v2.1a9 9 0 000-17.6z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zM14 3.2v2.1a7 7 0 010 13.4v2.1a9 9 0 000-17.6z'/%3E%3C/svg%3E")}
-.hd-cta{display:flex;align-items:center;padding:9px 16px;font-size:16px;color:#3a2410;border-radius:9px;letter-spacing:1px;
-  background:linear-gradient(160deg,var(--accent),#d59a37);box-shadow:0 4px 0 #9c6f1e;transition:transform .16s ease, box-shadow .16s ease;text-decoration:none}
-.hd-cta:hover{transform:translateY(-2px);box-shadow:0 6px 0 #9c6f1e}
-.hd-cta:active{transform:translateY(2px);box-shadow:0 2px 0 #9c6f1e}
-
 @media(max-width:680px){
   .hd-logo-text{display:none}
   .hd-nav{gap:0}
   .hd-link{padding:8px 8px;font-size:15px}
-  .hd-cta span{display:none}
-  .hd-cta::after{content:"CV"}
 }

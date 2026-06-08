@@ -4,48 +4,63 @@
    ============================================================ */
 window.CONTENT = {
   owner: {
-    name: "Ryan Huang",
-    site: "ryanhuang.work",
+    name: "Kerui (Ryan) Huang",
     email: "ryanhuang1234567890@gmail.com",
+    phone: "0481971130",
+    phoneIntl: "+61481971130",
+    phoneDisplay: "0481 971 130",
     linkedin: "https://www.linkedin.com/in/kerui-huang/",
-    github: "https://github.com/"
+    instagram: "https://www.instagram.com/itsryianx/"
   },
 
   // ---- Header panels ----
   about: {
     kicker: "About",
-    title: "Hi, I'm Ryan 👋",
-    lead: "Developer, builder, and lover of interactive experiences. I like turning ordinary pages into little worlds you can actually walk around in — this portfolio being exhibit A.",
-    items: [
-      { h: "What I do", meta: "Focus", p: "Full-stack & creative front-end engineering. I care about the feel of a thing — motion, responsiveness, the small details that make software fun.", tags:["TypeScript","React","Node","Canvas / WebGL","Pixel art"] },
-      { h: "How I think", meta: "Approach", p: "Ship something playable early, then polish relentlessly. I'd rather build a tiny world that delights than a big page that bores." },
-      { h: "Outside the editor", meta: "Off the clock", p: "Chess (badly), making music, and over-engineering my own portfolio website instead of sleeping." }
-    ]
+    name: "Kerui (Ryan) Huang",
+    role: "Forward Deployed Engineer @ Lyra",
+    location: "Melbourne, Australia",
+    photo: "assets/photo/ryan.jpg",
+    lead: "Turning ambiguous problems into shipped products.",
+    bio: "I'm a Forward Deployed Engineer at Lyra, based in Melbourne. I study Computing and Software Systems at the University of Melbourne alongside a Diploma in Languages in German, graduating with First Class Honours. I build across the stack, from AI platforms to fintech tooling.",
+    facts: [
+      { label: "Education", value: "University of Melbourne. Bachelor majoring in Computing &amp; Software Systems, with a Diploma in Languages (German). First Class Honours (H1)." },
+      { label: "Languages", value: "English, Mandarin, German" },
+      { label: "Leadership", value: "Events Director, UniMelb Game Makers" }
+    ],
+    skills: ["Python","Java","C","SQL","JavaScript","C#","React","Node.js","PostgreSQL","LangChain","LangGraph","RAG","Git","Figma"]
   },
   experience: {
     kicker: "Experience",
     title: "Where I've worked",
-    lead: "A few of the roles and projects that shaped how I build.",
     items: [
-      { h: "Software Engineer", meta: "Most recent", p: "Built and shipped production web features end-to-end — design systems, performant UI, and the glue that holds a product together.", tags:["React","TypeScript","Design systems"] },
-      { h: "Full-Stack Developer", meta: "Before that", p: "Owned features from database to pixel. APIs, auth, data flows, and front-ends that didn't make people sigh.", tags:["Node","Postgres","REST"] },
-      { h: "Creative / Game-ish builds", meta: "Always", p: "Interactive sites, canvas toys, and this very world. Where engineering meets play.", tags:["Canvas","Animation","Audio"] }
+      { company:"Inherity", role:"Software Engineer", logo:"assets/logos/inherity.jpeg", period:"Apr 2026 – Present",
+        p:"Built a secure document parser for a fintech platform, automating document extraction and verification to support faster approvals and early access to funds." },
+      { company:"Lyra", role:"Forward Deployed Engineer", logo:"assets/logos/lyra.jpeg", period:"Feb 2026 – Present",
+        p:"Founding engineer for Silicon Valley startups." },
+      { company:"CSIRO", role:"Software Engineer", logo:"assets/logos/csiro.jpeg", period:"Jan 2026 – Mar 2026",
+        p:"Built an AI-powered climate projection platform." },
+      { company:"Deloitte", role:"Software Engineer", logo:"assets/logos/deloitte.jpeg", period:"Nov 2025 – Dec 2025",
+        p:"Digital Workplace (DWP) team." },
+      { company:"FSR Smart Consulting", role:"Software Engineer", logo:"assets/logos/fsr.jpeg", period:"Jun 2025 – Nov 2025",
+        p:"AI and deepfake detection software." }
     ]
   },
   projects: {
     kicker: "Projects",
-    title: "Things I've built",
-    lead: "A sampler. The best demo is the one you're standing in.",
+    title: "Selected Projects",
     items: [
-      { h: "This World", meta: "Interactive portfolio", p: "A walkable, four-room pixel world with NPCs, a playable chess engine, and a music studio. No frameworks fighting me — just canvas and care.", tags:["Canvas","Game loop","Chess AI"] },
-      { h: "Chess vs. Drod", meta: "In the Game Room", p: "A from-scratch chess engine with selectable difficulty and a trash-talking opponent. Go beat him.", tags:["Minimax","Alpha-beta","Heuristics"] },
-      { h: "The Studio", meta: "In the Music Room", p: "A jukebox plus a tap-to-play beat pad with a live visualizer. Make a little noise.", tags:["Web Audio","Sequencer"] }
+      { h:"Airtable Clone", p:"Airtable clone built with the T3 stack." },
+      { h:"AI Job Application Tailor", p:"AI-powered web application that generates tailored cover letters and resume bullet points from a candidate profile and job description." },
+      { h:"Drone Delivery Simulation", p:"Optimized parcel delivery simulation focused on routing efficiency and system performance." },
+      { h:"Book Recommendation System", p:"Data processing and recommendation engine built on publicly available book datasets." },
+      { h:"Pinochle", p:"Desktop card game featuring GUI gameplay and an intelligent computer opponent." },
+      { h:"Chessformer Puzzle Solver", p:"AI puzzle solver using optimized search techniques and duplicate-state reduction." }
     ]
   },
   contact: {
     kicker: "Contact",
     title: "Let's talk",
-    lead: "Collaborations, opportunities, or just to say hi — I'm around.",
+    lead: "Collaborations, opportunities, or just to say hi."
   },
 
   // ---- Characters ----

@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/ui.css">
-<link rel="stylesheet" href="css/activity.css">
+<link rel="stylesheet" href="css/style.css?v=4">
+<link rel="stylesheet" href="css/ui.css?v=3">
+<link rel="stylesheet" href="css/activity.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -30,7 +30,6 @@
     <div class="hd-right">
       <button class="hd-icon" data-nav="map" title="Room map" aria-label="Room map"><span class="ico ico-map"></span></button>
       <button class="hd-icon" data-nav="sound" title="Sound" aria-label="Toggle sound"><span class="ico ico-sound"></span></button>
-      <a class="hd-cta" href="assets/Ryan_Huang_Resume.pdf" target="_blank" rel="noopener"><span>Résumé</span></a>
     </div>
   </header>
 
@@ -67,12 +66,14 @@
     </div>
   </div>
 
-  <!-- Slide-over content panels (header) -->
+  <!-- Centered content modal (header) -->
   <div id="panelScrim" class="hidden"></div>
-  <aside id="panel" class="hidden" aria-hidden="true">
-    <button id="panelClose" class="panel-close" aria-label="Close">✕</button>
-    <div id="panelInner"></div>
-  </aside>
+  <div id="panel" class="hidden" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="panel-card">
+      <button id="panelClose" class="panel-close" aria-label="Close">✕</button>
+      <div id="panelInner"></div>
+    </div>
+  </div>
 
   <!-- Room map / fast travel -->
   <div id="mapModal" class="hidden">
@@ -113,7 +114,7 @@
 <script src="js/sprites.js"></script>
 <script src="js/entities.js"></script>
 <script src="js/dialogue.js"></script>
-<script src="js/header.js?v=2"></script>
+<script src="js/header.js?v=4"></script>
 <script src="js/chess-engine.js"></script>
 <script src="js/chess.js"></script>
 <script src="js/music.js"></script>
