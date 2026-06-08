@@ -253,9 +253,30 @@ window.HITBOXES = (function(){
   function depth(k){ return room(k).depth; }
   function doors(k){ return room(k).doors || (room(k).doors=[]); }
   function spawn(k){ return room(k).spawn || (room(k).spawn={x:480,y:320,face:"down"}); }
+
+  // Per-source spawn: when the player walks into `roomKey` from `fromKey`, drop
+  // them just inside the carpet (door) that leads back to that room, facing into
+  // the room — e.g. returning to the lounge from the gym lands you right under
+  // the gym's (green) carpet. Returns null if this room has no door back to
+  // fromKey, so callers can fall back to the room's single spawn.
+  const CW = 30*TS, CH = 20*TS;            // room canvas in world px (960x640)
+  function spawnFrom(roomKey, fromKey){
+    const back = (doors(roomKey)).find(d => d.to === fromKey);
+    if(!back) return null;
+    const GAP = 22;                        // stand off the door trigger, on the floor
+    const cx = back.x + back.w/2, cy = back.y + back.h/2;
+    if(back.w >= back.h){                  // wide carpet -> top/bottom wall
+      return cy < CH/2
+        ? { x:cx, y:back.y+back.h+GAP, face:"down" }   // top wall: step down in
+        : { x:cx, y:back.y-GAP,        face:"up"   };  // bottom wall: step up in
+    }
+    return cx < CW/2                       // tall carpet -> left/right wall
+      ? { x:back.x+back.w+GAP, y:cy, face:"right" }    // left wall: step right in
+      : { x:back.x-GAP,        y:cy, face:"left"  };   // right wall: step left in
+  }
   function resetRoom(k){ const d=buildDefaults(); DATA[k]=d[k]; save(); }
   function exportJSON(){ return JSON.stringify(DATA, null, 2); }
 
-  return { TS, solids, depth, doors, spawn, overlays:depth /*alias*/, room, save, resetRoom, exportJSON,
+  return { TS, solids, depth, doors, spawn, spawnFrom, overlays:depth /*alias*/, room, save, resetRoom, exportJSON,
            _data:()=>DATA, _defaults:buildDefaults };
 })();

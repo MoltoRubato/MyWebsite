@@ -139,28 +139,30 @@ window.GAME = (function(){
     let door=null;
     for(const d of doors){ if(fxp>=d.x && fxp<d.x+d.w && fyp>=d.y && fyp<d.y+d.h){ door=d; break; } }
     if(!door){ doorGuard=false; }
-    else if(!doorGuard){ enterRoom(door.to); }
+    else if(!doorGuard){ enterRoom(door.to, curRoom); }
   }
 
   // ---------- transitions ----------
-  function placeAtSpawn(roomKey, spawnOverride, faceOverride){
-    if(spawnOverride){
-      player.x=spawnOverride[0]*W.TS+16; player.y=spawnOverride[1]*W.TS+W.TS-2;
-      player.dir=faceOverride||"down";
-    } else {
-      const sp = window.HITBOXES ? HITBOXES.spawn(roomKey) : null;
-      if(sp){ player.x=sp.x; player.y=sp.y; player.dir=sp.face||"down"; }
-      else { const h=(W.ROOMS[roomKey].home)||[15,9]; player.x=h[0]*W.TS+16; player.y=h[1]*W.TS+W.TS-2; player.dir="down"; }
-    }
+  function placeAtSpawn(roomKey, fromRoom){
+    // Per-source spawn: arriving from a known room drops the player just inside
+    // the carpet that leads back there (e.g. lounge<-gym = under the gym carpet).
+    // Falls back to the room's single spawn for map travel / first load, and
+    // rejects a derived spot that would land in a wall.
+    let sp = (fromRoom && window.HITBOXES && HITBOXES.spawnFrom)
+      ? HITBOXES.spawnFrom(roomKey, fromRoom) : null;
+    if(sp && !EN.freeAt(roomKey, sp.x, sp.y)) sp = null;
+    if(!sp) sp = window.HITBOXES ? HITBOXES.spawn(roomKey) : null;
+    if(sp){ player.x=sp.x; player.y=sp.y; player.dir=sp.face||"down"; }
+    else { const h=(W.ROOMS[roomKey].home)||[15,9]; player.x=h[0]*W.TS+16; player.y=h[1]*W.TS+W.TS-2; player.dir="down"; }
     player.moving=false;
   }
-  function enterRoom(to, spawnOverride, faceOverride){
+  function enterRoom(to, fromRoom){
     if(transitioning) return;
     transitioning=true; paused=true;
     veil.classList.add("show");
     setTimeout(()=>{
       curRoom=to; ensureRoom(to);
-      placeAtSpawn(to, spawnOverride, faceOverride);
+      placeAtSpawn(to, fromRoom);
       doorGuard=true;
       showRoomLabel();
       if(window.EDITOR) EDITOR.setRoom(to);

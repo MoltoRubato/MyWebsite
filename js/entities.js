@@ -35,22 +35,24 @@ window.ENTITIES = (function(){
     };
   }
 
-  // NPC placement per room
+  // NPC placement per room. Every NPC wanders within a region (tile bounds) the
+  // way Dino does; interactive NPCs keep a tighter region so they linger near
+  // their station (decks / bag / chess board) yet still mill about.
   const NPCS = {
     lounge:[
-      { char:"Bob",  name:"Bob",    tx:14, ty:11, dir:"right", behavior:"watch" },
+      { char:"Bob",  name:"Bob",    tx:14, ty:11, dir:"left",  behavior:"wander", speed:0.8,  region:{x0:12,y0:10,x1:17,y1:12} },
       { char:"Dino", name:"Dino",   tx:14, ty:9,  dir:"down",  behavior:"wander", speed:0.85, region:{x0:13,y0:8,x1:18,y1:10} }
     ],
     gym:[
-      { char:"Girl", name:"Amelia", tx:12, ty:9,  dir:"up",    behavior:"work" },
-      { char:"Gojo", name:"Gojo",   tx:20, ty:8,  dir:"left",  behavior:"box", interact:"workout" }
+      { char:"Girl", name:"Amelia", tx:12, ty:9,  dir:"down",  behavior:"wander", speed:0.85, region:{x0:8,y0:6,x1:13,y1:9} },
+      { char:"Gojo", name:"Gojo",   tx:20, ty:8,  dir:"left",  behavior:"wander", speed:0.85, region:{x0:17,y0:6,x1:21,y1:9}, interact:"workout" }
     ],
     game:[
-      { char:"Drod", name:"Drod",   tx:16, ty:9, dir:"up",  behavior:"idle", interact:"chess" }
+      { char:"Drod", name:"Drod",   tx:16, ty:9,  dir:"down",  behavior:"wander", speed:0.8,  region:{x0:13,y0:9,x1:17,y1:11}, interact:"chess" }
     ],
     music:[
-      { char:"Alex", name:"Alex",   tx:10, ty:9,  dir:"right", behavior:"groove", interact:"music" },
-      { char:"DJ",   name:"DJ",     tx:15, ty:9,  dir:"left",  behavior:"groove", interact:"music" }
+      { char:"Alex", name:"Alex",   tx:10, ty:9,  dir:"right", behavior:"wander", speed:0.85, region:{x0:9,y0:8,x1:12,y1:10}, interact:"music" },
+      { char:"DJ",   name:"DJ",     tx:15, ty:9,  dir:"left",  behavior:"wander", speed:0.85, region:{x0:14,y0:8,x1:17,y1:10}, interact:"music" }
     ]
   };
 
@@ -109,10 +111,16 @@ window.ENTITIES = (function(){
           n.moving=false;
           if (n.timer<=0){
             const r = n.region;
-            const tx = (r.x0 + Math.floor(Math.random()*(r.x1-r.x0+1)));
-            const ty = (r.y0 + Math.floor(Math.random()*(r.y1-r.y0+1)));
-            n.tgtX = tx*TS+16; n.tgtY = ty*TS+TS-2;
-            n.state="walk"; n.timer=4;
+            // pick a WALKABLE target tile inside the region (retry a few times),
+            // so NPCs never march into furniture; idle again if none is free.
+            let tx, ty, ok=false;
+            for(let i=0;i<8 && !ok;i++){
+              tx = r.x0 + Math.floor(Math.random()*(r.x1-r.x0+1));
+              ty = r.y0 + Math.floor(Math.random()*(r.y1-r.y0+1));
+              ok = freeAt(room, tx*TS+16, ty*TS+TS-2);
+            }
+            if(ok){ n.tgtX = tx*TS+16; n.tgtY = ty*TS+TS-2; n.state="walk"; n.timer=4; }
+            else { n.timer = 0.6+Math.random()*1.2; }
           }
         } else {
           const dx = n.tgtX-n.x, dy = n.tgtY-n.y;
