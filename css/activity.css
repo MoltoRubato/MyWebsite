@@ -1,7 +1,7 @@
 /* ============================================================
    ACTIVITY CSS — chess + music overlays (Modern UI wood)
    ============================================================ */
-.chess-wrap,.mz-wrap{display:flex;gap:20px;padding:24px;
+.chess-wrap,.mz-wrap,.pool-wrap{display:flex;gap:20px;padding:24px;
   background:var(--ui-fill);border:6px solid var(--ui-frame);border-radius:22px;
   box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),
              inset 0 3px 0 2px rgba(255,255,255,.14),0 26px 70px rgba(0,0,0,.6)}
@@ -118,6 +118,63 @@
   .jk-stop{align-self:flex-end}
   .wk-wrap{flex-direction:column;align-items:center}
   .wk-right{width:min(420px,90vw)}
+  .pool-wrap{flex-direction:column;align-items:center}
+  .pool-right{width:min(540px,92vw)}
+}
+
+/* ---- pool (8-ball vs. Drod) ---- */
+.pool-left{display:flex;flex-direction:column;gap:14px;align-items:center}
+.pl-frame{position:relative;border-radius:16px;overflow:hidden;
+  box-shadow:0 0 0 3px var(--ui-outline),0 12px 30px rgba(0,0,0,.55)}
+#plTable{display:block;width:684px;max-width:min(70vw,684px);height:auto;
+  image-rendering:auto;cursor:crosshair;touch-action:none}
+.pl-status{font-size:18px;color:var(--ui-ink);font-weight:600;letter-spacing:.4px;min-height:24px;text-align:center}
+.pool-right{position:relative;width:300px;display:flex;flex-direction:column;gap:14px}
+.pool-play{display:flex;flex-direction:column;gap:14px}
+/* group trays — who owns which balls + whose turn */
+.pl-groups{display:flex;align-items:stretch;gap:8px}
+.pl-side{flex:1;display:flex;flex-direction:column;gap:7px;padding:10px;border-radius:13px;
+  background:rgba(90,60,35,.1);border:2px solid var(--ui-frame);
+  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease}
+.pl-side.active{border-color:var(--ui-gold);background:rgba(156,90,37,.16);
+  box-shadow:0 0 0 2px rgba(231,163,62,.4),0 4px 14px rgba(231,163,62,.18)}
+.pl-who{font-size:12px;letter-spacing:1.5px;color:var(--ui-ink-soft);font-weight:700}
+.pl-side.active .pl-who{color:var(--ui-gold)}
+.pl-balls{display:flex;flex-wrap:wrap;gap:4px;min-height:22px;align-content:flex-start}
+.pl-open{font-size:12px;color:var(--ui-ink-soft);font-style:italic;opacity:.8}
+.pl-chip{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;
+  font-family:'Silkscreen',monospace;font-size:9px;color:#1c1c1f;
+  background:radial-gradient(circle at 32% 30%, #fff6, transparent 60%), var(--bc);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.25),0 1px 2px rgba(0,0,0,.3)}
+.pl-chip.stripe{background:radial-gradient(circle at 32% 30%, #fff6, transparent 60%),
+  linear-gradient(#f4f1e8 0 28%, var(--bc) 28% 72%, #f4f1e8 72%)}
+.pl-turn{align-self:center;writing-mode:vertical-rl;font-size:10px;letter-spacing:2px;
+  color:var(--ui-ink-soft);opacity:.55;user-select:none}
+/* power meter */
+.pl-power{display:flex;align-items:center;gap:10px}
+.pl-power-lbl{font-size:11px;letter-spacing:1.5px;color:var(--ui-ink-soft);font-weight:700;flex:none;width:48px}
+.pl-power-bar{flex:1;height:14px;border-radius:8px;overflow:hidden;position:relative;
+  background:rgba(90,60,35,.22);box-shadow:inset 0 1px 3px rgba(0,0,0,.25)}
+.pl-power-fill{position:absolute;left:0;top:0;bottom:0;width:0%;
+  background:linear-gradient(90deg,#69b06a,#e0a64a 55%,#d5392c);
+  transition:width 90ms cubic-bezier(.23,1,.32,1)}
+.pool-tip{margin-top:auto;font-size:12.5px;color:var(--ui-ink-soft);line-height:1.45}
+/* win / lose card over the table */
+.pl-over{position:absolute;inset:0;display:grid;place-items:center;
+  background:rgba(10,14,20,.55);backdrop-filter:blur(2px);
+  opacity:0;transition:opacity .25s cubic-bezier(.23,1,.32,1)}
+.pl-over.show{opacity:1}
+.pl-over-card{display:flex;flex-direction:column;align-items:center;gap:12px;padding:26px 34px;
+  background:var(--ui-fill);border:5px solid var(--ui-frame);border-radius:18px;
+  box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),0 20px 50px rgba(0,0,0,.6);
+  transform:scale(.94);opacity:0;transition:transform .3s cubic-bezier(.23,1,.32,1),opacity .3s ease}
+.pl-over.show .pl-over-card{transform:scale(1);opacity:1}
+.pl-over-title{font-size:34px;letter-spacing:3px;font-weight:700;color:var(--ui-gold)}
+.pl-over-card.lose .pl-over-title{color:#b5442f}
+.pl-over-sub{font-size:14px;color:var(--ui-ink-soft);text-align:center;max-width:240px;line-height:1.4}
+@media (prefers-reduced-motion: reduce){
+  .pl-over,.pl-over .pl-over-card,.pl-power-fill,.pl-side{transition:opacity .2s ease}
+  .pl-over .pl-over-card{transform:none}
 }
 
 /* ---- workout (combo trainer) ---- */
@@ -174,4 +231,22 @@ body:not(.touch) .wk-dpad{display:none}
   30%{opacity:1;transform:translate(-50%,-50%) rotate(var(--rot,0deg)) scale(1.15)}
   60%{transform:translate(-50%,-50%) rotate(var(--rot,0deg)) scale(1)}
   100%{opacity:0;transform:translate(-50%,-62%) rotate(var(--rot,0deg)) scale(1.05)}
+}
+
+/* ============================================================
+   Mobile fit — keep the game canvases inside the overlay.
+   The board/table carry an intrinsic pixel size (chess 426²,
+   pool 684×372); on a narrow phone that overflows its column and
+   the board gets clipped on both edges. min-width:0 lets the flex
+   column shrink below the canvas's content size, and max-width:100%
+   scales the canvas to fit. Declared last so these win over the
+   fixed-size base rules above. Click math already uses
+   getBoundingClientRect scaling, so a shrunk canvas stays accurate.
+   ============================================================ */
+@media(max-width:760px){
+  .chess-wrap,.pool-wrap,.mz-wrap,.wk-wrap{min-width:0}
+  .chess-left,.pool-left{width:100%;min-width:0}
+  .cb-frame,.pl-frame{max-width:100%}
+  #cbBoard{max-width:100%;height:auto}
+  #plTable{max-width:100%}
 }

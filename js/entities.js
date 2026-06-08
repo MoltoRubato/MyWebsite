@@ -60,7 +60,11 @@ window.ENTITIES = (function(){
   // The speaker is rendered as an animated sprite (see game.js render) and is
   // the jukebox trigger — it bobs/animates while site-wide music is playing.
   const OBJECTS = {
-    music:[ { type:"music", name:"Speaker", tx:13, ty:12, hint:"Open jukebox", sprite:"speaker" } ]
+    music:[ { type:"music", name:"Speaker", tx:13, ty:12, hint:"Open jukebox", sprite:"speaker" } ],
+    // Pool table is baked into the game-room art (bottom-left). This is just the
+    // interaction anchor: stand at the table's front edge to rack 'em up vs Drod.
+    // px/py = feet point in world px; markerY floats the prompt above the table.
+    game:[ { type:"pool", name:"Pool table", px:354, py:430, hint:"Play pool", markerY:104 } ]
   };
 
   // Pets — critters you can walk up to and pet (Enter/E). Placed in world px
@@ -95,7 +99,9 @@ window.ENTITIES = (function(){
   function buildRoom(roomKey){
     const npcs = (NPCS[roomKey]||[]).map(makeNPC);
     const objs = (OBJECTS[roomKey]||[]).map(o=>({
-      ...o, x:o.tx*TS+16, y:o.ty*TS+TS-2
+      ...o,
+      x: o.px!=null ? o.px : o.tx*TS+16,
+      y: o.py!=null ? o.py : o.ty*TS+TS-2
     }));
     const pets = (PETS[roomKey]||[]).map(makePet);
     return { npcs, objs, pets };

@@ -3,14 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Ryan's Place</title>
+<!-- Primary meta -->
+<title>Ryan's Place — Kerui (Ryan) Huang</title>
+<meta name="description" content="An interactive pixel-art apartment that doubles as Kerui (Ryan) Huang's portfolio — wander the rooms and play chess, pool, and music as you explore his work.">
+<meta name="author" content="Kerui (Ryan) Huang">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#10131c">
+<link rel="canonical" href="https://ryanhuang.work/">
+
+<!-- Icons -->
 <link rel="icon" type="image/png" href="assets/ui/favicon.png">
+<link rel="apple-touch-icon" href="assets/ui/favicon.png">
+
+<!-- Open Graph (Facebook, LinkedIn, iMessage, Discord, …) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ryan's Place">
+<meta property="og:title" content="Ryan's Place — Kerui (Ryan) Huang">
+<meta property="og:description" content="An interactive pixel-art world that doubles as my portfolio. Wander the rooms, meet the characters, and play chess, pool, and music while you explore my work.">
+<meta property="og:url" content="https://ryanhuang.work/">
+<meta property="og:image" content="https://ryanhuang.work/assets/og/og.png">
+<meta property="og:image:secure_url" content="https://ryanhuang.work/assets/og/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A pixel-art lounge with three characters lined up beneath the title 'Ryan's Place'.">
+<meta property="og:locale" content="en_AU">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ryan's Place — Kerui (Ryan) Huang">
+<meta name="twitter:description" content="An interactive pixel-art world that doubles as my portfolio — wander the rooms and play chess, pool, and music while you explore my work.">
+<meta name="twitter:image" content="https://ryanhuang.work/assets/og/og.png">
+<meta name="twitter:image:alt" content="A pixel-art lounge with three characters lined up beneath the title 'Ryan's Place'.">
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Kerui (Ryan) Huang",
+  "alternateName": "Ryan Huang",
+  "url": "https://ryanhuang.work/",
+  "image": "https://ryanhuang.work/assets/photo/ryan.jpg",
+  "jobTitle": "Forward Deployed Engineer",
+  "worksFor": { "@type": "Organization", "name": "Lyra" },
+  "address": { "@type": "PostalAddress", "addressLocality": "Melbourne", "addressCountry": "AU" },
+  "sameAs": [
+    "https://www.linkedin.com/in/kerui-huang/",
+    "https://github.com/MoltoRubato",
+    "https://www.instagram.com/itsryianx/"
+  ]
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=4">
-<link rel="stylesheet" href="css/ui.css?v=3">
-<link rel="stylesheet" href="css/activity.css?v=4">
+<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/ui.css?v=6">
+<link rel="stylesheet" href="css/activity.css?v=6">
 </head>
 <body>
 <div id="app">
@@ -18,11 +69,11 @@
   <header id="siteHeader" class="hidden">
     <div class="hd-left">
       <button class="hd-logo" data-nav="home">
-        <span class="hd-logo-mark">RP</span>
+        <span class="hd-logo-mark">RH</span>
         <span class="hd-logo-text">Ryan&nbsp;Huang</span>
       </button>
     </div>
-    <nav class="hd-nav" aria-label="Main">
+    <nav class="hd-nav" id="hdNav" aria-label="Main">
       <button class="hd-link" data-nav="about"><span>About</span></button>
       <button class="hd-link" data-nav="experience"><span>Experience</span></button>
       <button class="hd-link" data-nav="projects"><span>Projects</span></button>
@@ -31,6 +82,7 @@
     <div class="hd-right">
       <button class="hd-icon" data-nav="map" title="Room map" aria-label="Room map"><span class="ico ico-map"></span></button>
       <button class="hd-icon" data-nav="sound" title="Sound" aria-label="Toggle sound"><span class="ico ico-sound"></span></button>
+      <button class="hd-icon hd-burger" data-nav="menu" aria-label="Menu" aria-expanded="false" aria-controls="hdNav"><span class="ico ico-burger"></span></button>
     </div>
   </header>
 
@@ -45,11 +97,9 @@
     <div id="veil"></div>
     <!-- on-screen controls (touch) -->
     <div id="touch" aria-hidden="true">
-      <div id="dpad">
-        <button data-key="up" class="db dbu">▲</button>
-        <button data-key="left" class="db dbl">◀</button>
-        <button data-key="down" class="db dbd">▼</button>
-        <button data-key="right" class="db dbr">▶</button>
+      <div id="joyZone">
+        <span id="joyHome"></span>
+        <div id="joystick"><span id="joyKnob"></span></div>
       </div>
       <button id="actBtn" data-key="enter">●</button>
     </div>
@@ -113,14 +163,15 @@
 <script src="js/assets.js?v=2"></script>
 <script src="js/world.js"></script>
 <script src="js/sprites.js?v=2"></script>
-<script src="js/entities.js?v=2"></script>
+<script src="js/entities.js?v=3"></script>
 <script src="js/dialogue.js"></script>
-<script src="js/header.js?v=4"></script>
+<script src="js/header.js?v=5"></script>
 <script src="js/chess-engine.js"></script>
 <script src="js/chess.js?v=3"></script>
+<script src="js/pool.js?v=7"></script>
 <script src="js/music.js?v=4"></script>
 <script src="js/workout.js"></script>
-<script src="js/game.js?v=5"></script>
+<script src="js/game.js?v=10"></script>
 <script src="js/editor.js"></script>
 <script src="js/boot.js"></script>
 </body>

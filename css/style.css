@@ -77,8 +77,32 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .ico{width:20px;height:20px;display:block;background:var(--cream);-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 .ico-map{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15 4l-6 2-5-2v15l5 2 6-2 5 2V6l-5-2zm-6 2.2l4-1.3v12.9l-4 1.3V6.2zM5 5.8l2 .7v12.8l-2-.8V5.8zm14 12.4l-2-.7V4.7l2 .8v12.7z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15 4l-6 2-5-2v15l5 2 6-2 5 2V6l-5-2zm-6 2.2l4-1.3v12.9l-4 1.3V6.2zM5 5.8l2 .7v12.8l-2-.8V5.8zm14 12.4l-2-.7V4.7l2 .8v12.7z'/%3E%3C/svg%3E")}
 .ico-sound{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zM14 3.2v2.1a7 7 0 010 13.4v2.1a9 9 0 000-17.6z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zM14 3.2v2.1a7 7 0 010 13.4v2.1a9 9 0 000-17.6z'/%3E%3C/svg%3E")}
-@media(max-width:680px){
-  .hd-logo-text{display:none}
-  .hd-nav{gap:0}
-  .hd-link{padding:8px 8px;font-size:15px}
+.ico-burger{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z'/%3E%3C/svg%3E")}
+/* hamburger toggle — desktop hides it (full nav is inline); mobile shows it */
+.hd-burger{display:none}
+#siteHeader.nav-open .hd-burger{background:rgba(231,163,62,.18)}
+
+@media(max-width:760px){
+  .hd-burger{display:grid}
+  /* collapse the inline nav into a dropdown sheet under the header */
+  .hd-nav{position:absolute;top:100%;left:0;right:0;margin:0;flex-direction:column;gap:3px;
+    padding:8px;background:linear-gradient(180deg,rgba(18,23,36,.99),rgba(12,16,25,.99));
+    border-bottom:2px solid rgba(231,163,62,.32);box-shadow:0 18px 40px rgba(0,0,0,.55);
+    opacity:0;transform:translateY(-10px);pointer-events:none;
+    transition:opacity .24s ease,transform .24s cubic-bezier(.22,1,.36,1)}
+  #siteHeader.nav-open .hd-nav{opacity:1;transform:none;pointer-events:auto}
+  .hd-link{width:100%;padding:14px 14px;font-size:18px;border-radius:10px}
+  .hd-link::after{display:none}
+  .hd-link:active{background:rgba(231,163,62,.16)}
 }
+@media(max-width:430px){ .hd-logo-text{display:none} }
+
+/* ---------------- Mobile layout ----------------
+   The room renders whole into a 3:2 canvas, so portrait phones letterbox it.
+   Anchor the view just under the header and hand the freed band below to the
+   touch controls; float the interaction hint above them so they don't collide. */
+@media(max-width:760px){
+  #stage{align-items:flex-start;padding-top:10px}
+  #hint{bottom:200px;animation:hintBobM 1.6s ease-in-out infinite}
+}
+@keyframes hintBobM{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
