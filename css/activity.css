@@ -49,8 +49,9 @@
 .ctl-btn.ghost:hover{background:rgba(181,68,47,.7);color:#fff}
 .chess-tip{margin-top:auto;font-size:13px;color:var(--ui-ink-soft);line-height:1.4}
 
-/* ---- music ---- */
-.mz-wrap{flex-direction:column;width:min(800px,94vw)}
+/* ---- music (shared: jukebox + beat pad) ---- */
+.mz-wrap{flex-direction:column}
+.bp-wrap{width:min(560px,94vw)}
 .mz-head{display:flex;align-items:center;gap:18px}
 .mz-djs{display:flex;gap:10px}
 .mz-dj{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -73,6 +74,10 @@
 .mz-tn{font-size:17px;color:var(--ui-ink);font-weight:500}
 .mz-eq{display:flex;gap:2px;align-items:flex-end;height:18px;width:18px;flex:none}
 .mz-eq i{width:4px;background:var(--ui-ink-soft);border-radius:2px;height:6px}
+/* varied resting heights so the icon reads as an equalizer, not an ellipsis */
+.mz-eq i:nth-child(1){height:7px}
+.mz-eq i:nth-child(2){height:13px}
+.mz-eq i:nth-child(3){height:5px}
 .mz-track.on .mz-eq i{background:#4e7a36;animation:eq .7s ease-in-out infinite}
 .mz-track.on .mz-eq i:nth-child(2){animation-delay:.18s}
 .mz-track.on .mz-eq i:nth-child(3){animation-delay:.36s}
@@ -88,10 +93,29 @@
 .mz-bpm{font-size:13px;color:var(--ui-ink-soft);display:flex;align-items:center;gap:8px;margin-left:auto}
 .mz-bpm input{accent-color:var(--ui-gold)}
 
+/* ---- jukebox (track picker; sets the site-wide background music) ---- */
+.jk-wrap{width:min(620px,94vw);gap:16px}
+.jk-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.jk-titles{display:flex;flex-direction:column;gap:3px}
+.jk-now{font-size:15px;color:var(--ui-ink-soft);font-weight:500;min-height:20px}
+.jk-stop{flex:none;align-self:center;min-width:104px}
+.jk-wrap .mz-viz{height:90px}
+.jk-tracks{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:296px;overflow-y:auto;
+  padding:2px 8px 2px 2px;scrollbar-width:thin;scrollbar-color:var(--ui-frame) transparent}
+.jk-tracks::-webkit-scrollbar{width:10px}
+.jk-tracks::-webkit-scrollbar-track{background:transparent}
+.jk-tracks::-webkit-scrollbar-thumb{background:var(--ui-frame);border-radius:7px;border:2px solid var(--ui-fill)}
+.jk-track{padding:9px 13px}
+.jk-track .mz-tn{font-size:15.5px}
+.jk-foot{font-size:12.5px;color:var(--ui-ink-soft);text-align:center;opacity:.85;letter-spacing:.2px}
+
 @media(max-width:760px){
   .chess-wrap{flex-direction:column;align-items:center}
   .chess-right{width:min(426px,90vw)}
   .mz-cols{grid-template-columns:1fr}
+  .jk-tracks{grid-template-columns:1fr;max-height:46vh}
+  .jk-head{flex-direction:column;align-items:stretch}
+  .jk-stop{align-self:flex-end}
   .wk-wrap{flex-direction:column;align-items:center}
   .wk-right{width:min(420px,90vw)}
 }

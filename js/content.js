@@ -77,14 +77,14 @@ window.CONTENT = {
         "Anyway. Face me at the board, or go gawk at his other little experiments. I'm exhibit A, by the way."
       ] },
     Alex: { name:"Alex", room:"music", color:"#5fb0c9",
-      actLabel:"🎵 Open the studio", noLabel:"Just vibing",
+      actLabel:"🥁 Tap out a beat", noLabel:"Just vibing",
       lines:[
         "Ayy, you found the studio! Watch the cables, a couple of 'em bite.",
         "The owner? Oh, he basically haunts this room. Pops in for a 'quick break,' leaves at 4am. Every time.",
         "Anyway, enough about the ghost who pays rent. Hop on the booth and let's hear you."
       ] },
     DJ: { name:"DJ", room:"music", color:"#b07acb",
-      actLabel:"🎵 Open the studio", noLabel:"Just vibing",
+      actLabel:"🎛 Hop on the pad", noLabel:"Just vibing",
       lines:[
         "Shh. Oh, false alarm, you're cool. Thought you were here about the noise complaint.",
         "Every track in this place got hand-picked by you-know-who. Man has VERY strong opinions about hi-hats.",
@@ -121,12 +121,27 @@ window.CONTENT = {
       ] }
   },
 
-  // tracks for the music room
+  // Jukebox tracks — lo-fi pack. Playing one sets the whole site's background
+  // music (keeps going after the jukebox window closes). Order is a loose
+  // "day into night" vibe arc, ending on the chiptune cuts.
   tracks: [
-    { name:"Midnight Loop",  file:"assets/audio/track1.wav" },
-    { name:"Pixel Sunrise",  file:"assets/audio/track2.wav" },
-    { name:"Studio Haze",    file:"assets/audio/track3.wav" },
-    { name:"Neon Drive",     file:"assets/audio/track4.mp3" },
-    { name:"After Hours",    file:"assets/audio/track5.wav" }
+    { name:"Coffee",     file:"assets/audio/Coffee.mp3" },
+    { name:"Cozy",       file:"assets/audio/Cozy.mp3" },
+    { name:"Chill",      file:"assets/audio/Chill.mp3" },
+    { name:"Rainy",      file:"assets/audio/Rainy.mp3" },
+    { name:"Cabin",      file:"assets/audio/Cabin.mp3" },
+    { name:"Garden",     file:"assets/audio/Garden.mp3" },
+    { name:"Stroll",     file:"assets/audio/Stroll.mp3" },
+    { name:"Drive",      file:"assets/audio/Drive.mp3" },
+    { name:"Sunset",     file:"assets/audio/Sunset.mp3" },
+    { name:"Night",      file:"assets/audio/Night.mp3" },
+    { name:"Midnight",   file:"assets/audio/Midnight.mp3" },
+    { name:"Serenity",   file:"assets/audio/Serenity.mp3" },
+    { name:"Zen",        file:"assets/audio/Zen.mp3" },
+    { name:"Ambience",   file:"assets/audio/Ambience.mp3" },
+    { name:"Underwater", file:"assets/audio/Underwater.mp3" },
+    { name:"Vibe",       file:"assets/audio/Vibe.mp3" },
+    { name:"Pixel",      file:"assets/audio/Pixel.mp3" },
+    { name:"Chiptune",   file:"assets/audio/Chiptune.mp3" }
   ]
 };

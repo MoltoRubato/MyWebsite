@@ -13,6 +13,7 @@ window.GAME = (function(){
   const ROOM_IMG={lounge:"room_lounge",gym:"room_gym",game:"room_game",music:"room_music"};
   const TOP_IMG={lounge:"room_lounge_top",gym:"room_gym_top",game:"room_game_top",music:"room_music_top"};
   const PROPS_IMG={lounge:"room_lounge_props",gym:"room_gym_props",game:"room_game_props",music:"room_music_props"};
+  const SPK_SCALE=1.2; // on-screen size of the animated jukebox speaker
 
   let player=EN.makePlayer();
   let curRoom="lounge";
@@ -22,7 +23,8 @@ window.GAME = (function(){
   let nearTarget=null; // {kind, ref}
   let doorGuard=null;  // tile string to ignore until stepped off
   let lastTs=0;
-  let soundOn=true, ambientAudio=null;
+  let soundOn=true;
+  let musicAnimT=0; // clock for the animated speaker (advances while music is audible)
   let showHitboxes=/[?&]dev=1\b/.test(location.search); // DEV: collision overlay (press 'H' or ?dev=1)
 
   function ensureRoom(k){ if(!rooms[k]) rooms[k]=EN.buildRoom(k); return rooms[k]; }
@@ -86,7 +88,7 @@ window.GAME = (function(){
     if(!near) return;
     if(near.kind==="npc") talkTo(near.ref);
     else if(near.kind==="pet") EN.petStart(near.ref);
-    else if(near.kind==="obj" && near.ref.type==="music") openMusic();
+    else if(near.kind==="obj" && near.ref.type==="music") openJukebox();
   }
   function talkTo(npc){
     const data=C.characters[npc.key];
@@ -99,7 +101,7 @@ window.GAME = (function(){
     // (chess/music/workout) and an optional header tab they can pull up (opens).
     const choices=[], actions={};
     const ACT={ chess:{def:"♟ Play a game", run:openChess},
-                music:{def:"🎵 Open the studio", run:openMusic},
+                music:{def:"🥁 Tap out a beat", run:openBeatpad},
                 workout:{def:"🥊 Hit the bag", run:openWorkout} };
     if(npc.interact && ACT[npc.interact]){
       choices.push({label:data.actLabel||ACT[npc.interact].def, value:"act"});
@@ -118,7 +120,8 @@ window.GAME = (function(){
   }
 
   function openChess(){ paused=true; CHESS.open({onClose:()=>{paused=false;}}); }
-  function openMusic(){ paused=true; MUSIC.open({onClose:()=>{paused=false;}}); }
+  function openJukebox(){ paused=true; MUSIC.openJukebox({onClose:()=>{paused=false;}}); }
+  function openBeatpad(){ paused=true; MUSIC.openBeatpad({onClose:()=>{paused=false;}}); }
   function openWorkout(){ paused=true; WORKOUT.open({onClose:()=>{paused=false;}}); }
 
   function setHitboxes(v){ showHitboxes=!!v; if(window.EDITOR) EDITOR.setVisible(showHitboxes, curRoom); }
@@ -195,7 +198,7 @@ window.GAME = (function(){
   function toggleSound(btn){
     soundOn=!soundOn;
     if(btn) btn.classList.toggle("muted",!soundOn);
-    if(!soundOn){ if(ambientAudio) ambientAudio.pause(); }
+    if(window.MUSIC) MUSIC.setMuted(!soundOn); // mutes/unmutes the site-wide jukebox
   }
 
   // ---------- render ----------
@@ -223,6 +226,19 @@ window.GAME = (function(){
     const draw=[];
     R.npcs.forEach(n=>draw.push({y:n.y, fn:()=>{ S.drawShadow(ctx,n.x,n.y,28,1); S.drawChar(ctx,n.char,n.x,n.y+2,n.dir,n.moving,n.frame,1); }}));
     (R.pets||[]).forEach(p=>draw.push({y:p.y, fn:()=>{ S.drawShadow(ctx,p.x,p.y,p.w*0.92,1); S.drawPet(ctx,p.kind,p.x,p.y,p.state,p.frame,p.w,p.h); }}));
+    // Animated jukebox speaker — cycles its 3 frames + a tiny amplitude bob
+    // while the site-wide music is audible; sits at rest otherwise.
+    (R.objs||[]).forEach(o=>{ if(o.sprite!=="speaker") return;
+      draw.push({y:o.y, fn:()=>{
+        const audible = window.MUSIC && MUSIC.isAudible();
+        const fr  = audible ? Math.floor(musicAnimT*8) : 0;
+        const lvl = audible && MUSIC.level ? MUSIC.level() : 0;
+        const bob = audible ? Math.sin(performance.now()/110)*(0.5+lvl*1.6) : 0;
+        const spkW = A.SPK_FW*SPK_SCALE;          // speaker's on-screen width
+        S.drawShadow(ctx,o.x,o.y,spkW/0.84,1);    // ground shadow as wide as the sprite (drawShadow x-radius = w*0.42)
+        S.drawSpeaker(ctx,o.x,o.y-bob,fr,SPK_SCALE);
+      }});
+    });
     draw.push({y:player.y, fn:()=>{ S.drawShadow(ctx,player.x,player.y,28,1); S.drawChar(ctx,player.char,player.x,player.y+2,player.dir,player.moving,player.frame,1); }});
     // Each depth box samples BOTH the props and top PNGs at its rectangle, then
     // y-sorts against the characters by baseY. Sampling both — instead of
@@ -295,7 +311,10 @@ window.GAME = (function(){
       const bob=Math.sin(performance.now()/240)*3;
       ctx.save(); ctx.globalAlpha=0.95;
       ctx.fillStyle="#e7a33e";
-      const mYoff = t.kind==="npc" ? 66 : (t.kind==="pet" ? (t.ref.h||30)+8 : 30);
+      const mYoff = t.kind==="npc" ? 66
+                  : t.kind==="pet" ? (t.ref.h||30)+8
+                  : (t.ref.sprite==="speaker" ? 64 : 30); // float above the speaker
+
       const mx=t.x, my=t.y-mYoff+bob;
       ctx.beginPath(); ctx.moveTo(mx-7,my); ctx.lineTo(mx+7,my); ctx.lineTo(mx,my+9); ctx.closePath(); ctx.fill();
       ctx.restore();
@@ -316,7 +335,7 @@ window.GAME = (function(){
       if(nearTarget.kind==="obj") txt=nearTarget.ref.hint||"Use";
       else if(nearTarget.kind==="pet") txt=nearTarget.ref.hint||"Pet";
       else if(nearTarget.ref.interact==="chess") txt="Play chess";
-      else if(nearTarget.ref.interact==="music") txt="Open studio";
+      else if(nearTarget.ref.interact==="music") txt="Make a beat";
       else if(nearTarget.ref.interact==="workout") txt="Train with Gojo";
       else txt="Talk to "+(C.characters[nearTarget.ref.key]?.name||nearTarget.ref.name);
       hintEl.querySelector(".hint-text").textContent=txt;
@@ -342,6 +361,7 @@ window.GAME = (function(){
       // player animation
       player.animT += dt;
       player.frame = Math.floor(player.animT*(player.moving?9:3));
+      musicAnimT += dt; // speaker animation runs regardless of pause (music is site-wide)
       render();
       DIALOGUE.tick(ts);
     } catch(err){ console.error("frame error", err); }

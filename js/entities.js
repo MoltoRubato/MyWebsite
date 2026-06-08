@@ -57,8 +57,10 @@ window.ENTITIES = (function(){
   };
 
   // Interactable objects (non-NPC). type drives the action.
+  // The speaker is rendered as an animated sprite (see game.js render) and is
+  // the jukebox trigger — it bobs/animates while site-wide music is playing.
   const OBJECTS = {
-    music:[ { type:"music", name:"The Decks", tx:13, ty:11, hint:"play music", icon:"🎶" } ]
+    music:[ { type:"music", name:"Speaker", tx:13, ty:12, hint:"Open jukebox", icon:"🔊", sprite:"speaker" } ]
   };
 
   // Pets — critters you can walk up to and pet (Enter/E). Placed in world px
@@ -66,8 +68,8 @@ window.ENTITIES = (function(){
   // (x,y) = feet/base point; w,h = on-screen draw size in world px.
   const PETS = {
     lounge:[
-      { kind:"dog", name:"the dog", x:360, y:300, w:30, h:44, hint:"Pet the dog" },
-      { kind:"cat", name:"the cat", x:648, y:300, w:44, h:34, hint:"Pet the cat" }
+      { kind:"dog", name:"the dog", x:405, y:270, w:30, h:44, hint:"Pet the dog" },
+      { kind:"cat", name:"the cat", x:625, y:260, w:44, h:34, hint:"Pet the cat" }
     ]
   };
   function makePet(spec){

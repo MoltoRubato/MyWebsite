@@ -67,6 +67,21 @@ window.SPRITES = (function(){
     ctx.drawImage(img, sx, sy, cfg.fw, cfg.fh, dx, dy, w, h);
   }
 
+  // Draw the animated speaker/amp prop. (cx, baseY) = center-bottom of the
+  // VISIBLE speaker (its art sits in the top of each cell, so we anchor on the
+  // content bottom, not the cell bottom). frame cycles 0..2 while music plays.
+  function drawSpeaker(ctx, cx, baseY, frame, scale){
+    const img = A.get("prop_speaker");
+    if(!img || !img.complete || !img.naturalWidth) return;
+    scale = scale || 1;
+    const FW=A.SPK_FW, FH=A.SPK_FH;
+    const f = ((frame % A.SPK_FRAMES) + A.SPK_FRAMES) % A.SPK_FRAMES;
+    const dw=FW*scale, dh=FH*scale;
+    const dx = Math.round(cx - dw/2);
+    const dy = Math.round(baseY - A.SPK_CONTENT_BOTTOM*scale);
+    ctx.drawImage(img, f*FW, 0, FW, FH, dx, dy, dw, dh);
+  }
+
   // Draw one talking-portrait frame into a 64x64 (or scaled) canvas ctx.
   function drawPortraitFrame(ctx, key, frame, dw, dh){
     const img = A.get(key);
@@ -80,5 +95,5 @@ window.SPRITES = (function(){
     ctx.drawImage(img, sx, sy, A.PORT_FW, A.PORT_FH, 0, 0, dw, dh);
   }
 
-  return { drawChar, drawShadow, drawPet, drawPortraitFrame, FW, FH };
+  return { drawChar, drawShadow, drawPet, drawSpeaker, drawPortraitFrame, FW, FH };
 })();

@@ -47,6 +47,9 @@ window.ASSETS = (function(){
   load("pet_dog", "assets/pets/dog.png");
   load("pet_cat", "assets/pets/cat.png");
 
+  // animated props — speaker/amp the jukebox plays through (3 frames, 32x64)
+  load("prop_speaker", "assets/props/speaker.png");
+
   return {
     images,
     get: (k)=>images[k],
@@ -59,6 +62,10 @@ window.ASSETS = (function(){
     // first column for each facing direction (6 frames each)
     DIR_COL: { right:0, up:6, left:12, down:18 },
     DIR_FRAMES: 6,
-    PORT_FW: 64, PORT_FH: 64, PORT_FRAMES: 30, PORT_COLS: 10
+    PORT_FW: 64, PORT_FH: 64, PORT_FRAMES: 30, PORT_COLS: 10,
+    // speaker sheet: 3 frames laid out horizontally, each cell 32x64.
+    // The speaker art sits in the TOP of each cell (alpha bbox y:6..46), so it
+    // anchors at content-bottom (46), not the cell bottom.
+    SPK_FW: 32, SPK_FH: 64, SPK_FRAMES: 3, SPK_CONTENT_BOTTOM: 46
   };
 })();
