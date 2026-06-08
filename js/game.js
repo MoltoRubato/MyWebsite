@@ -95,15 +95,24 @@ window.GAME = (function(){
     const dx=player.x-npc.x, dy=player.y-npc.y;
     npc.watchDir = Math.abs(dx)>Math.abs(dy)?(dx<0?"left":"right"):(dy<0?"up":"down");
     const opts={ charKey:npc.key, name:data.name, color:data.color, lines:data.lines.slice() };
-    if(npc.interact==="chess"){
-      opts.choices=[{label:"♟ Play a game",value:"chess"},{label:"Maybe later",value:"no"}];
-      opts.onChoice=(v)=>{ if(v==="chess") openChess(); };
-    } else if(npc.interact==="music"){
-      opts.choices=[{label:"🎵 Open the studio",value:"music"},{label:"Just vibing",value:"no"}];
-      opts.onChoice=(v)=>{ if(v==="music") openMusic(); };
-    } else if(npc.interact==="workout"){
-      opts.choices=[{label:"🥊 Hit the bag",value:"workout"},{label:"Just stretching",value:"no"}];
-      opts.onChoice=(v)=>{ if(v==="workout") openWorkout(); };
+    // Build the end-of-dialogue menu from two sources: the character's station
+    // (chess/music/workout) and an optional header tab they can pull up (opens).
+    const choices=[], actions={};
+    const ACT={ chess:{def:"♟ Play a game", run:openChess},
+                music:{def:"🎵 Open the studio", run:openMusic},
+                workout:{def:"🥊 Hit the bag", run:openWorkout} };
+    if(npc.interact && ACT[npc.interact]){
+      choices.push({label:data.actLabel||ACT[npc.interact].def, value:"act"});
+      actions.act=ACT[npc.interact].run;
+    }
+    if(data.opens && window.HEADER){
+      choices.push({label:data.openLabel||"Show me", value:"open"});
+      actions.open=()=>HEADER.openPanel(data.opens);
+    }
+    if(choices.length){
+      choices.push({label:data.noLabel||"Maybe later", value:"no"});
+      opts.choices=choices;
+      opts.onChoice=(v)=>{ const fn=actions[v]; if(fn) fn(); };
     }
     DIALOGUE.start(opts);
   }

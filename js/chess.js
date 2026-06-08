@@ -31,7 +31,7 @@ window.CHESS = (function(){
   };
 
   let state, sel=-1, legal=[], lastMove=null, level=LEVELS.normal;
-  let raf=0, portFrame=0, portT=0, talkUntil=0, bubble="", thinking=false;
+  let raf=0, portFrame=0, portT=0, talkUntil=0, bubble="", thinking=false, lastT=0;
   let over=false, capturedW=[], capturedB=[], onClose=null, anim=0;
   let bctx, pcanvas;
 
@@ -46,7 +46,7 @@ window.CHESS = (function(){
     bctx = document.getElementById("cbBoard").getContext("2d");
     bctx.imageSmoothingEnabled=false;
     wireDifficulty();
-    portFrame=0; portT=0; bubble=""; thinking=false;
+    portFrame=0; portT=0; bubble=""; thinking=false; lastT=0;
     showDifficulty(true);
     loop();
   }
@@ -220,7 +220,8 @@ window.CHESS = (function(){
   function loop(){
     try{
     const now=performance.now();
-    portT+=1/60;
+    if(!lastT) lastT=now; const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+    portT+=dt;
     const talking = now<talkUntil || thinking;
     portFrame=Math.floor(portT*(talking?13:5));
     const pc=document.getElementById("cbPort");

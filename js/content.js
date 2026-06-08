@@ -65,48 +65,59 @@ window.CONTENT = {
 
   // ---- Characters ----
   // role: where each lives. portrait + sprite filenames match assets folders.
+  // opens   = header tab a character can pull up ("about"/"experience"/"projects"/"contact").
+  // openLabel/actLabel/noLabel = funny choice-button text (game.js builds the menu).
   characters: {
     Drod: { name:"Drod", room:"game", color:"#caa23a",
+      opens:"projects", openLabel:"🧪 See the experiments",
+      actLabel:"♟ Play a game", noLabel:"Maybe later",
       lines:[
-        "Oh, a challenger. Ryan keeps sending me people to humble.",
-        "He built this whole chess engine just so I'd have someone to beat. Sweet of him, really.",
-        "Pull up a chair. Press {ENTER} at the board and pick your poison — I go easy… sometimes."
+        "Ah, another brave soul sent here to be 'humbled.' Apparently that's my entire purpose.",
+        "Fun fact: I'm not real. Some guy coded me up over a weekend. I try not to dwell on it.",
+        "Anyway. Face me at the board, or go gawk at his other little experiments. I'm exhibit A, by the way."
       ] },
     Alex: { name:"Alex", room:"music", color:"#5fb0c9",
+      actLabel:"🎵 Open the studio", noLabel:"Just vibing",
       lines:[
-        "Yo! Welcome to the studio. Ryan basically lives in here when he's 'taking a break'.",
-        "Dude wired up a whole jukebox AND a beat pad. Said a portfolio should make noise.",
-        "Step on the booth and press {ENTER} — let's hear what you've got."
+        "Ayy, you found the studio! Watch the cables, a couple of 'em bite.",
+        "The owner? Oh, he basically haunts this room. Pops in for a 'quick break,' leaves at 4am. Every time.",
+        "Anyway, enough about the ghost who pays rent. Hop on the booth and let's hear you."
       ] },
     DJ: { name:"DJ", room:"music", color:"#b07acb",
+      actLabel:"🎵 Open the studio", noLabel:"Just vibing",
       lines:[
-        "Ryan's got taste, I'll give him that. Every track in here, he picked.",
-        "He says music's just code you can feel. Kinda corny. Kinda true.",
-        "Hit the decks and make something — nobody's judging. (I'm judging a little.)"
+        "Shh. Oh, false alarm, you're cool. Thought you were here about the noise complaint.",
+        "Every track in this place got hand-picked by you-know-who. Man has VERY strong opinions about hi-hats.",
+        "Enough chitchat. Get on the decks and cook something. I totally won't judge. (I'm judging.)"
       ] },
     Bob: { name:"Bob", room:"lounge", color:"#d98a5a",
+      opens:"experience", openLabel:"📜 Show me the rundown", noLabel:"Nah, just resting",
       lines:[
-        "Ahh, the lounge. Best seat in Ryan's world if you ask me.",
-        "I've known Ryan a while. Guy ships fast and polishes everything to death — in a good way.",
-        "Check the header up top for his Experience and Projects. Or just wander, that's the point."
+        "Sit, sit. This couch has held fancier people than me, but it'll cope.",
+        "Asking about the owner, huh? I've watched a lotta folks pass through this lounge.",
+        "That Ryan's worked more places than I've taken naps, and buddy, I nap competitively. Want the rundown?"
       ] },
     Dino: { name:"Dino", room:"lounge", color:"#69b06a",
+      opens:"about", openLabel:"🦖 Show me his file", noLabel:"I'll keep snooping",
       lines:[
-        "Rawr. That's hello in lounge-speak.",
-        "Ryan drew this whole place tile by tile. Took him forever. Worth it though, right?",
-        "Up north there's a gym, west has chess, east is the music studio. Go explore!"
+        "Oh! A real-life person. We mostly get pigeons in here, so honestly this is big.",
+        "Word is some guy named 'Ryan' owns this whole place. Never seen him. Little bit sus, if you ask me.",
+        "I'm nosy though, so I looked him up. Wanna see what kind of person builds a dinosaur his own lounge?"
       ] },
     Girl: { name:"Amelia", room:"gym", color:"#e58aa6",
+      opens:"contact", openLabel:"📇 Grab his contact", noLabel:"Just stretching",
       lines:[
-        "Leg day! Ryan never skips it. Says debugging is cardio for the brain.",
-        "He's stubborn — keeps grinding a problem till it cracks. You can tell from his commits.",
-        "Want the formal stuff? Tap 'Experience' in the header. Or spot me on the bench, ha."
+        "Spotter's here! Drop the bar on your face and I'll gasp real convincing-like.",
+        "Lemme guess: you're after the guy whose name's plastered all over this building?",
+        "I'm not his secretary, but his contact's just sorta lying around over here. Don't make it weird."
       ] },
     Gojo: { name:"Gojo", room:"gym", color:"#7aa0e5",
+      opens:"projects", openLabel:"📂 Show me his builds",
+      actLabel:"🥊 Hit the bag", noLabel:"Just stretching",
       lines:[
-        "Throughout heaven and earth, I alone am the strongest… spotter.",
-        "Ryan trains like he codes — full focus, no half reps. Respect.",
-        "Hit the 'Projects' tab up top if you want proof. The man builds."
+        "Throughout heaven and earth, I alone am the strongest… spotter in this gym, anyway.",
+        "You wondering if the owner actually does stuff, or just hires cool guys to stand around? Valid question.",
+        "So pick: throw hands with the bag, or I pull up the pile of things he's built. You leave impressed regardless."
       ] }
   },
 

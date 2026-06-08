@@ -138,7 +138,7 @@ window.MUSIC = (function(){
     document.getElementById("mzBpm").oninput=(e)=>{ bpm=+e.target.value; };
   }
 
-  let sayUntil=0, sayText="", pa=0,pd=0,pt=0;
+  let sayUntil=0, sayText="", pa=0,pd=0,pt=0, lastT=0;
   function pick(a){return a[Math.floor(Math.random()*a.length)];}
   function say(t){ sayText=t; sayUntil=performance.now()+3000; }
 
@@ -162,7 +162,8 @@ window.MUSIC = (function(){
   function loop(){
     try{
     const now=performance.now();
-    pt+=1/60;
+    if(!lastT) lastT=now; const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+    pt+=dt;
     const active = playing||padPlaying;
     const f=Math.floor(pt*(active?12:5));
     const pA=document.getElementById("mzPortA"), pD=document.getElementById("mzPortD");
