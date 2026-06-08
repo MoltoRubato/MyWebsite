@@ -8,7 +8,7 @@ Four rooms, connected through doorways with a soft phase in/out transition:
 
 - **Lounge** (center) — the hub. Home to **Bob** and **Dino**.
 - **Gym** (north) — **Amelia** and **Gojo**. Step up to the heavy bag for the **Combo Trainer** mini-game.
-- **Game Room** (west) — **Drod**. Sit at the board to play **chess** against a from-scratch engine.
+- **Game Room** (west) — **Drod**. Sit at the board to play **chess** against a from-scratch engine, or step up to the **pool table** for a game of **8-ball**.
 - **Music Studio** (east) — **Alex** and **DJ**. A **jukebox** + tap-to-play **beat pad** with a live visualizer.
 
 Each room is alive: NPCs wander and do their own thing, tall objects (TVs, plants, mic stands) correctly draw in front of or behind you via baseline depth-sorting.
@@ -18,6 +18,7 @@ Each room is alive: NPCs wander and do their own thing, tall objects (TVs, plant
 - **Interactive 2D world** — walk room to room, full-screen canvas rendering
 - **Modern dialogue** — animated talking portraits, typewriter text, per-character personality, all about the portfolio
 - **Chess vs. Drod** — complete chess engine (legal moves, castling, en passant, checkmate), selectable difficulty, and a trash-talking opponent
+- **8-Ball vs. Drod** — a physics pool game (ball-to-ball + cushion collisions, six pockets, full 8-ball rules with groups, fouls, and ball-in-hand), slingshot aiming with a live trajectory guide, a ghost-ball AI opponent, and synthesized table SFX
 - **Music Studio** — jukebox playing 5 tracks + a beat pad with a Web Audio visualizer
 - **Gym Combo Trainer** — call-and-respond directional punch combos with a pixel-art heavy bag and POW bursts
 - **Website header** — About / Experience / Projects / Contact slide-over panels, room-map fast-travel, sound toggle, and résumé download, with smooth motion throughout
@@ -64,6 +65,7 @@ MyWebsite/
 │   ├── header.js           # header nav + content panels
 │   ├── chess-engine.js     # chess rules + AI
 │   ├── chess.js            # chess UI (vs. Drod)
+│   ├── pool.js             # 8-ball pool: physics, rules, AI, UI (vs. Drod)
 │   ├── music.js            # jukebox + beat pad
 │   ├── workout.js          # gym combo trainer
 │   ├── game.js             # main loop: render, input, transitions

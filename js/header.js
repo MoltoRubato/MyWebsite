@@ -179,23 +179,35 @@ window.HEADER = (function(){
     if (window.GAME) GAME.pause(false);
   }
 
+  // ---------- mobile nav dropdown ----------
+  function setMenu(open){
+    header.classList.toggle("nav-open", open);
+    const b = header.querySelector(".hd-burger");
+    if(b) b.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
   // ---------- wiring ----------
   function init(){
     document.querySelectorAll("[data-nav]").forEach(btn=>{
       btn.addEventListener("click",()=>{
         const k=btn.getAttribute("data-nav");
-        if(["about","experience","projects","contact"].includes(k)) openPanel(k);
-        else if(k==="map") openMap();
+        if(k==="menu"){ setMenu(!header.classList.contains("nav-open")); return; }
+        if(["about","experience","projects","contact"].includes(k)){ openPanel(k); setMenu(false); }
+        else if(k==="map"){ openMap(); setMenu(false); }
         else if(k==="sound" && window.GAME) GAME.toggleSound(btn);
-        else if(k==="home" && window.GAME) GAME.travelTo("lounge");
+        else if(k==="home" && window.GAME){ GAME.travelTo("lounge"); setMenu(false); }
       });
     });
     panelClose.addEventListener("click",closePanel);
     scrim.addEventListener("click",closePanel);
     panel.addEventListener("click",(e)=>{ if(e.target===panel) closePanel(); });
     mapClose.addEventListener("click",closeMap);
+    // tapping anywhere outside the header dismisses the open mobile nav
+    document.addEventListener("pointerdown",(e)=>{
+      if(header.classList.contains("nav-open") && !header.contains(e.target)) setMenu(false);
+    });
     document.addEventListener("keydown",(e)=>{
-      if(e.key==="Escape"){ closePanel(); closeMap(); }
+      if(e.key==="Escape"){ closePanel(); closeMap(); setMenu(false); }
     });
   }
 

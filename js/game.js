@@ -19,6 +19,7 @@ window.GAME = (function(){
   let curRoom="lounge";
   let rooms={}; // built lazily per room
   let keys={};
+  let joy={x:0,y:0,active:false};   // analog touch joystick (-1..1 per axis)
   let paused=false, transitioning=false, running=false;
   let nearTarget=null; // {kind, ref}
   let doorGuard=null;  // tile string to ignore until stepped off
@@ -53,20 +54,47 @@ window.GAME = (function(){
       // if(k==="h"){ setHitboxes(!showHitboxes); }  // DEV hitbox toggle — disabled for now (still reachable via ?dev=1)
     });
     window.addEventListener("keyup",(e)=>{ keys[e.key.toLowerCase()]=false; });
-    // touch dpad
-    const tmap={up:"arrowup",down:"arrowdown",left:"arrowleft",right:"arrowright"};
-    document.querySelectorAll("#dpad .db").forEach(b=>{
-      const key=tmap[b.dataset.key];
-      const on=(e)=>{e.preventDefault();keys[key]=true;}, off=(e)=>{e.preventDefault();keys[key]=false;};
-      b.addEventListener("touchstart",on,{passive:false}); b.addEventListener("touchend",off);
-      b.addEventListener("mousedown",on); b.addEventListener("mouseup",off); b.addEventListener("mouseleave",off);
-    });
+    // touch joystick — analog drag-to-move. The stick spawns under the thumb
+    // anywhere in the left zone; the knob deflection (clamped to R) drives a
+    // continuous move vector, so direction + speed are both analog.
+    const zone=document.getElementById("joyZone");
+    const stick=document.getElementById("joystick");
+    const knob=document.getElementById("joyKnob");
+    if(zone&&stick&&knob){
+      const R=52;                       // max knob travel (px) = full deflection
+      let pid=null, ox=0, oy=0;          // active pointer id + stick origin
+      const setKnob=(dx,dy)=>{ knob.style.transform="translate("+dx+"px,"+dy+"px)"; };
+      const update=(cx,cy)=>{
+        let dx=cx-ox, dy=cy-oy; const d=Math.hypot(dx,dy);
+        if(d>R){ dx=dx/d*R; dy=dy/d*R; }
+        setKnob(dx,dy); joy.x=dx/R; joy.y=dy/R; joy.active=true;
+      };
+      const start=(e)=>{
+        if(anyOverlayOpen()||paused||transitioning||DIALOGUE.isOpen()) return;
+        pid=e.pointerId; ox=e.clientX; oy=e.clientY;
+        // #joystick is absolutely positioned inside #joyZone, so its left/top are
+        // zone-local — convert the viewport touch point or it renders offset below the finger.
+        const zr=zone.getBoundingClientRect();
+        stick.style.left=(ox-zr.left)+"px"; stick.style.top=(oy-zr.top)+"px";
+        setKnob(0,0); zone.classList.add("on");
+        joy.x=0; joy.y=0; joy.active=true;
+        try{ zone.setPointerCapture(pid); }catch(_){}
+        e.preventDefault();
+      };
+      const move=(e)=>{ if(pid===null||e.pointerId!==pid) return; update(e.clientX,e.clientY); e.preventDefault(); };
+      const end=(e)=>{ if(pid!==null&&e.pointerId!==pid) return;
+        pid=null; zone.classList.remove("on"); setKnob(0,0); joy.x=0; joy.y=0; joy.active=false; };
+      zone.addEventListener("pointerdown",start);
+      zone.addEventListener("pointermove",move,{passive:false});
+      zone.addEventListener("pointerup",end);
+      zone.addEventListener("pointercancel",end);
+    }
     const act=document.getElementById("actBtn");
     act.addEventListener("touchstart",(e)=>{e.preventDefault(); if(DIALOGUE.isOpen())DIALOGUE.advance(); else interact();});
     act.addEventListener("click",()=>{ if(DIALOGUE.isOpen())DIALOGUE.advance(); else interact();});
-    if(("ontouchstart" in window)||navigator.maxTouchPoints>0) document.body.classList.add("touch");
+    if(("ontouchstart" in window)||navigator.maxTouchPoints>0||(window.matchMedia&&matchMedia("(pointer:coarse)").matches)) document.body.classList.add("touch");
   }
-  function anyOverlayOpen(){ return CHESS.isOpen()||MUSIC.isOpen()||(window.WORKOUT&&WORKOUT.isOpen())||
+  function anyOverlayOpen(){ return CHESS.isOpen()||MUSIC.isOpen()||(window.POOL&&POOL.isOpen())||(window.WORKOUT&&WORKOUT.isOpen())||
     !document.getElementById("panel").classList.contains("hidden")||
     !document.getElementById("mapModal").classList.contains("hidden"); }
 
@@ -89,6 +117,7 @@ window.GAME = (function(){
     if(near.kind==="npc") talkTo(near.ref);
     else if(near.kind==="pet") EN.petStart(near.ref);
     else if(near.kind==="obj" && near.ref.type==="music") openJukebox();
+    else if(near.kind==="obj" && near.ref.type==="pool") openPool();
   }
   function talkTo(npc){
     const data=C.characters[npc.key];
@@ -120,6 +149,7 @@ window.GAME = (function(){
   }
 
   function openChess(){ paused=true; CHESS.open({onClose:()=>{paused=false;}}); }
+  function openPool(){ paused=true; POOL.open({onClose:()=>{paused=false;}}); }
   function openJukebox(){ paused=true; MUSIC.openJukebox({onClose:()=>{paused=false;}}); }
   function openBeatpad(){ paused=true; MUSIC.openBeatpad({onClose:()=>{paused=false;}}); }
   function openWorkout(){ paused=true; WORKOUT.open({onClose:()=>{paused=false;}}); }
@@ -135,12 +165,15 @@ window.GAME = (function(){
     if(keys["s"]||keys["arrowdown"]) vy+=1;
     if(keys["a"]||keys["arrowleft"]) vx-=1;
     if(keys["d"]||keys["arrowright"]) vx+=1;
-    player.moving = (vx||vy)!==0;
+    // analog joystick overrides keys; its magnitude scales speed (deadzone .06)
+    let mag = (vx||vy) ? 1 : 0;
+    if(joy.active && (joy.x||joy.y)){ vx=joy.x; vy=joy.y; mag=Math.min(1,Math.hypot(joy.x,joy.y)); }
+    player.moving = mag>0.06;
     if(player.moving){
       if(Math.abs(vx)>Math.abs(vy)) player.dir = vx<0?"left":"right";
       else player.dir = vy<0?"up":"down";
       const len=Math.hypot(vx,vy)||1;
-      const sp=player.speed*dt*60;
+      const sp=player.speed*dt*60*mag;
       const nx=player.x+vx/len*sp, ny=player.y+vy/len*sp;
       if(EN.freeAt(curRoom,nx,player.y)) player.x=nx;
       if(EN.freeAt(curRoom,player.x,ny)) player.y=ny;
@@ -313,7 +346,8 @@ window.GAME = (function(){
       ctx.fillStyle="#e7a33e";
       const mYoff = t.kind==="npc" ? 66
                   : t.kind==="pet" ? (t.ref.h||30)+8
-                  : (t.ref.sprite==="speaker" ? 64 : 30); // float above the speaker
+                  : (t.ref.markerY!=null ? t.ref.markerY      // object-defined float height (e.g. pool table)
+                  : (t.ref.sprite==="speaker" ? 64 : 30));    // float above the speaker
 
       const mx=t.x, my=t.y-mYoff+bob;
       ctx.beginPath(); ctx.moveTo(mx-7,my); ctx.lineTo(mx+7,my); ctx.lineTo(mx,my+9); ctx.closePath(); ctx.fill();
