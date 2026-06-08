@@ -1,45 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Ryan's Lounge</title>
-    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <script src="script.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ryan's Place</title>
+<link rel="icon" type="image/png" href="assets/ui/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=4">
+<link rel="stylesheet" href="css/ui.css?v=3">
+<link rel="stylesheet" href="css/activity.css?v=4">
 </head>
 <body>
-    <div id="gameShell">
-        <div id="gameContainer">
-            <canvas id="gameCanvas" width="800" height="600"></canvas>
-
-            <div id="ui">
-                <div class="keyboardHelp">Use WASD to move</div>
-                <div class="keyboardHelp">Press ENTER to interact</div>
-                <div class="keyboardHelp">Press ESC to close dialogs</div>
-                <div class="touchHelp">Use the pad to move</div>
-                <div class="touchHelp">Tap ACT to interact</div>
-            </div>
-
-            <div id="modal">
-                <button id="closeButton" onclick="closeModal()">×</button>
-                <div id="modalContent"></div>
-            </div>
-        </div>
-
-        <div id="touchControls" aria-label="Touch controls">
-            <div id="dpad" aria-label="Movement controls">
-                <button class="touchButton dpadButton dpadUp" type="button" data-key="w" aria-label="Move up">W</button>
-                <button class="touchButton dpadButton dpadLeft" type="button" data-key="a" aria-label="Move left">A</button>
-                <button class="touchButton dpadButton dpadDown" type="button" data-key="s" aria-label="Move down">S</button>
-                <button class="touchButton dpadButton dpadRight" type="button" data-key="d" aria-label="Move right">D</button>
-            </div>
-
-            <div id="actionPad">
-                <button class="touchButton actionButton" type="button" data-action="interact" aria-label="Interact">ACT</button>
-                <button class="touchButton escapeButton" type="button" data-action="escape" aria-label="Close dialog">ESC</button>
-            </div>
-        </div>
+<div id="app">
+  <!-- Website header -->
+  <header id="siteHeader" class="hidden">
+    <div class="hd-left">
+      <button class="hd-logo" data-nav="home">
+        <span class="hd-logo-mark">RP</span>
+        <span class="hd-logo-text">Ryan&nbsp;Huang</span>
+      </button>
     </div>
+    <nav class="hd-nav" aria-label="Main">
+      <button class="hd-link" data-nav="about"><span>About</span></button>
+      <button class="hd-link" data-nav="experience"><span>Experience</span></button>
+      <button class="hd-link" data-nav="projects"><span>Projects</span></button>
+      <button class="hd-link" data-nav="contact"><span>Contact</span></button>
+    </nav>
+    <div class="hd-right">
+      <button class="hd-icon" data-nav="map" title="Room map" aria-label="Room map"><span class="ico ico-map"></span></button>
+      <button class="hd-icon" data-nav="sound" title="Sound" aria-label="Toggle sound"><span class="ico ico-sound"></span></button>
+    </div>
+  </header>
+
+  <!-- Game stage -->
+  <div id="stage">
+    <canvas id="game" width="960" height="640"></canvas>
+    <!-- room nameplate -->
+    <div id="roomLabel"><span class="rl-inner"></span></div>
+    <!-- interaction hint -->
+    <div id="hint" class="hidden"><span class="hint-key">Enter</span><span class="hint-text"></span></div>
+    <!-- transition veil -->
+    <div id="veil"></div>
+    <!-- on-screen controls (touch) -->
+    <div id="touch" aria-hidden="true">
+      <div id="dpad">
+        <button data-key="up" class="db dbu">▲</button>
+        <button data-key="left" class="db dbl">◀</button>
+        <button data-key="down" class="db dbd">▼</button>
+        <button data-key="right" class="db dbr">▶</button>
+      </div>
+      <button id="actBtn" data-key="enter">●</button>
+    </div>
+  </div>
+
+  <!-- Dialogue (modern UI) -->
+  <div id="dialogue" class="hidden">
+    <div class="dlg-choices" id="dlgChoices"></div>
+    <div class="dlg-main">
+      <div class="dlg-portrait"><canvas id="dlgPortrait" width="64" height="64"></canvas></div>
+      <div class="dlg-name" id="dlgName">Name</div>
+      <div class="dlg-body"><p id="dlgText"></p></div>
+      <button class="dlg-close" id="dlgClose">✕</button>
+      <div class="dlg-next" id="dlgNext">▼</div>
+    </div>
+  </div>
+
+  <!-- Centered content modal (header) -->
+  <div id="panelScrim" class="hidden"></div>
+  <div id="panel" class="hidden" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="panel-card">
+      <button id="panelClose" class="panel-close" aria-label="Close">✕</button>
+      <div id="panelInner"></div>
+    </div>
+  </div>
+
+  <!-- Room map / fast travel -->
+  <div id="mapModal" class="hidden">
+    <div class="map-card">
+      <div class="map-head">
+        <span class="map-kicker">Ryan&#39;s&nbsp;Place</span>
+        <h3 class="map-title">Floor Plan</h3>
+        <p class="map-sub">Tap a room to travel there</p>
+      </div>
+      <div class="map-plan" id="mapGrid"></div>
+      <button class="map-close" id="mapClose">Close</button>
+    </div>
+  </div>
+
+  <!-- Activity overlay host (chess / music) -->
+  <div id="activity" class="hidden"><div id="activityInner"></div></div>
+
+  <!-- Loading / title screen -->
+  <div id="loader">
+    <canvas id="loadCanvas" width="960" height="640"></canvas>
+    <div class="load-overlay">
+      <div class="load-card">
+        <h1 class="load-title">RYAN&#39;S&nbsp;PLACE</h1>
+        <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
+        <div class="load-status" id="loadStatus">LOADING…</div>
+        <button class="load-enter hidden" id="loadEnter">ENTER&nbsp;WORLD</button>
+        <div class="load-controls">WASD / Arrows to move · ENTER to interact</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/content.js?v=5"></script>
+<script src="js/collision.js"></script>
+<script src="js/hitboxes.js?v=2"></script>
+<script src="js/assets.js?v=2"></script>
+<script src="js/world.js"></script>
+<script src="js/sprites.js?v=2"></script>
+<script src="js/entities.js?v=2"></script>
+<script src="js/dialogue.js"></script>
+<script src="js/header.js?v=4"></script>
+<script src="js/chess-engine.js"></script>
+<script src="js/chess.js?v=3"></script>
+<script src="js/music.js?v=4"></script>
+<script src="js/workout.js"></script>
+<script src="js/game.js?v=5"></script>
+<script src="js/editor.js"></script>
+<script src="js/boot.js"></script>
 </body>
 </html>
