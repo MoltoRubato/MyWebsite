@@ -59,24 +59,52 @@ window.HEADER = (function(){
     if (window.GAME) GAME.pause(false);
   }
 
-  // ---------- room map ----------
+  // ---------- room map (dollhouse floor plan) ----------
+  // Per-room map metadata: short name, accent colour, and a crisp inline glyph.
+  const MAP_META = {
+    lounge: { name:"Lounge",        accent:"#d79a47",
+      icon:'<svg viewBox="0 0 24 24"><path d="M20 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v2a2 2 0 0 0-2 2v5a1 1 0 0 0 1 1h1v2h2v-2h12v2h2v-2h1a1 1 0 0 0 1-1v-5a2 2 0 0 0-2-2m-3.5 1A1.5 1.5 0 0 0 15 10.5V12H9v-1.5A1.5 1.5 0 0 0 7.5 9H6V6h12v3z"/></svg>' },
+    gym: { name:"Gym",              accent:"#d2574a",
+      icon:'<svg viewBox="0 0 24 24"><path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></svg>' },
+    game: { name:"Game Room",       accent:"#4f9e6a",
+      icon:'<svg viewBox="0 0 24 24"><path d="M21.58 16.09 20.5 8.43A4 4 0 0 0 16.53 5H7.47a4 4 0 0 0-3.97 3.43l-1.08 7.66a2.5 2.5 0 0 0 4.5 1.79L8.5 16h7l1.55 1.88a2.5 2.5 0 0 0 4.53-1.79M11 11H9v2H7v-2H5V9h2V7h2v2h2zm4.5-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2m2.5 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>' },
+    music: { name:"Music Studio",   accent:"#5b8fd6",
+      icon:'<svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3z"/></svg>' }
+  };
+
   function openMap(){
     const cur = window.GAME ? GAME.currentRoom() : "lounge";
-    const layout = [
-      [null,"gym",null],
-      ["game","lounge","music"],
-      [null,null,null]
-    ];
-    mapGrid.innerHTML="";
-    layout.forEach(row=>row.forEach(key=>{
-      const cell=document.createElement("div");
-      if(!key){ cell.className="map-cell empty"; mapGrid.appendChild(cell); return; }
-      const r=WORLD.ROOMS[key];
-      cell.className="map-cell on"+(key===cur?" here":"");
-      cell.innerHTML=`<div class="mc-ic">${r.mapIcon}</div><div>${r.label.replace('The ','')}</div>`+(key===cur?'<div class="here-tag">HERE</div>':'');
-      if(key!==cur) cell.onclick=()=>{ closeMap(); if(window.GAME) GAME.travelTo(key); };
-      mapGrid.appendChild(cell);
-    }));
+    mapGrid.innerHTML = "";
+    // doorway connectors — every door runs through the lounge hub
+    ["gym","game","music"].forEach(k=>{
+      const link = document.createElement("div");
+      link.className = "map-link l-"+k;
+      link.innerHTML = '<span class="ml-jamb"></span><span class="ml-jamb"></span>';
+      mapGrid.appendChild(link);
+    });
+    // room cards, positioned by CSS into their true spatial layout
+    Object.keys(WORLD.ROOMS).forEach(key=>{
+      const m = MAP_META[key], here = key===cur;
+      const card = document.createElement(here ? "div" : "button");
+      card.className = "map-room r-"+key+(here ? " here" : "");
+      card.style.setProperty("--rc", m.accent);
+      card.innerHTML =
+        '<span class="mr-frame">'+
+          '<img class="mr-thumb" src="assets/maps/'+key+'.png" alt="" draggable="false">'+
+          (here
+            ? '<span class="mr-here">You’re here</span>'
+            : '<span class="mr-go">Enter<span class="mr-arrow">→</span></span>')+
+        '</span>'+
+        '<span class="mr-plate"><span class="mr-ic">'+m.icon+'</span><span class="mr-name">'+m.name+'</span></span>';
+      if(!here){
+        card.type = "button";
+        card.setAttribute("aria-label", "Travel to "+m.name);
+        card.addEventListener("click", ()=>{ closeMap(); if(window.GAME) GAME.travelTo(key); });
+      } else {
+        card.setAttribute("aria-current", "true");
+      }
+      mapGrid.appendChild(card);
+    });
     mapModal.classList.remove("hidden");
     requestAnimationFrame(()=>mapModal.classList.add("in"));
     if (window.GAME) GAME.pause(true);

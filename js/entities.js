@@ -59,12 +59,42 @@ window.ENTITIES = (function(){
     music:[ { type:"music", name:"The Decks", tx:13, ty:11, hint:"play music", icon:"🎶" } ]
   };
 
+  // Pets — critters you can walk up to and pet (Enter/E). Placed in world px
+  // (like the hand-traced lounge hitboxes) so they dodge the furniture cleanly.
+  // (x,y) = feet/base point; w,h = on-screen draw size in world px.
+  const PETS = {
+    lounge:[
+      { kind:"dog", name:"the dog", x:360, y:300, w:30, h:44, hint:"Pet the dog" },
+      { kind:"cat", name:"the cat", x:648, y:300, w:44, h:34, hint:"Pet the cat" }
+    ]
+  };
+  function makePet(spec){
+    return { ...spec, state:"idle", frame:0, animT:0, petTimer:0,
+             petDur:2.0, idleFps:5, petFps:6 };
+  }
+  // begin the petting animation (only from idle, matching the original)
+  function petStart(p){
+    if(!p || p.state!=="idle") return;
+    p.state="petted"; p.petTimer=p.petDur; p.animT=0; p.frame=0;
+  }
+  // advance a pet's animation + petting timer for one tick
+  function stepPet(p, dt){
+    p.animT += dt;
+    if(p.state==="petted"){
+      p.petTimer -= dt;
+      if(p.petTimer<=0){ p.state="idle"; p.animT=0; p.frame=0; }
+    }
+    const fps = p.state==="petted" ? p.petFps : p.idleFps;
+    p.frame = Math.floor(p.animT*fps);
+  }
+
   function buildRoom(roomKey){
     const npcs = (NPCS[roomKey]||[]).map(makeNPC);
     const objs = (OBJECTS[roomKey]||[]).map(o=>({
       ...o, x:o.tx*TS+16, y:o.ty*TS+TS-2
     }));
-    return { npcs, objs };
+    const pets = (PETS[roomKey]||[]).map(makePet);
+    return { npcs, objs, pets };
   }
 
   // advance ambient AI for one NPC
@@ -122,5 +152,5 @@ window.ENTITIES = (function(){
     n.frame = Math.floor(n.animT * fps);
   }
 
-  return { makePlayer, makeNPC, buildRoom, stepNPC, freeAt, FEET_W, FEET_H };
+  return { makePlayer, makeNPC, makePet, petStart, buildRoom, stepNPC, stepPet, freeAt, FEET_W, FEET_H };
 })();

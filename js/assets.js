@@ -43,6 +43,10 @@ window.ASSETS = (function(){
   load("chess_black", "assets/chess/BlackPieces.png");
   load("chess_board", "assets/chess/board.png");
 
+  // pets (own spritesheets: idle + being-petted rows)
+  load("pet_dog", "assets/pets/dog.png");
+  load("pet_cat", "assets/pets/cat.png");
+
   return {
     images,
     get: (k)=>images[k],

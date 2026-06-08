@@ -40,6 +40,33 @@ window.SPRITES = (function(){
     ctx.restore();
   }
 
+  // --- pets (cat/dog) -------------------------------------------------------
+  // Each pet has its own spritesheet (NOT the 32x64 char layout): row 0 = idle,
+  // row 1 = being petted. The cat's petting frames span two sheet rows, so its
+  // frame->source mapping is listed explicitly (cross-row).
+  const PET = {
+    dog: { img:"pet_dog", fw:230, fh:340,
+           idle:  { frames:4, y:0   },
+           petted:{ frames:4, y:340 } },
+    cat: { img:"pet_cat", fw:425, fh:325,
+           idle:  { frames:2, y:0 },
+           // frames 0-1 on the row at y=325, frames 2-3 on the row at y=650
+           petted:{ frames:4, cross:[[0,325],[1,325],[0,650],[1,650]] } }
+  };
+  // Draw a pet centered on (cx) with feet at (cy), filling w x h canvas px.
+  function drawPet(ctx, kind, cx, cy, state, frame, w, h){
+    const cfg = PET[kind]; if(!cfg) return;
+    const img = A.get(cfg.img);
+    if(!img || !img.complete || !img.naturalWidth) return;
+    const a = cfg[state] || cfg.idle;
+    const f = ((frame % a.frames) + a.frames) % a.frames;
+    let sx, sy;
+    if(a.cross){ const c=a.cross[f]; sx=c[0]*cfg.fw; sy=c[1]; }
+    else { sx = f*cfg.fw; sy = a.y; }
+    const dx = Math.round(cx - w/2), dy = Math.round(cy - h);
+    ctx.drawImage(img, sx, sy, cfg.fw, cfg.fh, dx, dy, w, h);
+  }
+
   // Draw one talking-portrait frame into a 64x64 (or scaled) canvas ctx.
   function drawPortraitFrame(ctx, key, frame, dw, dh){
     const img = A.get(key);
@@ -53,5 +80,5 @@ window.SPRITES = (function(){
     ctx.drawImage(img, sx, sy, A.PORT_FW, A.PORT_FH, 0, 0, dw, dh);
   }
 
-  return { drawChar, drawShadow, drawPortraitFrame, FW, FH };
+  return { drawChar, drawShadow, drawPet, drawPortraitFrame, FW, FH };
 })();

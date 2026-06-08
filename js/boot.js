@@ -18,17 +18,20 @@
   }
   sizeLoader(); window.addEventListener("resize",sizeLoader);
 
-  // ambient walkers for the loading scene
-  const walkers=[
-    {char:"char_Player",x:0.30,dir:"right",ph:0,row:11},
-    {char:"char_Dino",  x:0.62,dir:"left", ph:2,row:9},
-    {char:"char_Alex",  x:0.80,dir:"down", ph:4,row:7}
-  ];
-
   let ready=false, entered=false, t0=performance.now();
 
+  /* ---- Intro composition: "Lineup" with spotlight lighting -------------
+     Characters stand in place (idle), so nothing ever walks off-frame.
+     dx offsets are fractions of screen width; gyf is the feet ground line. */
+  const INTRO={ gyf:0.605, baseDiv:168,
+    cast:[
+      {char:"char_Dino",   dx:-0.165, dir:"right", scale:0.82, ph:1.7},
+      {char:"char_Alex",   dx: 0.165, dir:"left",  scale:0.82, ph:3.1},
+      {char:"char_Player", dx: 0.000, dir:"down",  scale:1.00, ph:0.0}
+    ]};
+
   function drawScene(now){
-    const W=lc.width, H=lc.height;
+    const W=lc.width, H=lc.height, P=INTRO;
     lctx.clearRect(0,0,W,H);
     const room=A.get("room_lounge");
     if(room&&room.complete){
@@ -38,23 +41,29 @@
       const pan=Math.sin(now/4000)*20;
       const ox=(W-dw)/2+pan, oy=(H-dh)/2;
       lctx.drawImage(room,ox,oy,dw,dh);
-      // scale factor from room px to screen
-      const sx=dw/room.width, sy=dh/room.height;
-      // walking sprites along a path
-      walkers.forEach(w=>{
-        const t=(now/3200 + w.ph)%1;
-        const tx = w.dir==="left" ? (1-t) : t;
-        const px = ox + (4 + tx*22)*32*sx; // travel cols 4..26
-        const py = oy + (w.row+1)*32*sy;
-        const moving=true;
-        const frame=Math.floor(now/110 + w.ph*4);
-        S.drawShadow(lctx,px,py,28,sx*1.0);
-        S.drawChar(lctx,w.char,px,py,w.dir,moving,frame,sx);
+      // spotlight lighting — radial pool centered on the cast, edges fall to dark
+      const g=lctx.createRadialGradient(W/2,H*0.46,H*0.05,W/2,H*0.52,H*0.66);
+      g.addColorStop(0,"rgba(7,9,16,0)");
+      g.addColorStop(1,"rgba(7,9,16,0.84)");
+      lctx.fillStyle=g;
+      lctx.fillRect(0,0,W,H);
+      // standing cast — idle animation, gentle breathing bob, never moves in x
+      const base=Math.max(2.4, H/P.baseDiv);
+      const gy=H*P.gyf;
+      P.cast.forEach(c=>{
+        const s=base*c.scale;
+        const cx=W/2 + c.dx*W;
+        const bob=Math.sin(now/620 + c.ph)*2.2*c.scale;
+        const cy=gy + bob;
+        const frame=Math.floor(now/170 + c.ph*3);
+        lctx.globalAlpha = c.scale<1 ? 0.92 : 1;
+        S.drawShadow(lctx,cx,gy,28,s*1.0);
+        S.drawChar(lctx,c.char,cx,cy,c.dir,false,frame,s);
+        lctx.globalAlpha = 1;
       });
     } else {
       lctx.fillStyle="#0c1018"; lctx.fillRect(0,0,W,H);
     }
-    // subtle vignette handled by overlay CSS
   }
 
   function loop(now){

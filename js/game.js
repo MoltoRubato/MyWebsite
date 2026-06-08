@@ -75,6 +75,7 @@ window.GAME = (function(){
     const cands=[];
     R.npcs.forEach(n=>cands.push({kind:"npc",ref:n,x:n.x,y:n.y}));
     R.objs.forEach(o=>cands.push({kind:"obj",ref:o,x:o.x,y:o.y}));
+    (R.pets||[]).forEach(p=>cands.push({kind:"pet",ref:p,x:p.x,y:p.y}));
     for(const c of cands){ const d=Math.hypot(c.x-player.x, c.y-player.y);
       if(d<bestD){ bestD=d; best=c; } }
     return best;
@@ -84,6 +85,7 @@ window.GAME = (function(){
     const near=findNear();
     if(!near) return;
     if(near.kind==="npc") talkTo(near.ref);
+    else if(near.kind==="pet") EN.petStart(near.ref);
     else if(near.kind==="obj" && near.ref.type==="music") openMusic();
   }
   function talkTo(npc){
@@ -206,23 +208,31 @@ window.GAME = (function(){
     const top=A.get(TOP_IMG[curRoom]);
     const propsImg=A.get(PROPS_IMG[curRoom]);
     const depth = window.HITBOXES ? HITBOXES.depth(curRoom) : [];
-    const srcImg = (o)=> o.src==="top" ? top : propsImg;
     // gather drawables (npcs + player + depth objects) and sort by feet/base y
     const draw=[];
     R.npcs.forEach(n=>draw.push({y:n.y, fn:()=>{ S.drawShadow(ctx,n.x,n.y,28,1); S.drawChar(ctx,n.char,n.x,n.y+2,n.dir,n.moving,n.frame,1); }}));
+    (R.pets||[]).forEach(p=>draw.push({y:p.y, fn:()=>{ S.drawShadow(ctx,p.x,p.y,p.w*0.92,1); S.drawPet(ctx,p.kind,p.x,p.y,p.state,p.frame,p.w,p.h); }}));
     draw.push({y:player.y, fn:()=>{ S.drawShadow(ctx,player.x,player.y,28,1); S.drawChar(ctx,player.char,player.x,player.y+2,player.dir,player.moving,player.frame,1); }});
-    depth.forEach(o=>{ const im=srcImg(o); if(im&&im.complete) draw.push({y:o.baseY, fn:()=>{ ctx.drawImage(im, o.x,o.y,o.w,o.h, o.x,o.y,o.w,o.h); }}); });
+    // Each depth box samples BOTH the props and top PNGs at its rectangle, then
+    // y-sorts against the characters by baseY. Sampling both — instead of
+    // branching on o.src — means a box occludes the player no matter which PNG
+    // its art lives in, so a props object (e.g. the music-room harp) correctly
+    // goes in front of / behind the player as its depth box dictates.
+    depth.forEach(o=>{ draw.push({y:o.baseY, fn:()=>{
+      if(propsImg&&propsImg.complete) ctx.drawImage(propsImg, o.x,o.y,o.w,o.h, o.x,o.y,o.w,o.h);
+      if(top&&top.complete)           ctx.drawImage(top,      o.x,o.y,o.w,o.h, o.x,o.y,o.w,o.h);
+    }}); });
     draw.sort((a,b)=>a.y-b.y);
     draw.forEach(d=>d.fn());
 
-    // foreground (Top/top1/11) stays above everything; clip out any 'top'-sourced
-    // depth boxes so they are not drawn twice.
+    // Foreground (Top/top1/11) stays above everything EXCEPT where a depth box
+    // already painted it y-sorted: clip out every depth-box rect so that art is
+    // drawn once at its sorted depth, never re-stamped on top of the player.
     if(top&&top.complete){
-      const topDepth = depth.filter(o=>o.src==="top");
       ctx.save();
       ctx.beginPath();
       ctx.rect(0,0,canvas.width,canvas.height);
-      topDepth.forEach(o=>ctx.rect(o.x,o.y,o.w,o.h));
+      depth.forEach(o=>ctx.rect(o.x,o.y,o.w,o.h));
       ctx.clip("evenodd");
       ctx.drawImage(top,0,0,canvas.width,canvas.height);
       ctx.restore();
@@ -274,7 +284,8 @@ window.GAME = (function(){
       const bob=Math.sin(performance.now()/240)*3;
       ctx.save(); ctx.globalAlpha=0.95;
       ctx.fillStyle="#e7a33e";
-      const mx=t.x, my=(t.kind==="npc"?t.y-66:t.y-30)+bob;
+      const mYoff = t.kind==="npc" ? 66 : (t.kind==="pet" ? (t.ref.h||30)+8 : 30);
+      const mx=t.x, my=t.y-mYoff+bob;
       ctx.beginPath(); ctx.moveTo(mx-7,my); ctx.lineTo(mx+7,my); ctx.lineTo(mx,my+9); ctx.closePath(); ctx.fill();
       ctx.restore();
     }
@@ -292,6 +303,7 @@ window.GAME = (function(){
     if(nearTarget){
       let txt="Talk";
       if(nearTarget.kind==="obj") txt=nearTarget.ref.hint||"Use";
+      else if(nearTarget.kind==="pet") txt=nearTarget.ref.hint||"Pet";
       else if(nearTarget.ref.interact==="chess") txt="Play chess";
       else if(nearTarget.ref.interact==="music") txt="Open studio";
       else if(nearTarget.ref.interact==="workout") txt="Train with Gojo";
@@ -314,6 +326,7 @@ window.GAME = (function(){
         tryMove(dt);
         const R=ensureRoom(curRoom);
         R.npcs.forEach(n=>EN.stepNPC(n,curRoom,dt));
+        (R.pets||[]).forEach(p=>EN.stepPet(p,dt));
       }
       // player animation
       player.animT += dt;
@@ -364,6 +377,7 @@ window.GAME = (function(){
              return { x:(cx-c.ox)/c.s + c.vx, y:(cy-c.oy)/c.s + c.vy };
            },
            _dbg:()=>({x:Math.round(player.x),y:Math.round(player.y),dir:player.dir,transitioning,paused,keys:Object.keys(keys).filter(k=>keys[k]),
-             npcs:(rooms[curRoom]?rooms[curRoom].npcs.map(n=>({k:n.key,x:Math.round(n.x),y:Math.round(n.y)})):[])}),
+             npcs:(rooms[curRoom]?rooms[curRoom].npcs.map(n=>({k:n.key,x:Math.round(n.x),y:Math.round(n.y)})):[]),
+             pets:(rooms[curRoom]&&rooms[curRoom].pets?rooms[curRoom].pets.map(p=>({k:p.kind,state:p.state,frame:p.frame})):[])}),
            _tp:(x,y)=>{ player.x=x*W.TS+16; player.y=y*W.TS+30; } };
 })();
