@@ -146,7 +146,7 @@ window.CHESS = (function(){
     if(mv.cap!=="."){ say(pick(who==="w"?LINES.playerCap:LINES.aiCap), 2200); }
     const st=E.status(state);
     if(st==="checkmate"){ over=true;
-      if(state.turn==="b"){ setStatus("Checkmate — you win! 🏆"); say(pick(LINES.lose),5000); }
+      if(state.turn==="b"){ setStatus("Checkmate — you win! :D"); say(pick(LINES.lose),5000); }
       else { setStatus("Checkmate — Drod wins."); say(pick(LINES.win),5000); }
       return;
     }

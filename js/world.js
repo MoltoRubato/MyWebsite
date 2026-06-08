@@ -15,7 +15,7 @@ window.WORLD = (function(){
   const ROOMS = {
     lounge: {
       key:"lounge", label:"The Lounge", img:"room_lounge", grid:"LoungeRoom",
-      mapPos:[1,1], mapIcon:"🛋️", view:{x:198,y:100,w:534,h:352}, home:[14,9],
+      mapPos:[1,1], view:{x:198,y:100,w:534,h:352}, home:[14,9],
       doors:[
         { zone:[13,15,4,4],  to:"gym",   spawn:[17,9], face:"up"    },
         { zone:[7,7,8,11],   to:"game",  spawn:[17,9], face:"left"  },
@@ -24,21 +24,21 @@ window.WORLD = (function(){
     },
     gym: {
       key:"gym", label:"The Gym", img:"room_gym", grid:"gym",
-      mapPos:[1,0], mapIcon:"🏋️", view:{x:134,y:38,w:660,h:372}, home:[14,7],
+      mapPos:[1,0], view:{x:134,y:38,w:660,h:372}, home:[14,7],
       doors:[
         { x:17, y:10, to:"lounge", spawn:[14,6], face:"down" }
       ]
     },
     game: {
       key:"game", label:"The Game Room", img:"room_game", grid:"Game",
-      mapPos:[0,1], mapIcon:"♟️", view:{x:230,y:102,w:468,h:384}, home:[13,10],
+      mapPos:[0,1], view:{x:230,y:102,w:468,h:384}, home:[13,10],
       doors:[
         { x:18, y:9, to:"lounge", spawn:[9,9], face:"right" }
       ]
     },
     music: {
       key:"music", label:"The Music Studio", img:"room_music", grid:"Music",
-      mapPos:[2,1], mapIcon:"🎵", view:{x:198,y:70,w:468,h:384}, home:[13,9],
+      mapPos:[2,1], view:{x:198,y:70,w:468,h:384}, home:[13,9],
       doors:[
         { x:9, y:9, to:"lounge", spawn:[19,9], face:"left" }
       ]

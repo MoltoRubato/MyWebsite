@@ -47,14 +47,13 @@ window.CONTENT = {
   },
   projects: {
     kicker: "Projects",
-    title: "Selected Projects",
+    title: "Side Projects",
+    lead: "Things I build on my own time, outside of work.",
     items: [
-      { h:"Airtable Clone", p:"Airtable clone built with the T3 stack." },
-      { h:"AI Job Application Tailor", p:"AI-powered web application that generates tailored cover letters and resume bullet points from a candidate profile and job description." },
-      { h:"Drone Delivery Simulation", p:"Optimized parcel delivery simulation focused on routing efficiency and system performance." },
-      { h:"Book Recommendation System", p:"Data processing and recommendation engine built on publicly available book datasets." },
-      { h:"Pinochle", p:"Desktop card game featuring GUI gameplay and an intelligent computer opponent." },
-      { h:"Chessformer Puzzle Solver", p:"AI puzzle solver using optimized search techniques and duplicate-state reduction." }
+      { h:"Airtable Clone", link:"https://airtable-clone-ryan.vercel.app/", p:"Airtable clone built with the T3 stack." },
+      { h:"Chessformer Puzzle Solver", link:"https://github.com/MoltoRubato/Chessformer-Puzzle-Solver", p:"AI puzzle solver using optimized search techniques and duplicate-state reduction." },
+      { h:"Pinochle", link:"https://github.com/MoltoRubato/Pinochle", p:"Desktop card game featuring GUI gameplay and an intelligent computer opponent." },
+      { h:"This Website", link:"https://github.com/MoltoRubato/MyWebsite", p:"The interactive pixel-art world you're exploring right now — built with vanilla JavaScript and an HTML5 canvas." }
     ]
   },
   contact: {
@@ -69,7 +68,7 @@ window.CONTENT = {
   // openLabel/actLabel/noLabel = funny choice-button text (game.js builds the menu).
   characters: {
     Drod: { name:"Drod", room:"game", color:"#caa23a",
-      opens:"projects", openLabel:"🧪 See the experiments",
+      opens:"projects", openLabel:"✦ See the experiments",
       actLabel:"♟ Play a game", noLabel:"Maybe later",
       lines:[
         "Ah, another brave soul sent here to be 'humbled.' Apparently that's my entire purpose.",
@@ -77,43 +76,43 @@ window.CONTENT = {
         "Anyway. Face me at the board, or go gawk at his other little experiments. I'm exhibit A, by the way."
       ] },
     Alex: { name:"Alex", room:"music", color:"#5fb0c9",
-      actLabel:"🥁 Tap out a beat", noLabel:"Just vibing",
+      actLabel:"♫ Tap out a beat", noLabel:"Just vibing",
       lines:[
         "Ayy, you found the studio! Watch the cables, a couple of 'em bite.",
         "The owner? Oh, he basically haunts this room. Pops in for a 'quick break,' leaves at 4am. Every time.",
         "Anyway, enough about the ghost who pays rent. Hop on the booth and let's hear you."
       ] },
     DJ: { name:"DJ", room:"music", color:"#b07acb",
-      actLabel:"🎛 Hop on the pad", noLabel:"Just vibing",
+      actLabel:"♪ Hop on the pad", noLabel:"Just vibing",
       lines:[
         "Shh. Oh, false alarm, you're cool. Thought you were here about the noise complaint.",
         "Every track in this place got hand-picked by you-know-who. Man has VERY strong opinions about hi-hats.",
         "Enough chitchat. Get on the decks and cook something. I totally won't judge. (I'm judging.)"
       ] },
     Bob: { name:"Bob", room:"lounge", color:"#d98a5a",
-      opens:"experience", openLabel:"📜 Show me the rundown", noLabel:"Nah, just resting",
+      opens:"experience", openLabel:"☰ Show me the rundown", noLabel:"Nah, just resting",
       lines:[
         "Sit, sit. This couch has held fancier people than me, but it'll cope.",
         "Asking about the owner, huh? I've watched a lotta folks pass through this lounge.",
         "That Ryan's worked more places than I've taken naps, and buddy, I nap competitively. Want the rundown?"
       ] },
     Dino: { name:"Dino", room:"lounge", color:"#69b06a",
-      opens:"about", openLabel:"🦖 Show me his file", noLabel:"I'll keep snooping",
+      opens:"about", openLabel:"▤ Show me his file", noLabel:"I'll keep snooping",
       lines:[
         "Oh! A real-life person. We mostly get pigeons in here, so honestly this is big.",
         "Word is some guy named 'Ryan' owns this whole place. Never seen him. Little bit sus, if you ask me.",
         "I'm nosy though, so I looked him up. Wanna see what kind of person builds a dinosaur his own lounge?"
       ] },
     Girl: { name:"Amelia", room:"gym", color:"#e58aa6",
-      opens:"contact", openLabel:"📇 Grab his contact", noLabel:"Just stretching",
+      opens:"contact", openLabel:"✆ Grab his contact", noLabel:"Just stretching",
       lines:[
         "Spotter's here! Drop the bar on your face and I'll gasp real convincing-like.",
         "Lemme guess: you're after the guy whose name's plastered all over this building?",
         "I'm not his secretary, but his contact's just sorta lying around over here. Don't make it weird."
       ] },
     Gojo: { name:"Gojo", room:"gym", color:"#7aa0e5",
-      opens:"projects", openLabel:"📂 Show me his builds",
-      actLabel:"🥊 Hit the bag", noLabel:"Just stretching",
+      opens:"projects", openLabel:"◆ Show me his builds",
+      actLabel:"◉ Hit the bag", noLabel:"Just stretching",
       lines:[
         "Throughout heaven and earth, I alone am the strongest… spotter in this gym, anyway.",
         "You wondering if the owner actually does stuff, or just hires cool guys to stand around? Valid question.",

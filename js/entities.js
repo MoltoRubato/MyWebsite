@@ -60,7 +60,7 @@ window.ENTITIES = (function(){
   // The speaker is rendered as an animated sprite (see game.js render) and is
   // the jukebox trigger — it bobs/animates while site-wide music is playing.
   const OBJECTS = {
-    music:[ { type:"music", name:"Speaker", tx:13, ty:12, hint:"Open jukebox", icon:"🔊", sprite:"speaker" } ]
+    music:[ { type:"music", name:"Speaker", tx:13, ty:12, hint:"Open jukebox", sprite:"speaker" } ]
   };
 
   // Pets — critters you can walk up to and pet (Enter/E). Placed in world px

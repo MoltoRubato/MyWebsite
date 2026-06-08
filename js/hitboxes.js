@@ -76,17 +76,17 @@ window.HITBOXES = (function(){
   // and top PNGs per box, so the 'src' tag is informational only.
   const SEED_DEPTH = {
     lounge: [
-      { x:582, y:132, w:54,  h:80, baseY:212, src:"props", label:"bookshelf" },
       { x:292, y:144, w:28,  h:78, baseY:222, src:"props", label:"dining set" },
-      { x:608, y:308, w:26,  h:60, baseY:368, src:"props", label:"clothing stand" },
+      { x:614, y:302, w:20,  h:69, baseY:368, src:"props", label:"clothing stand" },
       { x:322, y:352, w:94,  h:50, baseY:402, src:"props", label:"flower vases" },
       { x:310, y:225, w:87,  h:54, baseY:279, src:"top" },
-      { x:476, y:272, w:138, h:93, baseY:349, src:"top" },
-      { x:470, y:365, w:145, h:52, baseY:402, src:"top" },
-      { x:603, y:202, w:37,  h:41, baseY:238, src:"top" },
+      { x:476, y:272, w:141, h:93, baseY:349, src:"top" },
+      { x:470, y:366, w:141, h:51, baseY:402, src:"top" },
+      { x:609, y:202, w:31,  h:41, baseY:238, src:"top" },
       { x:516, y:170, w:50,  h:55, baseY:216, src:"top" },
       { x:384, y:144, w:31,  h:79, baseY:223, src:"top" },
-      { x:319, y:140, w:65,  h:70, baseY:206, src:"top" }
+      { x:319, y:140, w:65,  h:70, baseY:206, src:"top" },
+      { x:610, y:297, w:24,  h:47, baseY:367, src:"top" }
     ],
     gym: [
       { x:672, y:64,  w:32, h:96, baseY:160, src:"props", label:"punch bag" },
@@ -109,12 +109,13 @@ window.HITBOXES = (function(){
       { x:550, y:234, w:18, h:54, baseY:288, src:"props", label:"mic stand" },
       { x:320, y:356, w:64, h:55, baseY:411, src:"props", label:"keyboard" },
       { x:578, y:366, w:30, h:50, baseY:416, src:"props", label:"mic stand" },
-      { x:314, y:183, w:39, h:44, baseY:222, src:"top" },
-      { x:315, y:123, w:104, h:66, baseY:185, src:"top" },
+      { x:314, y:190, w:39, h:37, baseY:222, src:"top" },
+      { x:315, y:123, w:68, h:64, baseY:185, src:"top" },
       { x:570, y:203, w:42, h:87, baseY:290, src:"top" },
       { x:454, y:344, w:54, h:67, baseY:411, src:"top" },
       { x:512, y:307, w:57, h:78, baseY:385, src:"top" },
-      { x:512, y:385, w:56, h:28, baseY:413, src:"top" }
+      { x:512, y:385, w:56, h:28, baseY:413, src:"top" },
+      { x:383, y:158, w:30, h:28, baseY:186, src:"top" }
     ],
     game: [
       { x:288, y:140, w:32,  h:36,  baseY:176, src:"props", label:"hanging plant" },
@@ -122,10 +123,11 @@ window.HITBOXES = (function(){
       { x:416, y:140, w:32,  h:36,  baseY:176, src:"props", label:"hanging plant" },
       { x:480, y:140, w:32,  h:36,  baseY:176, src:"props", label:"hanging plant" },
       { x:544, y:140, w:32,  h:36,  baseY:176, src:"props", label:"hanging plant" },
-      { x:286, y:314, w:129, h:136, baseY:439, src:"top" },
+      { x:289, y:419, w:29,  h:31,  baseY:439, src:"top" },
       { x:281, y:190, w:149, h:105, baseY:295, src:"top" },
       { x:435, y:204, w:151, h:86,  baseY:290, src:"top" },
-      { x:460, y:322, w:101, h:108, baseY:429, src:"top" }
+      { x:460, y:322, w:101, h:108, baseY:388, src:"top" },
+      { x:296, y:381, w:18,  h:37,  baseY:439, src:"top" }
     ]
   };
 
@@ -157,7 +159,8 @@ window.HITBOXES = (function(){
       { x:314, y:231, w:77,  h:43  },
       { x:344, y:391, w:16,  h:8   },
       { x:330, y:386, w:13,  h:9   },
-      { x:361, y:388, w:13,  h:6   }
+      { x:361, y:388, w:13,  h:6   },
+      { x:608, y:190, w:33,  h:49  }
     ],
     gym: [
       { x:18,  y:-1,  w:960, h:128 },
@@ -181,10 +184,11 @@ window.HITBOXES = (function(){
       { x:578, y:385, w:200, h:72  },
       { x:292, y:223, w:117, h:64  },
       { x:452, y:223, w:119, h:63  },
-      { x:306, y:339, w:94,  h:69  },
+      { x:306, y:339, w:97,  h:79  },
       { x:497, y:350, w:34,  h:80  },
       { x:467, y:370, w:88,  h:43  },
-      { x:577, y:191, w:130, h:65  }
+      { x:577, y:191, w:130, h:65  },
+      { x:294, y:432, w:22,  h:10  }
     ],
     music: [
       { x:0,   y:0,   w:960, h:158 },
@@ -204,7 +208,9 @@ window.HITBOXES = (function(){
       { x:580, y:403, w:26,  h:10  },
       { x:514, y:311, w:25,  h:30  },
       { x:528, y:334, w:28,  h:5   },
-      { x:523, y:313, w:20,  h:21  }
+      { x:523, y:313, w:20,  h:21  },
+      { x:527, y:394, w:28,  h:13  },
+      { x:413, y:396, w:37,  h:16  }
     ]
   };
 

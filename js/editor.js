@@ -95,18 +95,18 @@ window.EDITOR = (function(){
     p.innerHTML=`
       <div class="hbE-bar">
         <div><h4>LEVEL EDITOR</h4><div class="hbE-room" id="hbeRoom">—</div></div>
-        <button id="hbeEdit" class="pri">✎ Edit</button>
+        <button id="hbeEdit" class="pri">Edit</button>
       </div>
       <div id="hbeBody" style="display:none">
         <div class="hbE-seg">
           <button data-m="solid"   class="on">■ Solid</button>
           <button data-m="overlay">▦ Depth</button>
           <button data-m="door">⌑ Door</button>
-          <button data-m="spawn">✚ Spawn</button>
+          <button data-m="spawn">Spawn</button>
         </div>
         <div class="hbE-row" id="hbeAddRow">
           <button id="hbeAdd" style="flex:1">+ Add box</button>
-          <button id="hbeDel" class="danger" style="flex:1">🗑 Delete</button>
+          <button id="hbeDel" class="danger" style="flex:1">Delete</button>
         </div>
         <div class="hbE-grid">
           <div class="hbE-f"><label>X</label><input id="hbeX" type="number"></div>
@@ -128,10 +128,10 @@ window.EDITOR = (function(){
         </div>
         <div class="hbE-hint" id="hbeHint"></div>
         <div class="hbE-actions">
-          <button id="hbeExport">⬇ Export</button>
+          <button id="hbeExport">Export</button>
           <button id="hbeReset" class="danger">↺ Reset room</button>
         </div>
-        <button id="hbeDone" class="hbE-done">✓ Done editing</button>
+        <button id="hbeDone" class="hbE-done">Done editing</button>
       </div>`;
     document.body.appendChild(p);
     const q=id=>p.querySelector(id);
@@ -191,7 +191,7 @@ window.EDITOR = (function(){
     if(!el.panel) return;
     el.room.textContent = ROOM_LABEL[room]||room;
     el.body.style.display = editing?"block":"none";
-    el.edit.textContent = editing?"✎ Editing…":"✎ Edit";
+    el.edit.textContent = editing?"Editing…":"Edit";
     el.edit.style.display = editing?"none":"inline-block";
     el.addRow.style.display = (mode==="spawn")?"none":"flex";
     el.add.textContent = mode==="door" ? "+ Add door" : "+ Add box";

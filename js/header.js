@@ -67,11 +67,17 @@ window.HEADER = (function(){
 
   function projectsHTML(){
     const p = C.projects;
-    const rows = (p.items||[]).map((it,i)=>`
+    const ext='target="_blank" rel="noopener"';
+    const rows = (p.items||[]).map((it,i)=>{
+      const title = it.link
+        ? `<h3 class="pj-title"><a class="pj-link" href="${it.link}" ${ext}>${it.h}<span class="pj-ext" aria-hidden="true">↗</span></a></h3>`
+        : `<h3 class="pj-title">${it.h}</h3>`;
+      return `
       <li class="pj-row" style="--d:${0.06+i*0.045}s">
         <span class="pj-num">${String(i+1).padStart(2,"0")}</span>
-        <div class="pj-body"><h3 class="pj-title">${it.h}</h3><p class="pj-desc">${it.p}</p></div>
-      </li>`).join("");
+        <div class="pj-body">${title}<p class="pj-desc">${it.p}</p></div>
+      </li>`;
+    }).join("");
     return panelHead(p.kicker, p.title, p.lead) + `<ol class="pj-list">${rows}</ol>`;
   }
 

@@ -187,7 +187,7 @@ window.MUSIC = (function(){
     host.classList.remove("hidden"); requestAnimationFrame(()=>host.classList.add("in"));
     duckForPad();                                  // fade the jukebox music out
     buildPad(); wireBeat();
-    bpSay("Welcome to the booth. Tap out something filthy. 🎛");
+    bpSay("Welcome to the booth. Tap out something filthy. ;)");
     bpLastT=0; bpRaf=requestAnimationFrame(beatLoop);
   }
   function closeBeatpad(){
@@ -260,7 +260,7 @@ window.MUSIC = (function(){
       seqTimer=setTimeout(tick, (60/bpm)*1000/2);
     };
     tick();
-    bpSay("Now we're cooking. 🔥");
+    bpSay("Now we're cooking. :D");
   }
   function stopPad(){
     padPlaying=false; if(seqTimer)clearTimeout(seqTimer); seqTimer=null;

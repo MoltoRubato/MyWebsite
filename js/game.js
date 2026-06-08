@@ -50,7 +50,7 @@ window.GAME = (function(){
       keys[k]=true;
       if(k==="enter"||k==="e"){ interact(); }
       if(k==="m"){ HEADER.openMap(); }
-      if(k==="h"){ setHitboxes(!showHitboxes); }
+      // if(k==="h"){ setHitboxes(!showHitboxes); }  // DEV hitbox toggle — disabled for now (still reachable via ?dev=1)
     });
     window.addEventListener("keyup",(e)=>{ keys[e.key.toLowerCase()]=false; });
     // touch dpad
@@ -101,8 +101,8 @@ window.GAME = (function(){
     // (chess/music/workout) and an optional header tab they can pull up (opens).
     const choices=[], actions={};
     const ACT={ chess:{def:"♟ Play a game", run:openChess},
-                music:{def:"🥁 Tap out a beat", run:openBeatpad},
-                workout:{def:"🥊 Hit the bag", run:openWorkout} };
+                music:{def:"♫ Tap out a beat", run:openBeatpad},
+                workout:{def:"◉ Hit the bag", run:openWorkout} };
     if(npc.interact && ACT[npc.interact]){
       choices.push({label:data.actLabel||ACT[npc.interact].def, value:"act"});
       actions.act=ACT[npc.interact].run;
