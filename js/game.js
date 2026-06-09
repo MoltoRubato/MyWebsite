@@ -226,6 +226,7 @@ window.GAME = (function(){
   }
   function enterRoom(to, fromRoom){
     if(transitioning) return;
+    if(intro){ intro=null; player.moving=false; } // never let the opening cinematic follow you into another room
     transitioning=true; paused=true;
     veil.classList.add("show");
     setTimeout(()=>{
@@ -540,7 +541,7 @@ window.GAME = (function(){
   }
 
   return { start, resize, pause:(v)=>{paused=v;}, currentRoom:()=>curRoom,
-           travelTo, toggleSound, isPaused:()=>paused,
+           travelTo, toggleSound, isPaused:()=>paused, isIntro:()=>!!intro,
            toggleHitboxes:()=>{ setHitboxes(!showHitboxes); return showHitboxes; },
            setHitboxes,
            camera:()=>camera(),

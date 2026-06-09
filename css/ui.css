@@ -225,76 +225,86 @@
 .map-sub{margin:3px 0 0;font-size:13px;color:var(--ui-ink-soft);letter-spacing:.4px}
 
 /* ----- floor plan ----- */
-.map-plan{position:relative;width:100%;aspect-ratio:142/96;margin:0 auto 18px;
-  border-radius:14px;background:
-    repeating-linear-gradient(0deg,transparent 0 23px,rgba(231,200,150,.05) 23px 24px),
-    repeating-linear-gradient(90deg,transparent 0 23px,rgba(231,200,150,.05) 23px 24px),
-    radial-gradient(120% 120% at 50% 30%,#2c2114 0%,#221a10 60%,#1b150d 100%);
-  box-shadow:inset 0 0 0 2px var(--ui-frame-d),inset 0 0 24px rgba(0,0,0,.5),0 4px 0 rgba(0,0,0,.25)}
-.map-plan::after{content:"";position:absolute;top:11px;right:13px;width:42px;height:42px;pointer-events:none;opacity:.55;
-  background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2048%2048'%20fill='none'%20stroke='%23e7a33e'%3E%3Ccircle%20cx='24'%20cy='25'%20r='15'%20stroke-width='1.5'%20opacity='.45'/%3E%3Cpath%20d='M24%2010%20L28%2025%20L24%2040%20L20%2025%20Z'%20fill='%23e7a33e'%20stroke='none'/%3E%3Cpath%20d='M9%2025%20L24%2021%20L39%2025%20L24%2029%20Z'%20fill='%23e7a33e'%20stroke='none'%20opacity='.4'/%3E%3Ctext%20x='24'%20y='8'%20font-size='9'%20fill='%23e7a33e'%20stroke='none'%20text-anchor='middle'%20font-family='monospace'%20font-weight='bold'%3EN%3C/text%3E%3C/svg%3E") center/contain no-repeat}
+/* the plan is a top-down view of the apartment: warm wood-plank floor inside a
+   light outer wall, matching the cozy interiors of the actual game world */
+.map-plan{position:relative;width:100%;aspect-ratio:142/100;margin:0 auto 16px;
+  border-radius:10px;background:
+    radial-gradient(72% 58% at 50% -6%, rgba(255,234,186,.15), transparent 62%),
+    radial-gradient(56% 52% at 85% 112%, rgba(52,29,12,.30), transparent 68%),
+    repeating-linear-gradient(135deg, transparent 0 22px, rgba(40,22,9,.30) 22px 24px),
+    repeating-linear-gradient(135deg, rgba(255,238,205,.04) 0 24px, rgba(0,0,0,.045) 24px 48px),
+    linear-gradient(135deg,#9d6e41 0%,#875930 58%,#73482a 100%);
+  box-shadow:
+    inset 0 0 0 2px #2c1d11,
+    inset 0 0 0 7px #d3bd8f,
+    inset 0 0 0 9px #2c1d11,
+    inset 0 0 50px rgba(24,13,4,.6),
+    0 4px 0 rgba(0,0,0,.25)}
 
 .map-room{position:absolute;padding:0;margin:0;background:none;border:none;text-align:left;
   display:flex;flex-direction:column;color:var(--ui-ink);z-index:2;font-family:inherit}
-.map-room.r-gym   {left:35%;top:3%; width:30%;height:42%}
-.map-room.r-game  {left:2%; top:55%;width:30%;height:42%}
-.map-room.r-lounge{left:35%;top:55%;width:30%;height:42%}
-.map-room.r-music {left:68%;top:55%;width:30%;height:42%}
+.map-room.r-gym   {left:36%;top:4%; width:28%;height:40%}
+.map-room.r-game  {left:2%; top:53%;width:28%;height:40%}
+.map-room.r-lounge{left:36%;top:53%;width:28%;height:40%}
+.map-room.r-music {left:70%;top:53%;width:28%;height:40%}
 
-.mr-frame{position:relative;flex:1;min-height:0;overflow:hidden;border-radius:9px;
-  border:2px solid var(--ui-outline);outline:2px solid var(--rc);outline-offset:-2px;
-  background:radial-gradient(120% 120% at 50% 35%,#2a2014 0%,#221a10 70%,#1b150d 100%);
-  box-shadow:inset 0 0 0 2px rgba(0,0,0,.35),0 5px 12px rgba(0,0,0,.5);
-  transition:transform .18s ease, box-shadow .2s ease}
+.mr-frame{position:relative;flex:1;min-height:0;width:100%;overflow:hidden;border-radius:6px;
+  border:3px solid #d3bd8f;background:#241a10;
+  box-shadow:0 0 0 2px #2c1d11,
+             inset 0 0 0 1px rgba(44,29,17,.55),
+             inset 0 2px 0 rgba(255,255,255,.22),
+             0 7px 13px rgba(16,8,2,.5);
+  transition:transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease}
 .mr-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none}
-.mr-frame::after{content:"";position:absolute;inset:0;border-radius:7px;pointer-events:none;
-  box-shadow:inset 0 0 18px rgba(0,0,0,.45),inset 0 2px 0 rgba(255,255,255,.08)}
+.mr-frame::after{content:"";position:absolute;inset:0;border-radius:4px;pointer-events:none;
+  box-shadow:inset 0 0 16px rgba(18,9,2,.34)}
 
-.mr-plate{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;
-  padding:4px 6px;border-radius:7px;background:rgba(35,26,16,.55);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
-.mr-ic{width:16px;height:16px;flex:none;color:var(--rc);filter:drop-shadow(0 1px 0 rgba(0,0,0,.5))}
+.mr-label{position:absolute;left:0;right:0;bottom:0;z-index:3;
+  display:flex;align-items:center;gap:6px;padding:16px 10px 7px;
+  background:linear-gradient(transparent 46%,rgba(12,9,5,.5) 70%,rgba(9,6,3,.9));
+  color:var(--cream)}
+.mr-ic{width:15px;height:15px;flex:none;color:var(--rc);filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
 .mr-ic svg{width:100%;height:100%;display:block;fill:currentColor}
-.mr-name{font-size:14px;font-weight:600;letter-spacing:.4px;color:var(--cream);white-space:nowrap}
+.mr-name{font-size:13.5px;font-weight:600;letter-spacing:.3px;color:var(--cream);white-space:nowrap;
+  text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.8)}
+.mr-arrow{margin-left:auto;font-size:14px;font-weight:700;line-height:1;color:var(--rc);
+  opacity:0;transform:translateX(-4px);transition:opacity .18s ease, transform .18s ease}
 
 /* travel affordance on the clickable rooms */
-.map-room button,.map-room{cursor:default}
+.map-room{cursor:default}
 button.map-room{cursor:pointer}
-.mr-go{position:absolute;left:50%;bottom:8px;transform:translate(-50%,8px);z-index:3;
-  display:flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;
-  font-size:12px;font-weight:700;letter-spacing:.6px;color:#3a2410;
-  background:linear-gradient(160deg,var(--accent),#d59a37);box-shadow:0 3px 0 #9c6f1e;
-  opacity:0;transition:opacity .18s ease, transform .18s ease;white-space:nowrap}
-.mr-arrow{font-size:13px;line-height:1}
-button.map-room:hover .mr-frame,button.map-room:focus-visible .mr-frame{transform:translateY(-4px);
-  box-shadow:inset 0 0 0 2px rgba(0,0,0,.3),0 10px 20px rgba(0,0,0,.55),0 0 0 2px var(--rc)}
-button.map-room:hover .mr-go,button.map-room:focus-visible .mr-go{opacity:1;transform:translate(-50%,0)}
-button.map-room:hover .mr-frame::after,button.map-room:focus-visible .mr-frame::after{box-shadow:inset 0 0 18px rgba(0,0,0,.15)}
-button.map-room:active .mr-frame{transform:translateY(-1px)}
+button.map-room:hover .mr-frame,button.map-room:focus-visible .mr-frame{transform:translateY(-5px);
+  box-shadow:0 0 0 2px #2c1d11,0 0 0 4px var(--rc),0 16px 26px rgba(0,0,0,.55),0 0 22px -3px var(--rc),inset 0 2px 0 rgba(255,255,255,.22)}
+button.map-room:hover .mr-arrow,button.map-room:focus-visible .mr-arrow{opacity:1;transform:translateX(0)}
+button.map-room:hover .mr-frame::after,button.map-room:focus-visible .mr-frame::after{box-shadow:inset 0 0 22px rgba(0,0,0,.18),inset 0 2px 0 rgba(255,255,255,.1)}
+button.map-room:active .mr-frame{transform:translateY(-2px)}
 .map-room:focus-visible{outline:none}
 
-/* current room: gold glow + avatar */
-.map-room.here .mr-frame{border-color:var(--ui-gold);outline-color:var(--ui-gold);
-  box-shadow:inset 0 0 0 2px rgba(156,90,37,.5),0 0 0 2px rgba(231,163,62,.55),0 0 22px rgba(231,163,62,.45);
-  animation:mrPulse 2.2s ease-in-out infinite}
-@keyframes mrPulse{0%,100%{box-shadow:inset 0 0 0 2px rgba(156,90,37,.5),0 0 0 2px rgba(231,163,62,.5),0 0 16px rgba(231,163,62,.35)}
-  50%{box-shadow:inset 0 0 0 2px rgba(156,90,37,.5),0 0 0 3px rgba(231,163,62,.75),0 0 26px rgba(231,163,62,.6)}}
-.map-room.here .mr-plate{background:rgba(156,90,37,.4);box-shadow:inset 0 0 0 1px rgba(231,163,62,.4)}
-.mr-here{position:absolute;top:6px;left:6px;z-index:3;padding:2px 8px;border-radius:6px;white-space:nowrap;
-  font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;color:#3a2410;
-  background:linear-gradient(160deg,var(--accent),#d59a37);box-shadow:0 2px 0 #9c6f1e}
+/* current room: keep the cream wall, add a warm gold ring + gentle pulse */
+.map-room.here .mr-frame{
+  box-shadow:0 0 0 2px #2c1d11,0 0 0 4px rgba(231,163,62,.7),0 7px 14px rgba(16,8,2,.5),0 0 24px -3px rgba(231,163,62,.6),inset 0 2px 0 rgba(255,255,255,.22);
+  animation:mrPulse 2.4s ease-in-out infinite}
+@keyframes mrPulse{
+  0%,100%{box-shadow:0 0 0 2px #2c1d11,0 0 0 4px rgba(231,163,62,.55),0 7px 14px rgba(16,8,2,.5),0 0 18px -3px rgba(231,163,62,.45),inset 0 2px 0 rgba(255,255,255,.22)}
+  50%{box-shadow:0 0 0 2px #2c1d11,0 0 0 4px rgba(231,163,62,.9),0 7px 14px rgba(16,8,2,.5),0 0 28px -2px rgba(231,163,62,.72),inset 0 2px 0 rgba(255,255,255,.22)}}
+.mr-here{position:absolute;top:7px;left:7px;z-index:4;padding:3px 9px;border-radius:999px;white-space:nowrap;
+  font-family:'Silkscreen',monospace;font-size:8.5px;letter-spacing:.6px;color:#3a2410;
+  background:linear-gradient(160deg,var(--accent),#d59a37);box-shadow:0 2px 0 #9c6f1e,0 3px 9px rgba(0,0,0,.45)}
 
-/* doorway connectors (under the rooms, so the frames read as walls with a gap) */
-.map-link{position:absolute;z-index:1;background:#6a4a2c;
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
-.map-link .ml-jamb{position:absolute;background:var(--ui-gold)}
-.map-link.l-gym  {left:47.5%;top:42%;width:5%;height:15%}
-.map-link.l-game {left:30%;  top:71%;width:7%;height:8%}
-.map-link.l-music{left:63%;  top:71%;width:7%;height:8%}
-.map-link.l-gym .ml-jamb{top:0;bottom:0;width:2px}
+/* doorways — an opening in the wall between each wing and the lounge hub.
+   a wood threshold framed by two light jambs, glowing faintly in the destination
+   room's colour, the way the in-game lounge doors are colour-framed per room. */
+.map-link{position:absolute;z-index:1;border-radius:3px;
+  background:linear-gradient(#9d7142,#855a31);
+  box-shadow:inset 0 0 0 1px rgba(44,29,17,.5),inset 0 0 11px -2px var(--lc,transparent),0 2px 5px rgba(16,8,2,.4)}
+.map-link.l-gym  {--lc:#93ab5f;left:calc(50% - 15px);top:43%;width:30px;height:11%}
+.map-link.l-game {--lc:#7fa3cf;left:29%;  top:calc(73% - 15px);width:8.5%;height:30px}
+.map-link.l-music{--lc:#c95a4f;left:62.5%;top:calc(73% - 15px);width:8.5%;height:30px}
+.map-link .ml-jamb{position:absolute;background:#d3bd8f;box-shadow:0 0 0 1px #2c1d11;border-radius:1px}
+.map-link.l-gym .ml-jamb{top:0;bottom:0;width:3px}
 .map-link.l-gym .ml-jamb:first-child{left:0}
 .map-link.l-gym .ml-jamb:last-child{right:0}
-.map-link.l-game .ml-jamb,.map-link.l-music .ml-jamb{left:0;right:0;height:2px}
+.map-link.l-game .ml-jamb,.map-link.l-music .ml-jamb{left:0;right:0;height:3px}
 .map-link.l-game .ml-jamb:first-child,.map-link.l-music .ml-jamb:first-child{top:0}
 .map-link.l-game .ml-jamb:last-child,.map-link.l-music .ml-jamb:last-child{bottom:0}
 
@@ -304,20 +314,18 @@ button.map-room:active .mr-frame{transform:translateY(-1px)}
 
 @media(max-width:560px){
   .map-card{padding:20px 16px 22px}
-  .map-plan{aspect-ratio:120/104}
-  .map-plan::after{width:32px;height:32px;top:8px;right:9px}
-  .map-room.r-gym{left:34%;top:2%; width:32%;height:32%}
-  .map-room.r-game{left:1%; top:40%;width:32%;height:32%}
-  .map-room.r-lounge{left:34%;top:40%;width:32%;height:32%}
-  .map-room.r-music{left:67%;top:40%;width:32%;height:32%}
-  .map-link.l-gym{left:47%;top:31%;width:6%;height:11%}
-  .map-link.l-game{left:31%;top:53%;width:5%;height:7%}
-  .map-link.l-music{left:64%;top:53%;width:5%;height:7%}
-  .mr-plate{padding:3px 4px;gap:5px;margin-top:5px}
-  .mr-ic{width:13px;height:13px}
-  .mr-name{font-size:11px}
-  .mr-here{font-size:8px;padding:2px 5px;top:4px;left:4px}
-  .mr-go{font-size:11px;padding:3px 11px}
+  .map-plan{aspect-ratio:122/100}
+  .map-room.r-gym   {left:35%;top:6%; width:30%;height:34%}
+  .map-room.r-game  {left:1%; top:49%;width:30%;height:34%}
+  .map-room.r-lounge{left:35%;top:49%;width:30%;height:34%}
+  .map-room.r-music {left:69%;top:49%;width:30%;height:34%}
+  .map-link.l-gym   {left:calc(50% - 12px);top:39%;width:24px;height:11%}
+  .map-link.l-game  {left:30%;top:calc(66% - 12px);width:7%;height:24px}
+  .map-link.l-music {left:63%;top:calc(66% - 12px);width:7%;height:24px}
+  .mr-label{padding:11px 5px 6px;gap:3px}
+  .mr-ic{width:11px;height:11px}
+  .mr-name{font-size:10px;letter-spacing:0}
+  .mr-here{font-size:7.5px;padding:2px 7px;top:5px;left:5px}
 }
 
 /* ---------------- Activity overlay ---------------- */
