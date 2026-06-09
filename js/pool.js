@@ -37,9 +37,9 @@ window.POOL = (function(){
 
   /* ---------------- difficulty ---------------- */
   const LEVELS={
-    chill:  { name:"Chill",  err:0.090, power:0.78, label:"happy to miss" },
-    normal: { name:"Normal", err:0.038, power:0.86, label:"he's focused"  },
-    sweat:  { name:"Sweat",  err:0.013, power:0.95, label:"dead-eye Drod" }
+    chill:  { name:"Chill",  err:0.080, power:0.82, label:"happy to miss" },
+    normal: { name:"Normal", err:0.026, power:0.90, label:"he's focused"  },
+    sweat:  { name:"Sweat",  err:0.005, power:0.97, label:"dead-eye Drod" }
   };
 
   /* ---------------- banter (Drod's voice) ---------------- */
@@ -79,6 +79,7 @@ window.POOL = (function(){
   let ballInHand=false;          // active player may place cue ball
   let aiming=false, aimAngle=0, power=0;   // power 0..1
   let dragId=0;                  // pointer dragging the cue ball (place mode)
+  let cueGlide=null;             // smooth cue-ball reposition (Drod ball-in-hand)
   let over=false, winner=null;
   let onClose=null;
   let bctx, cnv;
@@ -239,7 +240,7 @@ window.POOL = (function(){
     level && (document.getElementById("plLevel").textContent = level.name+" — "+level.label);
     groups={you:null,drod:null}; openTable=true; isBreak=true;
     turn="you"; over=false; winner=null; ballInHand=false;
-    aiming=false; power=0;
+    aiming=false; power=0; cueGlide=null;
     phase="aim";
     showDiff(false);
     hideOver();
@@ -527,28 +528,55 @@ window.POOL = (function(){
   }
 
   /* ====================== Drod AI ====================== */
+  // inward (mouth) direction of each pocket — for judging a clean approach.
+  const POCKET_DIR = POCKETS.map(p=>{
+    const ix = p.x<=railL?1 : p.x>=railR?-1 : 0;   // side pockets: ix=0
+    const iy = p.y<=railT?1 : -1;
+    const m=Math.hypot(ix,iy)||1; return { x:ix/m, y:iy/m, side: ix===0 };
+  });
+
   function scheduleAI(){
-    setTimeout(()=>{ if(phase!=="aim"||turn!=="drod"||over) return; aiMove(); }, 720);
+    setTimeout(()=>{ if(phase!=="aim"||turn!=="drod"||over||cueGlide) return; aiMove(); }, 640);
   }
   function aiMove(){
-    // ball in hand: place the cue ball for the best available shot
-    if(ballInHand){ aiPlaceCue(); ballInHand=false; }
-    const cb=cueBall();
-    const plan=bestShot(cb.x, cb.y, "drod");
-    let angle, pw;
-    if(plan){
-      angle=plan.angle; pw=plan.power;
-    } else {
-      // safety: nudge the nearest legal ball so we at least make contact + a rail
-      const legal=legalTargets("drod");
-      const tgt = legal.sort((a,b)=>dist(cb,a)-dist(cb,b))[0];
-      if(tgt){ angle=Math.atan2(tgt.y-cb.y, tgt.x-cb.x); pw=0.5; }
-      else { angle=Math.random()*6.28; pw=0.45; }
+    if(over||turn!=="drod") return;
+    if(ballInHand){
+      // ball in hand: pick a spot, then GLIDE the cue there before shooting
+      ballInHand=false;
+      const spot=aiCuePlacement();
+      const cb=cueBall();
+      setStatus("Drod lines up ball in hand…");
+      startCueGlide(cb.x, cb.y, spot.x, spot.y, ()=>setTimeout(aiTakeShot, 480));
+      return;
     }
-    // difficulty-scaled aim error (worse on long/thin shots)
-    const errScale = level.err * (plan? (1+ (plan.dist/620) + (1-plan.quality)*0.6) : 1.4);
-    angle += (Math.random()*2-1)*errScale + (Math.random()*2-1)*errScale*0.5;
-    pw = Math.max(0.32, Math.min(1, pw*level.power + (Math.random()*2-1)*0.05));
+    aiTakeShot();
+  }
+  function startCueGlide(fx,fy,tx,ty,then){
+    thinking=true;                 // keep the portrait animated through the move
+    cueGlide={ fx, fy, tx, ty, t0:performance.now(),
+               dur:Math.min(720, 240+Math.hypot(tx-fx,ty-fy)*1.5), then };
+  }
+  function aiTakeShot(){
+    if(over||turn!=="drod"||phase==="shooting") return;
+    const cb=cueBall();
+    let plan=bestShot(cb.x, cb.y, "drod", false);     // strict: high-percentage line
+    if(!plan) plan=bestShot(cb.x, cb.y, "drod", true); // relaxed: any plausible line
+    let angle, pw, q=0.5, d=300;
+    if(plan){ angle=plan.angle; pw=plan.power; q=plan.quality; d=plan.dist; }
+    else {
+      // no makeable line: play safe. Hit the nearest legal ball FULL in the face
+      // (cue centre -> ball centre) at moderate pace, so the cue stuns to a near
+      // stop (no scratch) while the object travels off to a rail (a legal hit).
+      const cb2=cueBall();
+      const tgt=legalTargets("drod").sort((a,b)=>dist(cb2,a)-dist(cb2,b))[0];
+      if(tgt){ angle=Math.atan2(tgt.y-cb2.y,tgt.x-cb2.x); pw=0.52; q=0.95; d=dist(cb2,tgt); }
+      else { angle=Math.random()*6.28; pw=0.5; }
+    }
+    // bell-shaped aim error, scaled by difficulty + mild distance/cut difficulty
+    const errScale = level.err * (0.7 + d/1100 + (1-q)*0.45);
+    const g=(Math.random()+Math.random()+Math.random()-1.5)/1.5;   // ~bell in [-1,1]
+    angle += g*errScale;
+    pw = Math.max(0.42, Math.min(1, pw*(0.93+0.07*level.power) + (Math.random()*2-1)*0.03));
     thinking=false;
     shoot(angle, pw);
   }
@@ -563,7 +591,6 @@ window.POOL = (function(){
     for(const b of balls){
       if(b.out||b.id===0) continue;
       if(ignore && ignore.includes(b.id)) continue;
-      // distance from ball centre to segment
       const dx=x1-x0, dy=y1-y0, L2=dx*dx+dy*dy;
       let t = L2? ((b.x-x0)*dx+(b.y-y0)*dy)/L2 : 0;
       t=Math.max(0,Math.min(1,t));
@@ -572,53 +599,96 @@ window.POOL = (function(){
     }
     return true;
   }
-  function bestShot(cx, cy, who){
+  // Will the cue ball roll into a pocket after this contact? (deflection / follow
+  // scratch). Marches the cue's post-contact tangential path and checks pockets.
+  function cueScratchRisk(gx,gy, ax,ay, ux,uy, cosCut, power){
+    const sinCut=Math.sqrt(Math.max(0,1-cosCut*cosCut));
+    const launch=VMIN+power*(VMAX-VMIN);
+    // post-contact cue speed ~ launch*sinCut (tangential) + tiny follow along u
+    const tanSpeed=launch*sinCut, follow=launch*0.04*cosCut;
+    const rollDist=(s)=> s<=0?0 : (s+70)/0.96*(1-Math.exp(-0.0096*((s+70)/0.96))) ;
+    // tangential deflection ray
+    const adotu=ax*ux+ay*uy;
+    let tx=ax-adotu*ux, ty=ay-adotu*uy; const tl=Math.hypot(tx,ty);
+    const check=(dx,dy,len)=>{
+      if(len<6) return false;
+      for(const p of POCKETS){
+        const wx=p.x-gx, wy=p.y-gy;
+        let proj=wx*dx+wy*dy; if(proj<2) continue; if(proj>len) proj=len;
+        const cxp=gx+dx*proj, cyp=gy+dy*proj;
+        if(Math.hypot(p.x-cxp,p.y-cyp) < CAP+5) return true;
+      }
+      return false;
+    };
+    if(tl>1e-3 && check(tx/tl, ty/tl, Math.min(360, rollDist(tanSpeed)))) return true;  // deflection
+    if(check(ux, uy, Math.min(140, rollDist(follow)))) return true;                       // follow
+    return false;
+  }
+  // Best (target, pocket) line from a cue position. `relax` loosens thresholds
+  // so Drod still attempts a real shot when nothing is perfect.
+  function bestShot(cx, cy, who, relax){
     const targets=legalTargets(who);
+    const cutMin    = relax?0.20:0.36;   // cos of max cut angle (~78° vs ~69°)
+    const appCorner = relax?0.05:0.16;   // corner pockets are forgiving
+    const appSide   = relax?0.30:0.50;   // side pockets need a straighter approach
+    const laneCue   = relax?1.45:1.7;    // *R clearance, cue -> ghost
+    const laneObj   = relax?1.05:1.2;    // *R clearance, object -> pocket
     let best=null;
     for(const t of targets){
-      for(const p of POCKETS){
-        // ghost ball: where the cue centre must be at contact
-        const tpx=p.x-t.x, tpy=p.y-t.y; const tpd=Math.hypot(tpx,tpy); if(tpd<1) continue;
-        const ux=tpx/tpd, uy=tpy/tpd;                 // target -> pocket dir
+      for(let pi=0; pi<POCKETS.length; pi++){
+        const p=POCKETS[pi], pdir=POCKET_DIR[pi];
+        const tpx=p.x-t.x, tpy=p.y-t.y; const tpd=Math.hypot(tpx,tpy); if(tpd<6) continue;
+        const ux=tpx/tpd, uy=tpy/tpd;                 // object travel dir
+        const approachQ = -(ux*pdir.x + uy*pdir.y);   // 1 = straight into the mouth
+        if(approachQ < (pdir.side?appSide:appCorner)) continue;
         const gx=t.x-ux*BALL, gy=t.y-uy*BALL;          // ghost (cue contact centre)
-        const cax=gx-cx, cay=gy-cy; const cad=Math.hypot(cax,cay); if(cad<1) continue;
+        const cax=gx-cx, cay=gy-cy; const cad=Math.hypot(cax,cay); if(cad<2) continue;
         const ax=cax/cad, ay=cay/cad;                  // cue approach dir
         const cosCut=ax*ux+ay*uy;                      // 1 = dead straight
-        if(cosCut<0.18) continue;                      // cut too thin (>~80°)
-        // paths must be reasonably clear
-        if(!pathClear(cx,cy,gx,gy,[t.id],R*1.7)) continue;       // cue lane to ghost
-        if(!pathClear(t.x,t.y,p.x,p.y,[t.id],R*1.25)) continue;  // target lane to pocket
-        const quality=cosCut;
-        const score = quality*1.0 - (cad/900) - (tpd/900)*0.6;
+        if(cosCut<cutMin) continue;
+        if(!pathClear(cx,cy,gx,gy,[t.id],R*laneCue)) continue;
+        if(!pathClear(t.x,t.y,p.x,p.y,[t.id],R*laneObj)) continue;
+        // power: just enough for the object to reach the pocket, capped to limit scratches
+        const power=Math.max(0.40, Math.min(0.9, 0.34 + ((cad+tpd)/PW)*0.40 + (1-cosCut)*0.10));
+        const scratchy=cueScratchRisk(gx,gy, ax,ay, ux,uy, cosCut, power);
+        if(scratchy && !relax) continue;              // strict: never leave the cue for a pocket
+        // makeability: straightness + clean approach, minus travel + scratch penalty
+        // (corners are wider + safer than side pockets, so nudge toward them)
+        const score = cosCut*2.2 + approachQ*1.1 - (tpd/PW)*1.3 - (cad/PW)*0.7
+                      - (scratchy?2.5:0) - (pdir.side?0.5:0);
         if(!best || score>best.score){
-          best={ angle:Math.atan2(cay,cax), power:Math.min(1, 0.42+ cad/680*0.4 + tpd/680*0.18 + (1-quality)*0.2),
-                 dist:cad, quality, score, tx:t.x, ty:t.y };
+          best={ angle:Math.atan2(cay,cax), power, dist:cad, quality:cosCut, score };
         }
       }
     }
     return best;
   }
-  function aiPlaceCue(){
-    // try to place the cue for the straightest makeable shot
+  function aiCuePlacement(){
+    // pick the cue spot giving the straightest makeable shot on any legal ball
     const targets=legalTargets("drod");
     let best=null;
     for(const t of targets){
-      for(const p of POCKETS){
-        const tpx=t.x-p.x, tpy=t.y-p.y; const tpd=Math.hypot(tpx,tpy); if(tpd<1) continue;
-        const ux=tpx/tpd, uy=tpy/tpd;                 // pocket -> target, extended behind target
-        for(const D of [70,110,150]){
-          const x=t.x+ux*D, y=t.y+uy*D;
+      for(let pi=0; pi<POCKETS.length; pi++){
+        const p=POCKETS[pi], pdir=POCKET_DIR[pi];
+        const tpx=t.x-p.x, tpy=t.y-p.y; const tpd=Math.hypot(tpx,tpy); if(tpd<6) continue;
+        const ux=tpx/tpd, uy=tpy/tpd;                 // pocket -> target (place cue beyond it)
+        const approachQ = -((-ux)*pdir.x + (-uy)*pdir.y);
+        if(approachQ < (pdir.side?0.55:0.28)) continue;
+        if(!pathClear(t.x,t.y,p.x,p.y,[t.id],R*1.2)) continue;
+        for(const D of [60,95,140]){
+          const x=t.x+ux*D, y=t.y+uy*D;               // straight-behind placement
           if(!legalCuePos(x,y)) continue;
           if(!pathClear(x,y,t.x,t.y,[t.id],R*1.7)) continue;
-          if(!pathClear(t.x,t.y,p.x,p.y,[t.id],R*1.25)) continue;
-          const score=-tpd - D*0.2;
+          const score = approachQ*1.2 - (tpd/PW)*1.1 - (D/PW)*0.5;
           if(!best||score>best.score) best={x,y,score};
         }
       }
     }
-    const cb=cueBall();
-    if(best){ cb.x=best.x; cb.y=best.y; } else { respotCue(); }
-    cb.vx=cb.vy=0; cb.out=false;
+    if(best) return { x:best.x, y:best.y };
+    // fallback: a legal spot behind the head string
+    let x=railL+PW*0.22, y=midY, tries=0;
+    while(!legalCuePos(x,y) && tries<200){ x=railL+PW*0.15+Math.random()*PW*0.3; y=railT+R+Math.random()*(PH-BALL); tries++; }
+    return { x, y };
   }
 
   /* ====================== rendering ====================== */
@@ -838,6 +908,16 @@ window.POOL = (function(){
         let steps=0;
         while(acc>=H && steps<16){ physicsStep(); acc-=H; steps++; }
         if(allStopped()){ acc=0; resolveShot(); }
+      }
+
+      // smooth cue-ball reposition (Drod taking ball in hand)
+      if(cueGlide){
+        const cb=cueBall();
+        const k=Math.min(1,(now-cueGlide.t0)/cueGlide.dur);
+        const e=1-Math.pow(1-k,3);                 // ease-out cubic
+        if(cb){ cb.x=cueGlide.fx+(cueGlide.tx-cueGlide.fx)*e;
+                cb.y=cueGlide.fy+(cueGlide.ty-cueGlide.fy)*e; }
+        if(k>=1){ const then=cueGlide.then; cueGlide=null; if(then) then(); }
       }
 
       // portrait
