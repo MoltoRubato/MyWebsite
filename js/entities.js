@@ -40,8 +40,8 @@ window.ENTITIES = (function(){
   // their station (decks / bag / chess board) yet still mill about.
   const NPCS = {
     lounge:[
-      { char:"Bob",  name:"Bob",    tx:14, ty:11, dir:"left",  behavior:"wander", speed:0.8,  region:{x0:12,y0:10,x1:17,y1:12} },
-      { char:"Dino", name:"Dino",   tx:14, ty:9,  dir:"down",  behavior:"wander", speed:0.85, region:{x0:13,y0:8,x1:18,y1:10} }
+      { char:"Bob",  name:"Bob",    tx:15, ty:11, dir:"up",    behavior:"wander", speed:0.8,  region:{x0:14,y0:10,x1:17,y1:12} },
+      { char:"Dino", name:"Dino",   tx:13, ty:8,  dir:"left",  behavior:"wander", speed:0.85, region:{x0:12,y0:7,x1:14,y1:9} }
     ],
     gym:[
       { char:"Girl", name:"Amelia", tx:12, ty:9,  dir:"down",  behavior:"wander", speed:0.85, region:{x0:8,y0:6,x1:13,y1:9} },
@@ -51,8 +51,8 @@ window.ENTITIES = (function(){
       { char:"Drod", name:"Drod",   tx:16, ty:9,  dir:"down",  behavior:"wander", speed:0.8,  region:{x0:13,y0:9,x1:17,y1:11}, interact:"chess" }
     ],
     music:[
-      { char:"Alex", name:"Alex",   tx:10, ty:9,  dir:"right", behavior:"wander", speed:0.85, region:{x0:9,y0:8,x1:12,y1:10}, interact:"music" },
-      { char:"DJ",   name:"DJ",     tx:15, ty:9,  dir:"left",  behavior:"wander", speed:0.85, region:{x0:14,y0:8,x1:17,y1:10}, interact:"music" }
+      { char:"Alex", name:"Alex",   tx:9,  ty:7,  dir:"down",  behavior:"wander", speed:0.85, region:{x0:8,y0:6,x1:11,y1:8},  interact:"music" },
+      { char:"DJ",   name:"DJ",     tx:18, ty:11, dir:"left",  behavior:"wander", speed:0.85, region:{x0:17,y0:10,x1:18,y1:12}, interact:"music" }
     ]
   };
 
@@ -60,6 +60,12 @@ window.ENTITIES = (function(){
   // The speaker is rendered as an animated sprite (see game.js render) and is
   // the jukebox trigger — it bobs/animates while site-wide music is playing.
   const OBJECTS = {
+    // Flatscreen TV on the central media console. Like the pool table, the
+    // interaction anchor sits on the floor in front (by the coffee table) where
+    // the player stands to watch; markerY floats the prompt up to the screen.
+    // Power/channel state + the animated overlay live in game.js (the TV body
+    // rect it draws over is fixed there too).
+    lounge:[ { type:"tv", name:"TV", px:544, py:372, hint:"Turn on TV", markerY:100 } ],
     music:[ { type:"music", name:"Speaker", tx:13, ty:12, hint:"Open jukebox", sprite:"speaker" } ],
     // Pool table is baked into the game-room art (bottom-left). This is just the
     // interaction anchor: stand at the table's front edge to rack 'em up vs Drod.
@@ -72,8 +78,8 @@ window.ENTITIES = (function(){
   // (x,y) = feet/base point; w,h = on-screen draw size in world px.
   const PETS = {
     lounge:[
-      { kind:"dog", name:"the dog", x:405, y:270, w:30, h:44, hint:"Pet the dog" },
-      { kind:"cat", name:"the cat", x:625, y:260, w:44, h:34, hint:"Pet the cat" }
+      { kind:"dog", name:"Mimi",   x:405, y:270, w:30, h:44, hint:"Pet Mimi"   },
+      { kind:"cat", name:"Batman", x:625, y:260, w:44, h:34, hint:"Pet Batman" }
     ]
   };
   function makePet(spec){

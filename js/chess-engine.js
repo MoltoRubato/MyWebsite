@@ -166,8 +166,24 @@ window.CHESSENGINE = (function(){
     });
   }
 
+  // Quiescence: at the search horizon, keep resolving captures/promotions so the
+  // evaluation isn't taken in the middle of a trade (kills most hung-piece blunders).
+  function quiesce(s, alpha, beta){
+    let stand=evaluate(s);
+    if(stand>=beta) return beta;
+    if(stand>alpha) alpha=stand;
+    const caps=legalMoves(s).filter(m=>m.cap!=="." || m.promo);
+    orderMoves(caps);
+    for(const m of caps){
+      const sc=-quiesce(apply(s,m), -beta, -alpha);
+      if(sc>=beta) return beta;
+      if(sc>alpha) alpha=sc;
+    }
+    return alpha;
+  }
+
   function negamax(s, depth, alpha, beta){
-    if(depth===0) return evaluate(s);
+    if(depth===0) return quiesce(s, alpha, beta);
     const ms=legalMoves(s);
     if(ms.length===0){ return inCheck(s,s.turn)? -100000-depth : 0; } // mate / stalemate
     orderMoves(ms);
@@ -205,6 +221,40 @@ window.CHESSENGINE = (function(){
     return inCheck(s,s.turn)?"checkmate":"stalemate";
   }
 
+  // ---- UCI / FEN bridge (for the Stockfish worker) ----
+  const algebraic=i=> String.fromCharCode(97+file(i)) + (8-rank(i));   // index -> "e4"
+  function indexOfSquare(str){                                          // "e4" -> index
+    const f=str.charCodeAt(0)-97, rr=8-(str.charCodeAt(1)-48);
+    if(f<0||f>7||rr<0||rr>7) return -1;
+    return rr*8+f;
+  }
+  function toFEN(s){
+    const rows=[];
+    for(let r=0;r<8;r++){            // r=0 is our top row = FEN's 8th rank
+      let row="", empty=0;
+      for(let f=0;f<8;f++){ const p=s.b[r*8+f];
+        if(p==="."){ empty++; }
+        else { if(empty){ row+=empty; empty=0; } row+=p; }   // our letters already match FEN
+      }
+      if(empty) row+=empty;
+      rows.push(row);
+    }
+    const cr=((s.castle.wk?"K":"")+(s.castle.wq?"Q":"")+(s.castle.bk?"k":"")+(s.castle.bq?"q":""))||"-";
+    const ep=s.ep>=0?algebraic(s.ep):"-";
+    return rows.join("/")+" "+s.turn+" "+cr+" "+ep+" 0 1";
+  }
+  // Turn a UCI string ("e2e4", "e7e8q") into our move object by matching the
+  // legal move with the same from/to, then overriding the promotion piece.
+  function uciToMove(s, uci){
+    if(!uci || uci.length<4) return null;
+    const from=indexOfSquare(uci.slice(0,2)), to=indexOfSquare(uci.slice(2,4));
+    if(from<0||to<0) return null;
+    let mv=legalMoves(s).find(m=>m.from===from && m.to===to);
+    if(!mv) return null;
+    if(uci.length>=5) mv=Object.assign({},mv,{promo:uci[4].toUpperCase()});
+    return mv;
+  }
+
   return { initialState, legalMoves, apply, inCheck, bestMove, status, evaluate,
-           colorOf, isW, isB, rank, file, clone };
+           colorOf, isW, isB, rank, file, clone, toFEN, uciToMove };
 })();

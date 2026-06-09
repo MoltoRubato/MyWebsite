@@ -19,6 +19,19 @@ window.POOL = (function(){
     {x:railL,y:railT},{x:midX,y:railT},{x:railR,y:railT},
     {x:railL,y:railB},{x:midX,y:railB},{x:railR,y:railB}
   ];
+  // Pocket "jaws": the rounded cushion tips that frame each pocket mouth. They
+  // sit exactly where the cushion spans end (the MC/MS gaps), so a ball that
+  // doesn't roll cleanly into the throat rattles off a jaw instead of leaking
+  // out through the gap. This is what stops balls escaping off the table.
+  const JAWR=R*0.2;                    // rubber-tip radius (collide at R+JAWR)
+  const JAWS=[
+    {x:railL,    y:railT+MC},{x:railL+MC, y:railT},     // top-left corner
+    {x:railR,    y:railT+MC},{x:railR-MC, y:railT},     // top-right corner
+    {x:railL,    y:railB-MC},{x:railL+MC, y:railB},     // bottom-left corner
+    {x:railR,    y:railB-MC},{x:railR-MC, y:railB},     // bottom-right corner
+    {x:midX-MS,  y:railT},   {x:midX+MS,  y:railT},     // top side pocket
+    {x:midX-MS,  y:railB},   {x:midX+MS,  y:railB}      // bottom side pocket
+  ];
 
   /* ---------------- physics tuning ---------------- */
   const H=1/120;                 // fixed physics step (s)
@@ -216,6 +229,8 @@ window.POOL = (function(){
   function showDiff(show){
     document.getElementById("plDiff").classList.toggle("hidden",!show);
     document.getElementById("plPlay").classList.toggle("hidden",show);
+    // collapse Drod's bubble on the difficulty screen (no banter there yet)
+    const bub=document.getElementById("plBubble"); if(bub) bub.classList.toggle("no-slot",show);
   }
 
   /* ====================== game setup ====================== */
@@ -340,12 +355,25 @@ window.POOL = (function(){
       for(const b of live){
         b.x+=b.vx*h; b.y+=b.vy*h;
       }
-      // cushion collisions
+      // cushion collisions, then the pocket jaws that frame the mouths
       for(const b of live) cushions(b);
+      for(const b of live) jaws(b);
       // ball-ball
       for(let i=0;i<live.length;i++) for(let j=i+1;j<live.length;j++) collide(live[i],live[j]);
       // pockets
       for(const b of live){ if(b.out) continue; pocketCheck(b); }
+    }
+    // safety net: a ball must never leave the felt. If one ever slips past a
+    // jaw without being pocketed, pull it back in rather than fly off-screen.
+    for(const b of live){
+      if(b.out) continue;
+      if(b.x>railL-R && b.x<railR+R && b.y>railT-R && b.y<railB+R) continue;   // still on the table
+      let diving=false;
+      for(const p of POCKETS){ if(Math.hypot(b.x-p.x,b.y-p.y) < CAP+R){ diving=true; break; } }
+      if(diving) continue;                          // genuinely dropping into a pocket
+      b.x=Math.max(railL+R, Math.min(railR-R, b.x));
+      b.y=Math.max(railT+R, Math.min(railB-R, b.y));
+      b.vx*=-0.25; b.vy*=-0.25;
     }
     // friction + stop (apply once per full step)
     for(const b of live){
@@ -369,6 +397,20 @@ window.POOL = (function(){
     const onTopSpan = (b.x>railL+MC && b.x<midX-MS) || (b.x>midX+MS && b.x<railR-MC);
     if(b.vy<0 && b.y-R<railT && onTopSpan){ b.y=railT+R; b.vy=-b.vy*CUSH; b.vx*=CUSH; shotRail=true; sfxCushion(sp); }
     else if(b.vy>0 && b.y+R>railB && onTopSpan){ b.y=railB-R; b.vy=-b.vy*CUSH; b.vx*=CUSH; shotRail=true; sfxCushion(sp); }
+  }
+
+  // bounce a ball off the rounded cushion tips that guard each pocket mouth
+  function jaws(b){
+    if(b.out) return;
+    const min=R+JAWR, min2=min*min;
+    for(const j of JAWS){
+      const dx=b.x-j.x, dy=b.y-j.y, d2=dx*dx+dy*dy;
+      if(d2>=min2 || d2===0) continue;
+      const d=Math.sqrt(d2), nx=dx/d, ny=dy/d;
+      b.x=j.x+nx*min; b.y=j.y+ny*min;            // lift the ball off the tip
+      const vn=b.vx*nx+b.vy*ny;
+      if(vn<0){ b.vx-=(1+CUSH)*vn*nx; b.vy-=(1+CUSH)*vn*ny; shotRail=true; sfxCushion(Math.hypot(b.vx,b.vy)); }
+    }
   }
 
   function collide(a,b){

@@ -14,6 +14,17 @@ window.GAME = (function(){
   const TOP_IMG={lounge:"room_lounge_top",gym:"room_gym_top",game:"room_game_top",music:"room_music_top"};
   const PROPS_IMG={lounge:"room_lounge_props",gym:"room_gym_props",game:"room_game_props",music:"room_music_props"};
   const SPK_SCALE=1.2; // on-screen size of the animated jukebox speaker
+  // Lounge TV — the flatscreen on the central media console (in the top layer,
+  // inside the baseY:349 depth box). Body rect in world px (bezel-to-bezel),
+  // traced off the art; an animated channel frame is stamped here so its navy
+  // bezel lands over the painted one and the stand below stays visible.
+  const TV_RECT = { x:517, y:283, w:52, h:25, baseY:349 };
+  // The 3 supplied sheets, each with a cheeky on-air name flashed when selected.
+  const TV_CHANNELS = [
+    { key:"tv_ch0", label:"RYAN NEWS 24" },
+    { key:"tv_ch1", label:"GENERAL HOSPITAL" },
+    { key:"tv_ch2", label:"ER · AFTER DARK" }
+  ];
 
   let player=EN.makePlayer();
   let curRoom="lounge";
@@ -26,6 +37,9 @@ window.GAME = (function(){
   let lastTs=0;
   let soundOn=true;
   let musicAnimT=0; // clock for the animated speaker (advances while music is audible)
+  let tvCh=-1;      // lounge TV: -1 = off, else index into TV_CHANNELS
+  let tvAnimT=0;    // channel playback clock (advances always; TV is ambient)
+  let tvLabelT=0;   // seconds left to flash the channel name after a switch
   let showHitboxes=/[?&]dev=1\b/.test(location.search); // DEV: collision overlay (press 'H' or ?dev=1)
 
   function ensureRoom(k){ if(!rooms[k]) rooms[k]=EN.buildRoom(k); return rooms[k]; }
@@ -118,6 +132,13 @@ window.GAME = (function(){
     else if(near.kind==="pet") EN.petStart(near.ref);
     else if(near.kind==="obj" && near.ref.type==="music") openJukebox();
     else if(near.kind==="obj" && near.ref.type==="pool") openPool();
+    else if(near.kind==="obj" && near.ref.type==="tv") cycleTV();
+  }
+  // One-button remote: off -> ch1 -> ch2 -> ch3 -> off. Each switch restarts
+  // playback from frame 0 and flashes the channel's on-air name.
+  function cycleTV(){
+    tvCh = tvCh >= TV_CHANNELS.length-1 ? -1 : tvCh+1;
+    if(tvCh>=0){ tvAnimT=0; tvLabelT=1.8; }
   }
   function talkTo(npc){
     const data=C.characters[npc.key];
@@ -244,6 +265,17 @@ window.GAME = (function(){
   // convert a world point to canvas (screen) coords using current camera
   function worldToScreen(wx,wy){ const c=camera(); return { x:(wx-c.vx)*c.s+c.ox, y:(wy-c.vy)*c.s+c.oy }; }
 
+  // Stamp the current channel frame over the painted lounge TV. Only the bezel
+  // sub-rect of each 96x64 cell is drawn, scaled to the TV body, so the navy
+  // frames overlap exactly and the broadcast fills the screen.
+  function drawTV(){
+    const sheet=A.get(TV_CHANNELS[tvCh].key);
+    if(!sheet||!sheet.complete||!sheet.naturalWidth) return;
+    const f=Math.floor(tvAnimT*A.TV_FPS)%A.TV_FRAMES;
+    ctx.drawImage(sheet, f*A.TV_FW+A.TV_SX, A.TV_SY, A.TV_SW, A.TV_SH,
+                  TV_RECT.x, TV_RECT.y, TV_RECT.w, TV_RECT.h);
+  }
+
   function render(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     const cam=camera();
@@ -282,6 +314,10 @@ window.GAME = (function(){
       if(propsImg&&propsImg.complete) ctx.drawImage(propsImg, o.x,o.y,o.w,o.h, o.x,o.y,o.w,o.h);
       if(top&&top.complete)           ctx.drawImage(top,      o.x,o.y,o.w,o.h, o.x,o.y,o.w,o.h);
     }}); });
+    // Lounge TV: the live channel y-sorts at the TV console's depth line so the
+    // player passes in front of it like the painted set; pushed after the depth
+    // boxes so it lands over the (top-layer) screen the box just re-stamped.
+    if(curRoom==="lounge" && tvCh>=0) draw.push({y:TV_RECT.baseY, fn:drawTV});
     draw.sort((a,b)=>a.y-b.y);
     draw.forEach(d=>d.fn());
 
@@ -361,12 +397,30 @@ window.GAME = (function(){
       ctx.fillText("DEV HITBOXES ON \u2014 press H", 14, 24);
       ctx.restore();
     }
+    // Channel-name flash above the TV when a channel is selected (screen space,
+    // fades over its final 0.4s). Drawn outside the world transform for crisp text.
+    if(curRoom==="lounge" && tvCh>=0 && tvLabelT>0){
+      const p=worldToScreen(TV_RECT.x+TV_RECT.w/2, TV_RECT.y-5);
+      const label="CH "+(tvCh+1)+"   "+TV_CHANNELS[tvCh].label;
+      ctx.save();
+      ctx.globalAlpha=Math.min(1, tvLabelT/0.4);
+      ctx.font="14px 'Silkscreen', monospace"; ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+      const bw=ctx.measureText(label).width+18, bh=22, bx=p.x-bw/2, by=p.y-bh;
+      ctx.fillStyle="rgba(16,19,28,0.88)"; ctx.fillRect(bx,by,bw,bh);
+      ctx.fillStyle="#e7a33e"; ctx.fillRect(bx,by,bw,2);
+      ctx.fillStyle="#f4ead6"; ctx.fillText(label, p.x, by+15);
+      ctx.restore(); ctx.textAlign="left";
+    }
     updateHint();
   }
   function updateHint(){
     if(nearTarget){
       let txt="Talk";
-      if(nearTarget.kind==="obj") txt=nearTarget.ref.hint||"Use";
+      if(nearTarget.kind==="obj"){
+        if(nearTarget.ref.type==="tv") txt = tvCh<0 ? "Turn on TV"
+              : (tvCh>=TV_CHANNELS.length-1 ? "Turn off TV" : "Change channel");
+        else txt=nearTarget.ref.hint||"Use";
+      }
       else if(nearTarget.kind==="pet") txt=nearTarget.ref.hint||"Pet";
       else if(nearTarget.ref.interact==="chess") txt="Play chess";
       else if(nearTarget.ref.interact==="music") txt="Make a beat";
@@ -396,6 +450,7 @@ window.GAME = (function(){
       player.animT += dt;
       player.frame = Math.floor(player.animT*(player.moving?9:3));
       musicAnimT += dt; // speaker animation runs regardless of pause (music is site-wide)
+      tvAnimT += dt; if(tvLabelT>0) tvLabelT=Math.max(0,tvLabelT-dt); // TV plays + caption fades even while paused
       render();
       DIALOGUE.tick(ts);
     } catch(err){ console.error("frame error", err); }
