@@ -14,7 +14,7 @@ window.MUSIC = (function(){
 
   /* ---------- persistent audio engine (survives window open/close) -------- */
   let ac=null, analyser=null, data=null;     // shared Web Audio graph
-  let bgAudio=null, bgSrc=null;              // current background <audio> + node
+  let bgAudio=null, bgSrc=null, bgGain=null; // current background <audio> + nodes
   let curTrack=-1, playing=false;            // jukebox state
   let muted=false;                           // global (header) mute
   let padDuck=false;                         // beat pad ducking the bg music
@@ -26,6 +26,13 @@ window.MUSIC = (function(){
       ac=new (window.AudioContext||window.webkitAudioContext)();
       analyser=ac.createAnalyser(); analyser.fftSize=128;
       data=new Uint8Array(analyser.frequencyBinCount);
+      // master gain for the background track. iOS Safari ignores
+      // HTMLMediaElement.volume (it's hardware-controlled), so all volume,
+      // ducking and muting must go through a Web Audio GainNode instead.
+      // graph: bgSrc -> bgGain -> analyser -> destination
+      // (beat-pad blips connect straight to the analyser, so they're never ducked)
+      bgGain=ac.createGain(); bgGain.gain.value=FULL_VOL;
+      bgGain.connect(analyser);
       analyser.connect(ac.destination);
     }
     if(ac.state==="suspended") ac.resume();
@@ -33,14 +40,14 @@ window.MUSIC = (function(){
   }
 
   function clearFade(){ if(fadeRAF){ cancelAnimationFrame(fadeRAF); fadeRAF=0; } }
-  // ramp bgAudio.volume -> target over ms, then run cb
+  // ramp the background gain -> target over ms, then run cb
   function fadeTo(target, ms, cb){
     clearFade();
-    if(!bgAudio){ if(cb)cb(); return; }
-    const from=bgAudio.volume, t0=performance.now();
+    if(!bgGain){ if(cb)cb(); return; }
+    const from=bgGain.gain.value, t0=performance.now();
     const tick=(now)=>{
       const k=Math.min(1,(now-t0)/Math.max(1,ms));
-      try{ bgAudio.volume = Math.max(0,Math.min(1, from+(target-from)*k)); }catch(e){}
+      try{ bgGain.gain.value = Math.max(0,Math.min(1, from+(target-from)*k)); }catch(e){}
       if(k<1) fadeRAF=requestAnimationFrame(tick);
       else { fadeRAF=0; if(cb)cb(); }
     };
@@ -56,8 +63,9 @@ window.MUSIC = (function(){
     if(bgAudio){ bgAudio.pause(); try{ bgSrc&&bgSrc.disconnect(); }catch(e){} bgAudio=null; bgSrc=null; }
     curTrack=i; playing=true;
     bgAudio=new Audio(C.tracks[i].file); bgAudio.crossOrigin="anonymous"; bgAudio.loop=true;
-    bgAudio.volume = (muted||padDuck) ? 0 : 0.0001;
-    try{ bgSrc=ac.createMediaElementSource(bgAudio); bgSrc.connect(analyser); }catch(e){}
+    // volume is driven entirely by bgGain (see ensureAC) — leave the element at 1
+    try{ bgSrc=ac.createMediaElementSource(bgAudio); bgSrc.connect(bgGain); }catch(e){}
+    bgGain.gain.value = (muted||padDuck) ? 0 : 0.0001;
     bgAudio.play().catch(()=>{});
     if(!muted && !padDuck) fadeTo(FULL_VOL, 450);
     emit();
