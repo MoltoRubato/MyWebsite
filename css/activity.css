@@ -22,10 +22,15 @@
 #cbPort{width:80px;height:80px;image-rendering:pixelated}
 .drod-name{font-size:26px;color:var(--ui-gold);letter-spacing:2px;font-weight:700}
 .drod-sub{font-size:14px;color:var(--ui-ink-soft)}
-.drod-bubble{min-height:0;max-height:0;overflow:hidden;opacity:0;font-size:16px;line-height:1.45;color:var(--ui-ink);
-  padding:0 14px;border-radius:12px;background:rgba(90,60,35,.1);border:2px solid rgba(90,60,35,.2);
-  transition:max-height .3s ease, opacity .3s ease, padding .3s ease}
-.drod-bubble.show{max-height:120px;opacity:1;padding:12px 14px}
+/* Fixed-height speech area: the height is reserved whether or not Drod is
+   talking, so his banter fading in/out never changes the panel (and on the
+   stacked mobile layout, never changes the whole window) size. */
+.drod-bubble{height:78px;box-sizing:border-box;display:flex;align-items:center;overflow:hidden;
+  opacity:0;font-size:15px;line-height:1.35;color:var(--ui-ink);
+  padding:8px 14px;border-radius:12px;background:rgba(90,60,35,.1);border:2px solid rgba(90,60,35,.2);
+  transition:opacity .3s ease}
+.drod-bubble.show{opacity:1}
+.drod-bubble.no-slot{display:none}        /* selection screen: no bubble, no reserved gap */
 .chess-diff{display:flex;flex-direction:column;gap:9px}
 .diff-title{font-size:15px;color:var(--ui-ink-soft);letter-spacing:1px;text-transform:uppercase;font-weight:600}
 .diff-btn{display:flex;flex-direction:column;align-items:flex-start;padding:11px 16px;border-radius:12px;text-align:left;
@@ -48,6 +53,36 @@
 .ctl-btn.ghost{background:rgba(90,60,35,.12);color:var(--ui-ink);box-shadow:0 3px 0 rgba(90,60,35,.3)}
 .ctl-btn.ghost:hover{background:rgba(181,68,47,.7);color:#fff}
 .chess-tip{margin-top:auto;font-size:13px;color:var(--ui-ink-soft);line-height:1.4}
+/* colour picker (White / Black / Random) */
+.chess-colors{display:flex;gap:8px}
+.col-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 6px;border-radius:11px;
+  font-size:15px;color:var(--ui-ink-soft);font-weight:600;
+  background:rgba(90,60,35,.1);border:2px solid var(--ui-frame);
+  box-shadow:0 3px 0 var(--ui-frame-d);transition:transform .15s,box-shadow .15s,background .2s,color .2s,border-color .2s}
+.col-btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ui-frame-d);background:rgba(156,90,37,.16)}
+.col-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ui-frame-d)}
+.col-btn.active{color:var(--ui-ink);border-color:var(--ui-gold);background:rgba(156,90,37,.18);
+  box-shadow:0 0 0 2px rgba(231,163,62,.4),0 3px 0 var(--ui-frame-d)}
+.col-dot{width:15px;height:15px;border-radius:50%;flex:none;border:1.5px solid rgba(0,0,0,.35);box-shadow:inset 0 1px 2px rgba(255,255,255,.4)}
+.col-dot.w{background:#f4f1e8}
+.col-dot.b{background:#2a2a30}
+.col-dot.r{background:conic-gradient(#f4f1e8 0 50%,#2a2a30 50% 100%)}
+.chess-engine{font-size:12px;color:var(--ui-ink-soft);opacity:.85;min-height:16px;letter-spacing:.3px;margin-top:2px}
+/* promotion picker (over the board) */
+.cb-over{position:absolute;inset:0;display:grid;place-items:center;z-index:4;
+  background:rgba(10,14,20,.5);backdrop-filter:blur(2px)}
+.cb-over.hidden{display:none}
+.promo-card{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 22px;
+  background:var(--ui-fill);border:4px solid var(--ui-frame);border-radius:16px;
+  box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),0 16px 40px rgba(0,0,0,.55)}
+.promo-title{font-size:15px;letter-spacing:1px;text-transform:uppercase;color:var(--ui-ink-soft);font-weight:600}
+.promo-row{display:flex;gap:10px}
+.promo-btn{display:grid;place-items:center;width:52px;height:62px;border-radius:11px;
+  background:rgba(90,60,35,.12);border:2px solid var(--ui-frame);box-shadow:0 3px 0 var(--ui-frame-d);
+  transition:transform .12s,box-shadow .12s,background .15s}
+.promo-btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ui-frame-d);background:rgba(156,90,37,.2)}
+.promo-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ui-frame-d)}
+.promo-btn .cap-pc{pointer-events:none}
 
 /* ---- music (shared: jukebox + beat pad) ---- */
 .mz-wrap{flex-direction:column}

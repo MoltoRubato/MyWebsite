@@ -65,7 +65,7 @@ window.HITBOXES = (function(){
     music: [ { x:224, y:223, w:42, h:129, to:"lounge" } ]
   };
   const SEED_SPAWN = {
-    lounge:{ x:446, y:296, face:"down"  },
+    lounge:{ x:467, y:220, face:"down"  },
     gym:   { x:560, y:343, face:"up"    },
     game:  { x:605, y:319, face:"left"  },
     music: { x:289, y:288, face:"right" }
@@ -81,7 +81,7 @@ window.HITBOXES = (function(){
       { x:322, y:352, w:94,  h:50, baseY:402, src:"props", label:"flower vases" },
       { x:310, y:225, w:87,  h:54, baseY:279, src:"top" },
       { x:476, y:272, w:141, h:93, baseY:349, src:"top" },
-      { x:470, y:366, w:141, h:51, baseY:402, src:"top" },
+      { x:470, y:366, w:141, h:51, baseY:383, src:"top" },
       { x:609, y:202, w:31,  h:41, baseY:238, src:"top" },
       { x:516, y:170, w:50,  h:55, baseY:216, src:"top" },
       { x:384, y:144, w:31,  h:79, baseY:223, src:"top" },
@@ -169,13 +169,22 @@ window.HITBOXES = (function(){
       { x:192, y:320, w:320, h:320 },
       { x:608, y:320, w:128, h:320 },
       { x:512, y:384, w:96,  h:256 },
-      { x:686, y:257, w:35,  h:62  },
+      { x:686, y:283, w:35,  h:36  },
       { x:705, y:222, w:30,  h:20  },
       { x:224, y:237, w:32,  h:62  },
       { x:426, y:96,  w:44,  h:83  },
       { x:193, y:95,  w:62,  h:47  },
       { x:606, y:119, w:34,  h:39  },
-      { x:667, y:118, w:39,  h:42  }
+      { x:667, y:118, w:39,  h:42  },
+      { x:190, y:215, w:33,  h:8   },
+      { x:320, y:311, w:31,  h:8   },
+      { x:260, y:309, w:22,  h:5   },
+      { x:193, y:299, w:28,  h:6   },
+      { x:355, y:274, w:23,  h:8   },
+      { x:359, y:163, w:51,  h:7   },
+      { x:365, y:132, w:32,  h:11  },
+      { x:321, y:146, w:26,  h:6   },
+      { x:263, y:138, w:47,  h:6   }
     ],
     game: [
       { x:0,   y:0,   w:960, h:192 },

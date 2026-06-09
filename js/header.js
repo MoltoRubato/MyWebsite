@@ -126,17 +126,20 @@ window.HEADER = (function(){
   // ---------- room map (dollhouse floor plan) ----------
   // Per-room map metadata: short name, accent colour, and a crisp inline glyph.
   const MAP_META = {
-    lounge: { name:"Lounge",        accent:"#d79a47",
+    lounge: { name:"Lounge",        accent:"#dcb83f",
       icon:'<svg viewBox="0 0 24 24"><path d="M20 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v2a2 2 0 0 0-2 2v5a1 1 0 0 0 1 1h1v2h2v-2h12v2h2v-2h1a1 1 0 0 0 1-1v-5a2 2 0 0 0-2-2m-3.5 1A1.5 1.5 0 0 0 15 10.5V12H9v-1.5A1.5 1.5 0 0 0 7.5 9H6V6h12v3z"/></svg>' },
-    gym: { name:"Gym",              accent:"#d2574a",
-      icon:'<svg viewBox="0 0 24 24"><path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></svg>' },
-    game: { name:"Game Room",       accent:"#4f9e6a",
+    gym: { name:"Gym",              accent:"#93ab5f",
+      icon:'<svg viewBox="0 0 24 24"><rect x="2" y="8" width="3" height="8" rx="1"/><rect x="5" y="9.5" width="2" height="5" rx="1"/><rect x="7.5" y="11" width="9" height="2" rx="1"/><rect x="17" y="9.5" width="2" height="5" rx="1"/><rect x="19" y="8" width="3" height="8" rx="1"/></svg>' },
+    game: { name:"Game Room",       accent:"#7fa3cf",
       icon:'<svg viewBox="0 0 24 24"><path d="M21.58 16.09 20.5 8.43A4 4 0 0 0 16.53 5H7.47a4 4 0 0 0-3.97 3.43l-1.08 7.66a2.5 2.5 0 0 0 4.5 1.79L8.5 16h7l1.55 1.88a2.5 2.5 0 0 0 4.53-1.79M11 11H9v2H7v-2H5V9h2V7h2v2h2zm4.5-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2m2.5 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>' },
-    music: { name:"Music Studio",   accent:"#5b8fd6",
+    music: { name:"Music Studio",   accent:"#c95a4f",
       icon:'<svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3z"/></svg>' }
   };
 
   function openMap(){
+    // the opening cinematic owns the player until it finishes — don't let the
+    // map (and its fast-travel) interrupt it, or the walk-in carries into the next room
+    if(window.GAME && GAME.isIntro && GAME.isIntro()) return;
     const cur = window.GAME ? GAME.currentRoom() : "lounge";
     mapGrid.innerHTML = "";
     // doorway connectors — every door runs through the lounge hub
@@ -154,12 +157,14 @@ window.HEADER = (function(){
       card.style.setProperty("--rc", m.accent);
       card.innerHTML =
         '<span class="mr-frame">'+
-          '<img class="mr-thumb" src="assets/maps/'+key+'.png" alt="" draggable="false">'+
-          (here
-            ? '<span class="mr-here">You’re here</span>'
-            : '<span class="mr-go">Enter<span class="mr-arrow">→</span></span>')+
-        '</span>'+
-        '<span class="mr-plate"><span class="mr-ic">'+m.icon+'</span><span class="mr-name">'+m.name+'</span></span>';
+          '<img class="mr-thumb" src="assets/maps/'+key+'.png?v=3" alt="" draggable="false">'+
+          (here ? '<span class="mr-here">You’re here</span>' : '')+
+          '<span class="mr-label">'+
+            '<span class="mr-ic">'+m.icon+'</span>'+
+            '<span class="mr-name">'+m.name+'</span>'+
+            (here ? '' : '<span class="mr-arrow" aria-hidden="true">→</span>')+
+          '</span>'+
+        '</span>';
       if(!here){
         card.type = "button";
         card.setAttribute("aria-label", "Travel to "+m.name);

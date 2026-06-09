@@ -50,6 +50,14 @@ window.ASSETS = (function(){
   // animated props — speaker/amp the jukebox plays through (3 frames, 32x64)
   load("prop_speaker", "assets/props/speaker.png");
 
+  // animated TV channels — each sheet is 24 frames laid out horizontally, every
+  // cell 96x64. The TV artwork (bezel + screen) sits at x2..93 / y2..43 inside
+  // its cell (the rest is transparent); only the screen content animates, so one
+  // fixed crop works for every frame. Played over the lounge TV when switched on.
+  load("tv_ch0", "assets/props/tv_news.png");
+  load("tv_ch1", "assets/props/tv_hospital.png");
+  load("tv_ch2", "assets/props/tv_hospital2.png");
+
   return {
     images,
     get: (k)=>images[k],
@@ -66,6 +74,11 @@ window.ASSETS = (function(){
     // speaker sheet: 3 frames laid out horizontally, each cell 32x64.
     // The speaker art sits in the TOP of each cell (alpha bbox y:6..46), so it
     // anchors at content-bottom (46), not the cell bottom.
-    SPK_FW: 32, SPK_FH: 64, SPK_FRAMES: 3, SPK_CONTENT_BOTTOM: 46
+    SPK_FW: 32, SPK_FH: 64, SPK_FRAMES: 3, SPK_CONTENT_BOTTOM: 46,
+    // TV channel sheets: 24 frames of 96x64. The TV (bezel+screen) occupies the
+    // sub-rect [TV_SX,TV_SY,TV_SW,TV_SH] of each cell; draw just that over the
+    // lounge TV so the bezels line up. TV_FPS matches the source GIFs (10fps).
+    TV_FW: 96, TV_FH: 64, TV_FRAMES: 24, TV_FPS: 10,
+    TV_SX: 2, TV_SY: 2, TV_SW: 92, TV_SH: 42
   };
 })();
