@@ -10,6 +10,7 @@ import * as SF from "../stockfish-engine";
 import { getImage } from "../assets";
 import { drawPortraitFrame } from "../sprites";
 import { pick } from "../core/util";
+import * as P from "../progress";
 import { openOverlay, closeOverlay, isOverlayOpen, overlayInner, startLoop, type LoopHandle } from "./base";
 
 const SC = 3, SQ = 16 * SC, BORDER = 7 * SC, BOARD = 142 * SC; // 426
@@ -215,6 +216,7 @@ function startGame(): void {
       over = true;
       setStatus("You resigned.");
       say(pick(LINES.win), 4000);
+      P.inc("chessLosses");
     }
   };
   if (state.turn === playerColor) {
@@ -280,9 +282,11 @@ function doMove(mv: Move, who: "player" | "ai"): void {
     if (state.turn === aiColor) {
       setStatus("Checkmate — you win! :D");
       say(pick(LINES.lose), 5000);
+      P.inc("chessWins");
     } else {
       setStatus("Checkmate — Drod wins.");
       say(pick(LINES.win), 5000);
+      P.inc("chessLosses");
     }
     return;
   }
@@ -290,6 +294,7 @@ function doMove(mv: Move, who: "player" | "ai"): void {
     over = true;
     setStatus("Stalemate — it's a draw.");
     say(pick(LINES.draw), 5000);
+    P.inc("chessDraws");
     return;
   }
   if (st === "check") {

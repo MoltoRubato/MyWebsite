@@ -9,6 +9,8 @@
    ============================================================ */
 import { CONTENT as C } from "../content";
 import { drawPortraitFrame } from "../sprites";
+import * as P from "../progress";
+import { serializePattern, parsePattern, BPM_MIN, BPM_MAX } from "./beat-util";
 import { openOverlay, closeOverlay, isOverlayOpen, startLoop, type LoopHandle } from "./base";
 
 interface OpenOpts {
@@ -41,23 +43,143 @@ let bpLoop: LoopHandle | null = null;
 let bpClose: (() => void) | null = null;
 let bpKey: ((e: KeyboardEvent) => void) | null = null;
 const padCols = 8;
-const padRows = 4;
+const padRows = 6;
 let pattern: boolean[][] = [];
 let step = 0;
-let seqTimer: ReturnType<typeof setTimeout> | null = null;
 let bpm = 110;
 let padPlaying = false;
 let bpSayUntil = 0;
 let bpSayText = "";
 let bpT = 0;
+const PAD_LS_KEY = "beatPad1"; // auto-saved pattern + bpm
 
-// pentatonic-ish notes per row (Hz) — top bright down to low
-const NOTES = [
-  [523.25, 587.33, 659.25, 783.99, 880, 1046.5],
-  [392, 440, 493.88, 587.33, 659.25, 783.99],
-  [261.63, 293.66, 329.63, 392, 440, 523.25],
-  [130.81, 146.83, 164.81, 196, 220, 261.63],
+/* ---------- drum kit (CC0 one-shots from VCSL, synth fallback) ----------
+   Rows top -> bottom. Samples lazy-load on first beat-pad open; any row
+   whose file fails to fetch/decode keeps its synthesized voice forever. */
+interface DrumDef {
+  key: string;
+  label: string;
+  file: string;
+  gain: number;
+  synth(when: number): void;
+}
+const KIT: DrumDef[] = [
+  { key: "shaker", label: "SHK", file: "assets/audio/drums/shaker.wav", gain: 0.5, synth: (w) => synthNoise(w, 5000, "bandpass", 0.12, 0.1) },
+  { key: "openhat", label: "OHH", file: "assets/audio/drums/openhat.wav", gain: 0.5, synth: (w) => synthNoise(w, 7000, "highpass", 0.4, 0.12) },
+  { key: "hat", label: "HAT", file: "assets/audio/drums/hat.wav", gain: 0.55, synth: (w) => synthNoise(w, 7000, "highpass", 0.06, 0.14) },
+  { key: "clap", label: "CLP", file: "assets/audio/drums/clap.wav", gain: 0.8, synth: synthClap },
+  { key: "snare", label: "SNR", file: "assets/audio/drums/snare.wav", gain: 0.9, synth: synthSnare },
+  { key: "kick", label: "KCK", file: "assets/audio/drums/kick.wav", gain: 1.0, synth: synthKick },
 ];
+const drumBufs: (AudioBuffer | null)[] = KIT.map(() => null);
+let drumsRequested = false;
+let drumGain: GainNode | null = null;
+let lastOpenHat: AudioBufferSourceNode | null = null;
+
+function ensureDrumGraph(): void {
+  ensureAC();
+  if (!drumGain) {
+    drumGain = ac!.createGain();
+    drumGain.gain.value = 0.9;
+    drumGain.connect(analyser!); // same graph as everything else (iOS-safe)
+  }
+}
+function loadDrums(): void {
+  if (drumsRequested) return;
+  drumsRequested = true;
+  ensureDrumGraph();
+  KIT.forEach((d, i) => {
+    fetch(d.file)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+      .then((ab) => new Promise<AudioBuffer>((res, rej) => ac!.decodeAudioData(ab, res, rej)))
+      .then((buf) => {
+        drumBufs[i] = buf;
+      })
+      .catch(() => {
+        /* row stays on synth */
+      });
+  });
+}
+/** Trigger row `r` at AudioContext time `when` (sample if loaded, else synth). */
+function hit(r: number, when: number): void {
+  ensureDrumGraph();
+  const d = KIT[r];
+  const buf = drumBufs[r];
+  if (!buf) {
+    d.synth(when);
+    return;
+  }
+  const src = ac!.createBufferSource();
+  src.buffer = buf;
+  const g = ac!.createGain();
+  g.gain.value = d.gain;
+  src.connect(g);
+  g.connect(drumGain!);
+  // closed hat chokes the open hat, like a real hi-hat pedal
+  if (d.key === "hat" && lastOpenHat) {
+    try {
+      lastOpenHat.stop(when);
+    } catch {
+      /* already stopped */
+    }
+    lastOpenHat = null;
+  }
+  if (d.key === "openhat") lastOpenHat = src;
+  src.start(when);
+}
+
+// ---- synth kit (also the offline fallback) ----
+let noiseBuf: AudioBuffer | null = null;
+function noise(): AudioBuffer {
+  if (!noiseBuf) {
+    noiseBuf = ac!.createBuffer(1, ac!.sampleRate, ac!.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  return noiseBuf;
+}
+function synthNoise(when: number, freq: number, type: BiquadFilterType, dur: number, vol: number): void {
+  const src = ac!.createBufferSource();
+  src.buffer = noise();
+  const f = ac!.createBiquadFilter();
+  f.type = type;
+  f.frequency.value = freq;
+  const g = ac!.createGain();
+  g.gain.setValueAtTime(vol, when);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  src.connect(f);
+  f.connect(g);
+  g.connect(drumGain!);
+  src.start(when);
+  src.stop(when + dur + 0.02);
+}
+function synthKick(when: number): void {
+  const o = ac!.createOscillator(), g = ac!.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(150, when);
+  o.frequency.exponentialRampToValueAtTime(48, when + 0.12);
+  g.gain.setValueAtTime(0.55, when);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.35);
+  o.connect(g);
+  g.connect(drumGain!);
+  o.start(when);
+  o.stop(when + 0.36);
+}
+function synthSnare(when: number): void {
+  synthNoise(when, 1800, "bandpass", 0.2, 0.25);
+  const o = ac!.createOscillator(), g = ac!.createGain();
+  o.type = "triangle";
+  o.frequency.value = 190;
+  g.gain.setValueAtTime(0.18, when);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.1);
+  o.connect(g);
+  g.connect(drumGain!);
+  o.start(when);
+  o.stop(when + 0.11);
+}
+function synthClap(when: number): void {
+  for (let i = 0; i < 3; i++) synthNoise(when + i * 0.01, 1200, "bandpass", 0.12, 0.16);
+}
 
 const AudioCtor: typeof AudioContext =
   window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -131,6 +253,8 @@ function playTrack(i: number): void {
   }
   curTrack = i;
   playing = true;
+  P.inc("tracksPlayed");
+  P.flag(`track_${C.tracks[i].name}`);
   bgAudio = new Audio(C.tracks[i].file);
   bgAudio.crossOrigin = "anonymous";
   bgAudio.loop = true;
@@ -160,14 +284,33 @@ function toggleTrack(i: number): void {
   else playTrack(i);
 }
 
-// beat pad ducking — fade music down/out while the pad is open, back in after
-function duckForPad(): void {
+// instrument ducking — fade music down/out while an instrument is open
+// (beat pad here, piano in piano.ts), back in after it closes.
+export function duckBg(): void {
   padDuck = true;
   if (bgAudio && playing) fadeTo(0, 340);
 }
-function unduckAfterPad(): void {
+export function unduckBg(): void {
   padDuck = false;
   if (bgAudio && playing && !muted) fadeTo(FULL_VOL, 750);
+}
+const duckForPad = duckBg;
+const unduckAfterPad = unduckBg;
+
+/* ---- shared audio graph (other activities plug into the same
+       AudioContext + analyser so the visualizer reacts to them too) ---- */
+let extLive = false; // a non-jukebox instrument (piano) is currently sounding
+export function audioGraph(): { ac: AudioContext; analyser: AnalyserNode } {
+  ensureAC();
+  return { ac: ac!, analyser: analyser! };
+}
+/** Mark an external instrument as live so level()/the visualizer read the analyser. */
+export function setLive(on: boolean): void {
+  extLive = on;
+}
+/** Draw the shared warm-gold visualizer into any canvas (piano reuses it). */
+export function drawVizTo(cnv: HTMLCanvasElement | null): void {
+  drawViz(cnv);
 }
 
 // global mute (header sound button)
@@ -181,6 +324,10 @@ export function setMuted(m: boolean): void {
 export function isPlaying(): boolean {
   return playing;
 }
+/** Name of the track currently playing site-wide, or null. (NPC reactions use this.) */
+export function nowPlaying(): string | null {
+  return playing && curTrack >= 0 ? C.tracks[curTrack].name : null;
+}
 export function isAudible(): boolean {
   return playing && !padDuck && !muted;
 } // drives speaker anim
@@ -193,7 +340,7 @@ function vizData(): Uint8Array<ArrayBuffer> | null {
 }
 export function level(): number {
   // 0..1 overall amplitude
-  if (!isAudible() && !padPlaying) return 0;
+  if (!isAudible() && !padPlaying && !extLive) return 0;
   const d = vizData();
   if (!d) return 0;
   let s = 0;
@@ -213,7 +360,7 @@ function drawViz(cnv: HTMLCanvasElement | null): void {
   const W = cnv.width,
     H = cnv.height;
   vctx.clearRect(0, 0, W, H);
-  const arr = isAudible() || padPlaying ? vizData() : null;
+  const arr = isAudible() || padPlaying || extLive ? vizData() : null;
   const n = 32,
     bw = W / n;
   for (let i = 0; i < n; i++) {
@@ -318,15 +465,17 @@ function refreshJuke(): void {
 export function openBeatpad(opts?: OpenOpts): void {
   bpClose = opts?.onClose ?? null;
   ensureAC();
+  loadDrums(); // lazy: kit samples fetch on first open only
   openOverlay(beatpadShell());
   duckForPad(); // fade the jukebox music out
-  buildPad();
+  buildPad(true); // hydrate the auto-saved pattern
   wireBeat();
   bpSay("Welcome to the booth. Tap out something filthy. ;)");
   bpT = 0;
   bpLoop = startLoop(beatStep);
 }
 export function closeBeatpad(): void {
+  cancelRecording();
   stopPad();
   unduckAfterPad(); // fade the jukebox music back in
   closeOverlay();
@@ -352,54 +501,116 @@ function beatpadShell(): string {
       </div>
       <canvas id="mzViz" class="mz-viz" width="720" height="104"></canvas>
       <div class="mz-pad">
-        <div class="mz-sub">Tap a beat <span class="mz-hint">click cells · space to run</span></div>
+        <div class="mz-sub">Tap a beat <span class="mz-hint">click cells · space runs · beats auto-save</span></div>
         <div class="mz-grid" id="mzGrid"></div>
         <div class="mz-padctl">
           <button class="ctl-btn" id="mzPlay">▶ Run</button>
           <button class="ctl-btn ghost" id="mzClear">Clear</button>
-          <label class="mz-bpm">BPM <input type="range" id="mzBpm" min="70" max="160" value="110"></label>
+          <button class="ctl-btn ghost" id="mzDl">⬇ Save beat</button>
+          <label class="mz-bpm">BPM <input type="range" id="mzBpm" min="${BPM_MIN}" max="${BPM_MAX}" value="110"></label>
         </div>
       </div>
     </div>`;
 }
 
-function buildPad(): void {
+let padSaveTimer: ReturnType<typeof setTimeout> | null = null;
+function savePad(): void {
+  if (padSaveTimer) clearTimeout(padSaveTimer);
+  padSaveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(PAD_LS_KEY, serializePattern(pattern, bpm));
+    } catch {
+      /* quota / private mode */
+    }
+  }, 250);
+}
+
+function buildPad(fromStorage: boolean): void {
   pattern = Array.from({ length: padRows }, () => Array(padCols).fill(false));
+  if (fromStorage) {
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(PAD_LS_KEY);
+    } catch {
+      /* private mode */
+    }
+    const saved = parsePattern(raw, padRows, padCols);
+    if (saved) {
+      pattern = saved.pattern;
+      bpm = saved.bpm;
+      const slider = document.getElementById("mzBpm") as HTMLInputElement | null;
+      if (slider) slider.value = String(bpm);
+    }
+  }
   const g = document.getElementById("mzGrid")!;
-  g.style.gridTemplateColumns = `repeat(${padCols},1fr)`;
+  g.style.gridTemplateColumns = `36px repeat(${padCols},1fr)`;
   g.innerHTML = "";
-  for (let r = 0; r < padRows; r++)
+  for (let r = 0; r < padRows; r++) {
+    const lab = document.createElement("span");
+    lab.className = "mz-rowlab";
+    lab.textContent = KIT[r].label;
+    g.appendChild(lab);
     for (let c = 0; c < padCols; c++) {
       const cell = document.createElement("button");
-      cell.className = "pad-cell";
+      cell.className = "pad-cell" + (pattern[r][c] ? " on" : "");
       cell.dataset.r = String(r);
       cell.dataset.c = String(c);
       cell.onclick = () => {
         pattern[r][c] = !pattern[r][c];
         cell.classList.toggle("on", pattern[r][c]);
-        if (pattern[r][c]) blip(NOTES[r][2], 0.12);
+        if (pattern[r][c]) hit(r, ac!.currentTime);
+        savePad();
+        refreshDl();
       };
       g.appendChild(cell);
     }
+  }
+  refreshDl();
 }
 function stepClass(): void {
   const g = document.getElementById("mzGrid");
   if (!g) return;
   g.querySelectorAll<HTMLElement>(".pad-cell").forEach((c) => c.classList.toggle("col", +c.dataset.c! === step));
 }
-function blip(freq: number, dur?: number): void {
+/** Two-tone alarm for the DO NOT PRESS button. Unlike blip(), this respects
+    the header mute — the button's joke survives on shake + flicker alone. */
+export function klaxon(): void {
+  if (muted) return;
   ensureAC();
-  const o = ac!.createOscillator(),
-    gain = ac!.createGain();
-  o.type = "triangle";
-  o.frequency.value = freq;
-  gain.gain.setValueAtTime(0.0001, ac!.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.22, ac!.currentTime + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, ac!.currentTime + (dur || 0.18));
-  o.connect(gain);
-  gain.connect(analyser!);
-  o.start();
-  o.stop(ac!.currentTime + (dur || 0.18));
+  const t0 = ac!.currentTime;
+  const seg = 0.18;
+  for (let i = 0; i < 6; i++) {
+    const o = ac!.createOscillator(), g = ac!.createGain();
+    o.type = "square";
+    o.frequency.value = i % 2 === 0 ? 620 : 470;
+    g.gain.setValueAtTime(0.0001, t0 + i * seg);
+    g.gain.exponentialRampToValueAtTime(0.12, t0 + i * seg + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + (i + 1) * seg);
+    o.connect(g);
+    g.connect(analyser!);
+    o.start(t0 + i * seg);
+    o.stop(t0 + (i + 1) * seg + 0.01);
+  }
+}
+
+/* ---- lookahead scheduler: hits land at exact ac.currentTime offsets,
+        so the groove no longer wobbles with setTimeout jitter. The RAF
+        loop only drains stepQueue to move the column highlight. ---- */
+let nextStepTime = 0; // ac.currentTime-domain
+let schedStep = 0; // next step index to schedule
+let schedTimer: ReturnType<typeof setInterval> | null = null;
+let stepQueue: { step: number; time: number }[] = [];
+const LOOKAHEAD_S = 0.12, TICK_MS = 25;
+const stepDur = (): number => 60 / bpm / 2; // 8 steps = 4 beats
+
+function schedule(): void {
+  const now = ac!.currentTime;
+  while (nextStepTime < now + LOOKAHEAD_S) {
+    for (let r = 0; r < padRows; r++) if (pattern[r][schedStep]) hit(r, nextStepTime);
+    stepQueue.push({ step: schedStep, time: nextStepTime });
+    nextStepTime += stepDur();
+    schedStep = (schedStep + 1) % padCols;
+  }
 }
 function runPad(): void {
   ensureAC();
@@ -409,32 +620,115 @@ function runPad(): void {
   }
   padPlaying = true;
   step = 0;
+  schedStep = 0;
+  stepQueue = [];
+  nextStepTime = ac!.currentTime + 0.06;
+  schedule();
+  schedTimer = setInterval(schedule, TICK_MS);
   const b = document.getElementById("mzPlay");
   if (b) b.textContent = "■ Stop";
-  const tick = (): void => {
-    for (let r = 0; r < padRows; r++) if (pattern[r][step]) blip(NOTES[r][step % 6], 0.16);
-    stepClass();
-    step = (step + 1) % padCols;
-    seqTimer = setTimeout(tick, ((60 / bpm) * 1000) / 2);
-  };
-  tick();
   bpSay("Now we're cooking. :D");
 }
 function stopPad(): void {
   padPlaying = false;
-  if (seqTimer) clearTimeout(seqTimer);
-  seqTimer = null;
+  if (schedTimer) clearInterval(schedTimer);
+  schedTimer = null;
+  stepQueue = [];
   const b = document.getElementById("mzPlay");
   if (b) b.textContent = "▶ Run";
   const g = document.getElementById("mzGrid");
   if (g) g.querySelectorAll<HTMLElement>(".pad-cell").forEach((c) => c.classList.remove("col"));
 }
+
+/* ---- "Download my beat": record exactly two loop cycles off the drum bus.
+        Safari records audio/mp4 (never webm); the mime pick handles it.
+        The button is hidden entirely where MediaRecorder is unsupported. ---- */
+let recDest: MediaStreamAudioDestinationNode | null = null;
+let recorder: MediaRecorder | null = null;
+let recArmAt = 0; // ac time the captured loop starts
+let recDur = 0;
+let recCancelled = false;
+function recMime(): { mime: string; ext: string } {
+  if (typeof MediaRecorder === "undefined") return { mime: "", ext: "" };
+  if (MediaRecorder.isTypeSupported("audio/mp4")) return { mime: "audio/mp4", ext: "m4a" };
+  if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) return { mime: "audio/webm;codecs=opus", ext: "webm" };
+  return { mime: "audio/webm", ext: "webm" };
+}
+function refreshDl(): void {
+  const b = document.getElementById("mzDl") as HTMLButtonElement | null;
+  if (!b) return;
+  const supported = recMime().mime !== "";
+  b.style.display = supported ? "" : "none";
+  if (!recorder) b.disabled = !pattern.some((row) => row.some(Boolean));
+}
+function startDownload(): void {
+  if (recorder || recMime().mime === "") return;
+  if (!pattern.some((row) => row.some(Boolean))) return;
+  ensureDrumGraph();
+  if (!recDest) {
+    recDest = ac!.createMediaStreamDestination();
+    drumGain!.connect(recDest);
+  }
+  const { mime, ext } = recMime();
+  // restart the loop so the capture starts on a clean cycle boundary
+  stopPad();
+  runPad();
+  const chunks: Blob[] = [];
+  recCancelled = false;
+  recorder = new MediaRecorder(recDest.stream, { mimeType: mime });
+  recorder.ondataavailable = (e) => {
+    if (e.data.size) chunks.push(e.data);
+  };
+  recorder.onstop = () => {
+    recorder = null;
+    const b = document.getElementById("mzDl") as HTMLButtonElement | null;
+    if (b) b.textContent = "⬇ Save beat";
+    refreshDl();
+    if (recCancelled || !chunks.length) return;
+    const blob = new Blob(chunks, { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ryans-world-beat.${ext}`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    P.inc("beatsDownloaded");
+    bpSay("Cooked. Check your downloads. ;)");
+  };
+  recArmAt = nextStepTime - 0.06;
+  recDur = 2 * padCols * stepDur() + 0.3; // two cycles + decay tail
+  recorder.start();
+  const b = document.getElementById("mzDl") as HTMLButtonElement | null;
+  if (b) {
+    b.textContent = "● Recording…";
+    b.disabled = true;
+  }
+  bpSay("Recording two loops — keep it running!");
+}
+function cancelRecording(): void {
+  if (!recorder) return;
+  recCancelled = true;
+  try {
+    recorder.stop();
+  } catch {
+    /* already stopped */
+  }
+}
 function wireBeat(): void {
   (document.getElementById("bpClose") as HTMLElement).onclick = closeBeatpad;
   (document.getElementById("mzPlay") as HTMLElement).onclick = runPad;
-  (document.getElementById("mzClear") as HTMLElement).onclick = () => buildPad();
+  (document.getElementById("mzClear") as HTMLElement).onclick = () => {
+    buildPad(false);
+    try {
+      localStorage.removeItem(PAD_LS_KEY);
+    } catch {
+      /* private mode */
+    }
+  };
+  (document.getElementById("mzDl") as HTMLElement).onclick = startDownload;
   (document.getElementById("mzBpm") as HTMLInputElement).oninput = (e) => {
     bpm = +(e.target as HTMLInputElement).value;
+    savePad();
   };
   bpKey = (e: KeyboardEvent): void => {
     const tag = (e.target as HTMLElement | null)?.tagName || "";
@@ -448,6 +742,7 @@ function wireBeat(): void {
     }
   };
   window.addEventListener("keydown", bpKey);
+  refreshDl();
 }
 
 function bpSay(t: string): void {
@@ -458,6 +753,24 @@ function beatStep(dt: number): void {
   try {
     const now = performance.now();
     bpT += dt;
+    // drain due scheduler steps -> column highlight stays on RAF
+    if (padPlaying && ac) {
+      const t = ac.currentTime;
+      let moved = false;
+      while (stepQueue.length && stepQueue[0].time <= t) {
+        step = stepQueue.shift()!.step;
+        moved = true;
+      }
+      if (moved) stepClass();
+    }
+    // recording: stop after exactly two cycles (timed on the audio clock)
+    if (recorder && recorder.state === "recording" && ac && ac.currentTime >= recArmAt + recDur) {
+      try {
+        recorder.stop();
+      } catch {
+        /* already stopped */
+      }
+    }
     const f = Math.floor(bpT * (padPlaying ? 12 : 5));
     const pA = document.getElementById("mzPortA") as HTMLCanvasElement | null;
     const pD = document.getElementById("mzPortD") as HTMLCanvasElement | null;

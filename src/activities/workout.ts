@@ -8,6 +8,7 @@ import { pick } from "../core/util";
 import { DIR_GLYPH, KEY_DIR } from "../core/constants";
 import type { Dir } from "../core/types";
 import { openOverlay, closeOverlay, isOverlayOpen, startLoop, type LoopHandle } from "./base";
+import * as P from "../progress";
 
 interface OpenOpts {
   onClose?: () => void;
@@ -51,7 +52,7 @@ let comboTime = 0;
 let comboMax = 0;
 let score = 0;
 let streak = 0;
-let best = +(localStorage.getItem("gymBest2") || 0);
+let best = P.num("gymBest"); // legacy "gymBest2" is migrated inside progress.ts
 let bag: Bag = { ox: 0, oy: 0, vx: 0, vy: 0, shake: 0 };
 let sparks: Spark[] = [];
 let bctx: CanvasRenderingContext2D | null = null;
@@ -240,7 +241,7 @@ function endRound(): void {
   let line: string;
   if (score > best) {
     best = score;
-    localStorage.setItem("gymBest2", String(best));
+    P.record("gymBest", best);
     document.getElementById("wkBest")!.textContent = String(best);
     line = pick(LINES.endHigh);
   } else if (score >= 300) {

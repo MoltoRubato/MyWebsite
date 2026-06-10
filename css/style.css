@@ -50,6 +50,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
 #veil{position:absolute;inset:0;background:#0a0c12;opacity:0;pointer-events:none;z-index:30;transition:opacity .42s ease}
 #veil.show{opacity:1}
+/* DO NOT PRESS — emergency-light flicker. Separate class from .show so room
+   transitions keep sole ownership of the fade. */
+#veil.flicker{animation:veilFlick .9s steps(2,end)}
+@keyframes veilFlick{
+  0%,40%,80%{opacity:.45;background:#3a0805}
+  20%,60%,100%{opacity:0;background:#0a0c12}
+}
 
 /* ---------------- Header ---------------- */
 #siteHeader{height:var(--hd-h);flex:0 0 var(--hd-h);display:flex;align-items:center;gap:14px;

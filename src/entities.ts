@@ -94,9 +94,24 @@ interface ObjSpec {
 // sprite, see game.ts render). TV and pool table use a world-px anchor (px/py)
 // on the floor in front of them, with markerY floating the prompt up.
 const OBJECTS: Partial<Record<RoomKey, ObjSpec[]>> = {
-  lounge: [{ type: "tv", name: "TV", px: 544, py: 372, hint: "Turn on TV", markerY: 100 }],
-  music: [{ type: "music", name: "Speaker", tx: 13, ty: 12, hint: "Open jukebox", sprite: "speaker" }],
-  game: [{ type: "pool", name: "Pool table", px: 354, py: 430, hint: "Play pool", markerY: 104 }],
+  lounge: [
+    { type: "tv", name: "TV", px: 544, py: 372, hint: "Turn on TV", markerY: 100 },
+    // the open book on the flower side-table, clear of the vases and of Mimi
+    { type: "guestbook", name: "Guestbook", px: 368, py: 400, hint: "Sign the guestbook", markerY: 58 },
+  ],
+  music: [
+    { type: "music", name: "Speaker", tx: 13, ty: 12, hint: "Open jukebox", sprite: "speaker" },
+    // anchored at the keyboard end of the painted grand piano — far enough
+    // left that DJ's wander region (x>=17 tiles) can never out-near it
+    { type: "piano", name: "Grand piano", px: 522, py: 408, hint: "Play the piano", markerY: 110 },
+  ],
+  game: [
+    { type: "pool", name: "Pool table", px: 354, py: 430, hint: "Play pool", markerY: 104 },
+    // floor strip south of the diamond card table with the blue chairs
+    { type: "poker", name: "Card table", px: 514, py: 438, hint: "Play poker", markerY: 102 },
+    // a small wall-mounted mystery on the south wall between the tables
+    { type: "redbutton", name: "Red button", px: 435, py: 444, hint: "Do not press", markerY: 34 },
+  ],
 };
 
 interface PetSpec {

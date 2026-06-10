@@ -124,7 +124,7 @@
 .pad-cell.on{background:linear-gradient(160deg,#e0a64a,#c98a36);box-shadow:0 0 10px rgba(224,166,74,.55)}
 .pad-cell.col{outline:2px solid rgba(78,122,54,.9);outline-offset:-2px}
 .pad-cell.on.col{transform:scale(1.08)}
-.mz-padctl{display:flex;align-items:center;gap:10px}
+.mz-padctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .mz-bpm{font-size:13px;color:var(--ui-ink-soft);display:flex;align-items:center;gap:8px;margin-left:auto}
 .mz-bpm input{accent-color:var(--ui-gold)}
 
@@ -285,3 +285,76 @@ body:not(.touch) .wk-dpad{display:none}
   #cbBoard{max-width:100%;height:auto}
   #plTable{max-width:100%}
 }
+
+/* ---- piano (RagnaPixel keyboard, canvas-upscaled) ---- */
+.pn-wrap{width:min(760px,94vw);gap:16px}
+.pn-oct{display:flex;align-items:center;gap:8px;flex:none;align-self:center}
+.pn-oct .ctl-btn{flex:none;padding:8px 14px;min-width:52px}
+.pn-octlbl{font-family:'Silkscreen',monospace;font-size:12px;letter-spacing:1px;color:var(--ui-ink);min-width:74px;text-align:center}
+.pn-kbdwrap{display:flex;justify-content:center;padding:6px 0 2px}
+#pnKbd{width:100%;max-width:712px;height:auto;image-rendering:pixelated;touch-action:none;cursor:pointer;
+  border:4px solid var(--ui-frame);border-radius:8px;
+  box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 1px var(--ui-frame-d),0 10px 26px rgba(0,0,0,.45)}
+.pn-wrap .mz-viz{height:92px}
+@media (max-height:540px){ .pn-wrap .mz-viz{display:none} }
+
+/* ---- Beat Pad 2.0: instrument row labels + drum-machine grid ---- */
+.mz-rowlab{display:flex;align-items:center;justify-content:flex-end;padding-right:4px;
+  font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;color:var(--ui-ink-soft);user-select:none}
+.pad-cell{touch-action:manipulation} /* no double-tap zoom delay on phones */
+@media (max-height:540px){ .bp-wrap .mz-viz{display:none} } /* short landscape phones */
+
+/* ---- poker (heads-up vs. Drod) ---- */
+#pkTable{display:block;width:684px;max-width:min(70vw,684px);height:auto;touch-action:manipulation}
+.pk-hud .wk-stat b{font-size:18px}
+.pk-actions{display:flex;gap:8px}
+.pk-actions .ctl-btn,.pk-raise .ctl-btn{min-height:44px}
+.pk-actions .ctl-btn small,.pk-raise .ctl-btn small,#pkAllin small{font-size:10px;opacity:.6;margin-left:4px}
+.pk-raise{display:flex;align-items:center;gap:10px}
+.pk-raise input{flex:1;accent-color:var(--ui-gold);min-width:0}
+.pk-raise .ctl-btn{flex:none;min-width:132px}
+#pkAllin{min-height:40px}
+.ctl-btn:disabled{opacity:.45;pointer-events:none}
+.pl-over.pk-next{background:transparent;backdrop-filter:none;pointer-events:none;align-items:end;padding-bottom:14px}
+.pl-over.pk-next .ctl-btn{pointer-events:auto;box-shadow:0 3px 0 #8a5a25,0 8px 22px rgba(0,0,0,.5)}
+@media(max-width:760px){ #pkTable{max-width:100%} .pk-wrap .pool-right{width:min(540px,92vw)} }
+
+/* ---- pool trick-shot rack (8 chips with star meters) ---- */
+.pl-trickrack{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.pl-tk{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 2px 5px;border-radius:11px;
+  font-family:'Silkscreen',monospace;font-size:13px;color:var(--ui-ink);
+  background:rgba(90,60,35,.1);border:2px solid var(--ui-frame)}
+.pl-tk i{font-style:normal;font-size:9px;letter-spacing:1px;color:var(--ui-gold)}
+.pl-tk.active{border-color:var(--ui-gold);background:rgba(156,90,37,.16);
+  box-shadow:0 0 0 2px rgba(231,163,62,.4)}
+.pl-over-card .ctl-btn+.ctl-btn{margin-top:2px}
+
+/* ---- guestbook (lounge side table) ---- */
+.gb-wrap{width:min(560px,94vw);max-height:min(640px,90vh);gap:14px}
+.gb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.gb-sub{font-size:14px;color:var(--ui-ink-soft)}
+.gb-tabs{display:flex;gap:6px;flex:none}
+.gb-tab{padding:9px 16px;border-radius:10px;font-size:15px;font-weight:600;color:var(--ui-ink);
+  background:rgba(90,60,35,.12);border:2px solid var(--ui-frame);box-shadow:0 3px 0 var(--ui-frame-d)}
+.gb-tab.on{background:linear-gradient(180deg,#e0a64a,#c98a36);color:#3a2410}
+.gb-tab:disabled{opacity:.6;pointer-events:none}
+.gb-page{flex:1;min-height:240px;max-height:380px;overflow-y:auto;padding:14px 16px;border-radius:12px;
+  background:#f4ead6;border:3px solid var(--ui-frame);box-shadow:inset 0 2px 8px rgba(0,0,0,.12);
+  scrollbar-width:thin;scrollbar-color:var(--ui-frame) transparent}
+.gb-note{font-size:13px;color:var(--ui-ink-soft);font-style:italic;padding:4px 0 10px}
+.gb-row{padding:10px 2px 9px;border-bottom:1px dashed rgba(74,53,38,.3)}
+.gb-row.pending{opacity:.55}
+.gb-row-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.gb-row-name{font-family:'Silkscreen',monospace;font-size:12px;color:var(--ui-gold);overflow-wrap:anywhere}
+.gb-row-when{font-size:11px;color:var(--ui-ink-soft);flex:none}
+.gb-row-msg{margin:3px 0 0;font-size:15px;line-height:1.45;color:var(--ui-ink);overflow-wrap:anywhere}
+.gb-form{display:flex;flex-direction:column;gap:12px}
+.gb-field{display:flex;flex-direction:column;gap:5px;position:relative;
+  font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ui-gold)}
+.gb-field input,.gb-field textarea{font-family:'Pixelify Sans',sans-serif;font-size:16px;color:var(--ui-ink);
+  padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.55);border:2px solid var(--ui-frame);resize:none}
+.gb-field input:focus,.gb-field textarea:focus{outline:2px solid var(--ui-gold)}
+.gb-count{position:absolute;right:4px;bottom:-16px;font-size:10px;letter-spacing:0;color:var(--ui-ink-soft);text-transform:none}
+.gb-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.gb-err{min-height:18px;font-size:13px;color:#b5442f;line-height:1.35}
+#gbSubmit{min-height:46px}

@@ -78,6 +78,14 @@ export const CONTENT: Content = {
         "Fun fact: I'm not real. Some guy coded me up over a weekend. I try not to dwell on it.",
         "Anyway. Face me at the board, or go gawk at his other little experiments. I'm exhibit A, by the way.",
       ],
+      // Session memory — first match wins, shown once per visit.
+      reactions: [
+        { flag: "pokerBigWin", lines: ["Word from the card room is you went on a HEATER. The chips are fake, but the dealer's tears? Real."] },
+        { flag: "pokerBusted", lines: ["Heard you went bust at the card table. Hey, house money. The house is still laughing though."] },
+        { flag: "pressedButton", lines: ["You pressed the big red button, didn't you. Don't bother denying it — I read the logs. Every. Single. Visitor."] },
+        { when: (c) => c.num("chessWins") > 0, lines: ["Oh. You're back. About last game — I LET you win. That's my story, Ryan's already heard it, and we're both pretending to believe it."] },
+        { when: (c) => c.num("chessLosses") > 0, lines: ["Back for revenge? Adorable. Last time ended in checkmate; this time let's aim for 'respectably close.'"] },
+      ],
     },
     Alex: {
       name: "Alex", room: "music", color: "#5fb0c9",
@@ -86,6 +94,9 @@ export const CONTENT: Content = {
         "Ayy, you found the studio! Watch the cables, a couple of 'em bite.",
         "The owner? Oh, he basically haunts this room. Pops in for a 'quick break,' leaves at 4am. Every time.",
         "Anyway, enough about the ghost who pays rent. Hop on the booth and let's hear you.",
+      ],
+      reactions: [
+        { when: (c) => c.num("pianoNotes") >= 50, lines: ["I heard you on the piano earlier. {pianoNotes} notes! The owner plays it nightly and calls it 'lo-fi research.' Yours was better. Don't tell him."] },
       ],
     },
     DJ: {
@@ -96,6 +107,10 @@ export const CONTENT: Content = {
         "Every track in this place got hand-picked by you-know-who. Man has VERY strong opinions about hi-hats.",
         "Enough chitchat. Get on the decks and cook something. I totally won't judge. (I'm judging.)",
       ],
+      reactions: [
+        { when: (c) => c.trackName !== null, lines: ["Ohhh, '{track}'? Good ears. The owner claims he 'curated' that one. He found it at 3am and got emotional, but sure — curated."] },
+        { when: (c) => c.num("beatsDownloaded") > 0, lines: ["Wait, you DOWNLOADED your beat? Respect. The owner's never shipped one of his. It's 'in post.' It's been 'in post' for a year."] },
+      ],
     },
     Bob: {
       name: "Bob", room: "lounge", color: "#d98a5a",
@@ -104,6 +119,9 @@ export const CONTENT: Content = {
         "Sit, sit. This couch has held fancier people than me, but it'll cope.",
         "Asking about the owner, huh? I've watched a lotta folks pass through this lounge.",
         "That Ryan's worked more places than I've taken naps, and buddy, I nap competitively. Want the rundown?",
+      ],
+      reactions: [
+        { when: (c) => c.has("room_gym") && c.has("room_game") && c.has("room_music"), lines: ["Full lap of the place already? Most folks nap on this couch first. You hustle harder than the owner — don't tell him I said that."] },
       ],
     },
     Dino: {
@@ -114,6 +132,9 @@ export const CONTENT: Content = {
         "Word is some guy named 'Ryan' owns this whole place. Never seen him. Little bit sus, if you ask me.",
         "I'm nosy though, so I looked him up. Wanna see what kind of person builds a dinosaur his own lounge?",
       ],
+      reactions: [
+        { flag: "guestbookSigned", lines: ["You signed the guestbook!! I read it every night before bed. ...Don't make it weird that I just told you that."] },
+      ],
     },
     Girl: {
       name: "Amelia", room: "gym", color: "#e58aa6",
@@ -122,6 +143,9 @@ export const CONTENT: Content = {
         "Spotter's here! Drop the bar on your face and I'll gasp real convincing-like.",
         "Lemme guess: you're after the guy whose name's plastered all over this building?",
         "I'm not his secretary, but his contact's just sorta lying around over here. Don't make it weird.",
+      ],
+      reactions: [
+        { when: (c) => c.has("pet_Mimi") && c.has("pet_Batman"), lines: ["Heard you've been petting everything that moves in the lounge. Mimi rates you. Batman is 'reserving judgment,' which is cat for obsessed."] },
       ],
     },
     Gojo: {
@@ -132,6 +156,9 @@ export const CONTENT: Content = {
         "Throughout heaven and earth, I alone am the strongest… spotter in this gym, anyway.",
         "You wondering if the owner actually does stuff, or just hires cool guys to stand around? Valid question.",
         "So pick: throw hands with the bag, or I pull up the pile of things he's built. You leave impressed regardless.",
+      ],
+      reactions: [
+        { when: (c) => c.num("gymBest") > 0, lines: ["{gymBest} points on the bag. Not bad. For reference, the owner once pulled a muscle reaching for his mouse, so the bar here is underground."] },
       ],
     },
   },

@@ -2,7 +2,7 @@
    GAME — main loop, rendering, input, transitions, interactions.
    ============================================================ */
 import { TS } from "./core/constants";
-import type { Camera, GameApi, GameObject, NPC, Pet, Point, Room, RoomKey } from "./core/types";
+import type { Camera, GameApi, GameObject, NPC, Pet, Point, ReactionCtx, Room, RoomKey } from "./core/types";
 import { ROOMS } from "./world";
 import * as A from "./assets";
 import * as S from "./sprites";
@@ -12,10 +12,14 @@ import * as HITBOXES from "./hitboxes";
 import * as DIALOGUE from "./dialogue";
 import * as HEADER from "./header";
 import * as EDITOR from "./editor";
+import * as P from "./progress";
 import * as CHESS from "./activities/chess";
 import * as POOL from "./activities/pool";
 import * as MUSIC from "./activities/music";
 import * as WORKOUT from "./activities/workout";
+import * as PIANO from "./activities/piano";
+import * as POKER from "./activities/poker";
+import * as GUESTBOOK from "./activities/guestbook";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
@@ -53,6 +57,12 @@ let tvAnimT = 0; // channel playback clock
 let tvLabelT = 0; // seconds left to flash the channel name after a switch
 let showHitboxes = /[?&]dev=1\b/.test(location.search); // DEV overlay (?dev=1)
 let intro: Intro | null = null; // opening cinematic
+const consumedReactions = new Set<string>(); // session-memory openers shown this page load
+// DO NOT PRESS button — camera shake + press feedback timers (seconds left)
+const shake = { t: 0, dur: 0, amp: 0 };
+let btnCooldown = 0;
+let btnPressT = 0;
+let worldT = 0; // ambient clock for in-world object animation (button glow)
 
 interface Intro {
   sx: number;
@@ -184,6 +194,9 @@ function anyOverlayOpen(): boolean {
     MUSIC.isOpen() ||
     POOL.isOpen() ||
     WORKOUT.isOpen() ||
+    PIANO.isOpen() ||
+    POKER.isOpen() ||
+    GUESTBOOK.isOpen() ||
     !document.getElementById("panel")!.classList.contains("hidden") ||
     !document.getElementById("mapModal")!.classList.contains("hidden")
   );
@@ -211,11 +224,40 @@ function interact(): void {
   const near = findNear();
   if (!near) return;
   if (near.kind === "npc") talkTo(near.ref);
-  else if (near.kind === "pet") EN.petStart(near.ref);
+  else if (near.kind === "pet") {
+    // count only pets that actually start (petStart ignores non-idle pets)
+    if (near.ref.state === "idle") {
+      P.flag(`pet_${near.ref.name}`);
+      P.inc("petsGiven");
+    }
+    EN.petStart(near.ref);
+  }
   else if (near.ref.type === "music") openJukebox();
   else if (near.ref.type === "pool") openPool();
+  else if (near.ref.type === "poker") openPoker();
+  else if (near.ref.type === "piano") openPiano();
+  else if (near.ref.type === "guestbook") openGuestbook();
   else if (near.ref.type === "tv") cycleTV();
+  else if (near.ref.type === "redbutton") pressRedButton();
 }
+// The big red button. It says not to. People press it. Shake, flicker,
+// klaxon... and then, very deliberately, nothing. Drod remembers, though.
+function pressRedButton(): void {
+  if (btnCooldown > 0) return;
+  btnCooldown = 3;
+  btnPressT = 0.2;
+  shake.t = 0;
+  shake.dur = 0.9;
+  shake.amp = 7;
+  veil.classList.remove("flicker");
+  void veil.offsetWidth; // restart the animation on repeat presses
+  veil.classList.add("flicker");
+  veil.addEventListener("animationend", () => veil.classList.remove("flicker"), { once: true });
+  MUSIC.klaxon(); // respects the header mute
+  P.flag("pressedButton");
+  P.inc("buttonPresses");
+}
+
 // One-button remote: off -> ch1 -> ch2 -> ch3 -> off.
 function cycleTV(): void {
   tvCh = tvCh >= TV_CHANNELS.length - 1 ? -1 : tvCh + 1;
@@ -246,6 +288,25 @@ function talkTo(npc: NPC): void {
     actions.open = () => HEADER.openPanel(data.opens!);
   }
   const opts: Parameters<typeof DIALOGUE.start>[0] = { charKey: npc.key, name: data.name, color: data.color, lines: data.lines.slice() };
+  // Session memory: the first matching unconsumed reaction replaces the
+  // opening line, once per page load. Reactions read progress through ctx
+  // only, so content.ts stays import-free (no ESM cycle with music.ts).
+  const ctx: ReactionCtx = {
+    num: (k) => P.num(k as Parameters<typeof P.num>[0]),
+    has: (f) => P.hasFlag(f as Parameters<typeof P.hasFlag>[0]),
+    trackName: MUSIC.nowPlaying(),
+  };
+  const fmt = (l: string): string =>
+    l.replace(/\{(\w+)\}/g, (_, k: string) => (k === "track" ? (ctx.trackName ?? "the music") : String(ctx.num(k))));
+  const reactions = data.reactions || [];
+  for (let i = 0; i < reactions.length; i++) {
+    const r = reactions[i], id = npc.key + ":" + i;
+    if (consumedReactions.has(id)) continue;
+    if (!(r.flag ? ctx.has(r.flag) : r.when ? r.when(ctx) : false)) continue;
+    consumedReactions.add(id);
+    opts.lines = [...r.lines.map(fmt), ...data.lines.slice(1)];
+    break;
+  }
   if (choices.length) {
     choices.push({ label: data.noLabel || "Maybe later", value: "no" });
     opts.choices = choices;
@@ -276,6 +337,18 @@ function openBeatpad(): void {
 function openWorkout(): void {
   paused = true;
   WORKOUT.open({ onClose: () => (paused = false) });
+}
+function openPiano(): void {
+  paused = true;
+  PIANO.open({ onClose: () => (paused = false) });
+}
+function openPoker(): void {
+  paused = true;
+  POKER.open({ onClose: () => (paused = false) });
+}
+function openGuestbook(): void {
+  paused = true;
+  GUESTBOOK.open({ onClose: () => (paused = false) });
 }
 
 function setHitboxes(v: boolean): void {
@@ -357,6 +430,7 @@ function enterRoom(to: RoomKey, fromRoom?: RoomKey): void {
   veil.classList.add("show");
   setTimeout(() => {
     curRoom = to;
+    P.flag(`room_${to}`);
     ensureRoom(to);
     placeAtSpawn(to, fromRoom);
     doorGuard = true;
@@ -490,8 +564,15 @@ interface Drawable {
 function render(): void {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const cam = camera();
+  // red-button camera shake — random jitter that eases out over shake.dur
+  let shx = 0, shy = 0;
+  if (shake.dur > 0 && shake.t < shake.dur) {
+    const k = 1 - shake.t / shake.dur;
+    shx = (Math.random() * 2 - 1) * shake.amp * k * k;
+    shy = (Math.random() * 2 - 1) * shake.amp * k * k;
+  }
   ctx.save();
-  ctx.translate(cam.ox, cam.oy);
+  ctx.translate(cam.ox + shx, cam.oy + shy);
   ctx.scale(cam.s, cam.s);
   ctx.translate(-cam.vx, -cam.vy);
   const img = A.getImage(ROOM_IMG[curRoom]);
@@ -519,6 +600,52 @@ function render(): void {
       },
     }),
   );
+  // The DO NOT PRESS button — wall plate + glowing dome, drawn procedurally.
+  (R.objs || []).forEach((o) => {
+    if (o.type !== "redbutton") return;
+    draw.push({
+      y: o.y + 8, // wall-mounted at the bottom edge: always in front of feet
+      fn: () => {
+        const bx = o.x, by = o.y + 2; // plate anchor on the south-wall baseboard
+        const pressed = btnPressT > 0;
+        // steel plate
+        ctx.fillStyle = "#20202a";
+        ctx.fillRect(bx - 12, by - 1, 24, 16);
+        ctx.fillStyle = "#3a3a44";
+        ctx.fillRect(bx - 11, by, 22, 14);
+        // warning placard
+        ctx.fillStyle = "#f4ead6";
+        ctx.fillRect(bx - 8, by - 7, 16, 5);
+        ctx.strokeStyle = "#d5392c";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx - 8, by - 2.5);
+        ctx.lineTo(bx + 8, by - 6.5);
+        ctx.stroke();
+        // dome (sits 2px lower while pressed)
+        const dy = pressed ? 2 : 0;
+        const glow = 0.25 + 0.2 * Math.sin(worldT * 2.2);
+        ctx.beginPath();
+        ctx.arc(bx, by + 7 + dy, 8, 0, 7);
+        ctx.fillStyle = "#7d1c12";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(bx, by + 6 + dy, 7, 0, 7);
+        ctx.fillStyle = "#d5392c";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(bx - 2, by + 4 + dy, 2.5, 0, 7);
+        ctx.fillStyle = "#ff8a70";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(bx, by + 6 + dy, 9.5, 0, 7);
+        ctx.strokeStyle = `rgba(255,90,60,${(pressed ? 0.8 : glow).toFixed(3)})`;
+        ctx.lineWidth = pressed ? 2.5 : 1.5;
+        ctx.stroke();
+      },
+    });
+  });
+
   // Animated jukebox speaker
   (R.objs || []).forEach((o) => {
     if (o.sprite !== "speaker") return;
@@ -737,7 +864,11 @@ function frame(ts: number): void {
     player.frame = Math.floor(player.animT * (player.moving ? 9 : 3));
     musicAnimT += dt;
     tvAnimT += dt;
+    worldT += dt;
     if (tvLabelT > 0) tvLabelT = Math.max(0, tvLabelT - dt);
+    if (shake.dur > 0) shake.t += dt;
+    if (btnCooldown > 0) btnCooldown = Math.max(0, btnCooldown - dt);
+    if (btnPressT > 0) btnPressT = Math.max(0, btnPressT - dt);
     render();
     DIALOGUE.tick(ts);
   } catch (err) {
@@ -748,6 +879,7 @@ function frame(ts: number): void {
 
 function start(): void {
   ensureRoom("lounge");
+  P.flag("room_lounge");
   placeAtSpawn("lounge");
   startIntro();
   resize();
