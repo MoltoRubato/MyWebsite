@@ -21,7 +21,7 @@ Each room is alive: NPCs wander and do their own thing, tall objects (TVs, plant
 - **8-Ball vs. Drod** — a physics pool game (ball-to-ball + cushion collisions, six pockets, full 8-ball rules with groups, fouls, and ball-in-hand), slingshot aiming with a live trajectory guide, a ghost-ball AI opponent, and synthesized table SFX
 - **Music Studio** — jukebox playing 5 tracks + a beat pad with a Web Audio visualizer
 - **Gym Combo Trainer** — call-and-respond directional punch combos with a pixel-art heavy bag and POW bursts
-- **Website header** — About / Experience / Projects / Contact slide-over panels, room-map fast-travel, sound toggle, and résumé download, with smooth motion throughout
+- **Website header** — About / Experience / Projects / Contact slide-over panels, room-map fast-travel, and a sound toggle, with smooth motion throughout
 - **Animated loading screen** — title card over a live, animated room scene
 - **Dev level editor** — load with **`?dev=1`** to show the hitbox overlay; the editor supports free-form collision boxes, depth baselines, door zones, and spawn points (saved to your browser, exportable as JSON)
 
@@ -82,7 +82,7 @@ MyWebsite/
 │       └── workout.ts      # gym combo trainer
 └── public/
     └── assets/             # static art/audio served at /assets/** (rooms, chars, portraits,
-                            #   chess, engine/ Stockfish WASM, props/ TV, audio, og, résumé)
+                            #   chess, engine/ Stockfish WASM, props/ TV, audio, og)
 ```
 
 ## Getting started

@@ -13,6 +13,7 @@ import * as S from "./sprites";
 import { GAME } from "./game";
 import * as HEADER from "./header";
 import * as EDITOR from "./editor";
+import * as SF from "./stockfish-engine";
 
 // expose GAME for debugging / preview tooling (matches the old window.GAME)
 (window as unknown as { GAME: typeof GAME }).GAME = GAME;
@@ -130,6 +131,9 @@ function enterWorld(): void {
   EDITOR.init(GAME);
   GAME.start();
   setTimeout(() => loader.classList.add("hidden"), 650);
+  // warm Stockfish (~640 KB worker + wasm) in the background so the first chess
+  // game's AI move is instant instead of waiting for the engine to boot.
+  setTimeout(() => void SF.init(), 1500);
 }
 enterBtn.addEventListener("click", enterWorld);
 window.addEventListener("keydown", (e) => {
