@@ -23,7 +23,7 @@ Each room is alive: NPCs wander and do their own thing, tall objects (TVs, plant
 - **Gym Combo Trainer** — call-and-respond directional punch combos with a pixel-art heavy bag and POW bursts
 - **Website header** — About / Experience / Projects / Contact slide-over panels, room-map fast-travel, sound toggle, and résumé download, with smooth motion throughout
 - **Animated loading screen** — title card over a live, animated room scene
-- **Dev level editor** — press **`H`** in-game to toggle the hitbox overlay; editing supports free-form collision boxes, depth baselines, door zones, and spawn points (saved to your browser, exportable as JSON)
+- **Dev level editor** — load with **`?dev=1`** to show the hitbox overlay; the editor supports free-form collision boxes, depth baselines, door zones, and spawn points (saved to your browser, exportable as JSON)
 
 ## Controls
 
@@ -32,13 +32,13 @@ Each room is alive: NPCs wander and do their own thing, tall objects (TVs, plant
 | Move | `W` `A` `S` `D` or arrow keys |
 | Interact | `Enter` (near an NPC or activity) |
 | Close dialog / overlay | `Esc` |
-| Dev hitbox overlay | `H` (or load with `?dev=1`) |
+| Dev hitbox overlay | load with `?dev=1` |
 
 On-screen touch controls (d-pad + action button) appear on mobile/touch devices.
 
 ## Technologies
 
-- **Frontend**: HTML5, CSS3, vanilla JavaScript (ES6+) — no frameworks
+- **Frontend**: HTML5, CSS3, **TypeScript** (ES modules) — no UI framework; bundled with **Vite**, unit-tested with **Vitest**
 - **Graphics**: HTML5 Canvas 2D
 - **Audio**: Web Audio API (jukebox, beat pad, sound effects)
 - **Chess engine**: official [Stockfish](https://stockfishchess.org/) compiled to WebAssembly (single-threaded, driven over UCI in a Web Worker), with a hand-written alpha–beta + quiescence engine as the offline fallback
@@ -49,52 +49,56 @@ On-screen touch controls (d-pad + action button) appear on mobile/touch devices.
 
 ```
 MyWebsite/
-├── index.html              # Ryan's World — the site entry point
+├── index.html              # entry HTML — loads a single module: /src/main.ts
+├── package.json            # scripts: dev / build / preview / typecheck / test
+├── tsconfig.json           # strict TypeScript config
+├── vite.config.ts          # Vite + Vitest config
 ├── css/
 │   ├── style.css           # world, header, loader
-│   ├── ui.css              # dialogue, slide-over panels, room map
-│   └── activity.css        # chess / music / gym overlays
-├── js/
-│   ├── content.js          # portfolio data + per-character dialogue
-│   ├── collision.js        # tile collision (legacy/fallback)
-│   ├── hitboxes.js         # free-form collision + depth data
-│   ├── assets.js           # image loader + sprite metadata
-│   ├── world.js            # rooms, doors, cameras
-│   ├── sprites.js          # spritesheet drawing
-│   ├── entities.js         # player + NPC behaviour
-│   ├── dialogue.js         # animated portrait dialogue
-│   ├── header.js           # header nav + content panels
-│   ├── chess-engine.js     # chess rules + fallback AI (alpha-beta + quiescence) + FEN/UCI bridge
-│   ├── stockfish-engine.js # Stockfish (WASM) Web Worker wrapper
-│   ├── chess.js            # chess UI (vs. Drod)
-│   ├── pool.js             # 8-ball pool: physics, rules, AI, UI (vs. Drod)
-│   ├── music.js            # jukebox + beat pad
-│   ├── workout.js          # gym combo trainer
-│   ├── game.js             # main loop: render, input, transitions
-│   ├── editor.js           # dev-only level editor (press H)
-│   └── boot.js             # loader + start sequence
-├── assets/
-│   ├── rooms/              # 4 rooms × base/props/top PNGs
-│   ├── chars/              # 8 character spritesheets (32×64 frames)
-│   ├── portraits/          # 8 talking portraits (64×64 frames)
-│   ├── chess/              # board + piece sheets
-│   ├── engine/             # Stockfish WASM build (stockfish.wasm.js + .wasm)
-│   ├── ui/                 # heavy bag, UI tiles
-│   ├── audio/              # 5 music tracks
-│   └── Ryan_Huang_Resume.pdf
-└── README.md
+│   ├── ui.css              # dialogue, slide-over panels, room map, activity host
+│   └── activity.css        # chess / pool / music / gym overlays
+├── src/
+│   ├── main.ts             # entry: loader screen, wires header/editor → GAME, starts the world
+│   ├── game.ts             # main loop: render, input, transitions, intro cinematic, TV
+│   ├── content.ts          # portfolio data + per-character dialogue (typed)
+│   ├── world.ts            # room registry + collision query
+│   ├── hitboxes.ts         # free-form collision + depth + door + spawn data
+│   ├── assets.ts           # image loader + sprite/sheet metadata
+│   ├── sprites.ts          # spritesheet drawing (chars, pets, speaker, portraits)
+│   ├── entities.ts         # player + NPC behaviour, objects, pets
+│   ├── dialogue.ts         # animated portrait dialogue
+│   ├── header.ts           # header nav + content panels + room map
+│   ├── editor.ts           # dev-only level editor (?dev=1)
+│   ├── stockfish-engine.ts # Stockfish (WASM) Web Worker bridge
+│   ├── core/               # shared types, constants (TS grid, dir maps), helpers (pick/clamp)
+│   ├── chess/
+│   │   ├── engine.ts       # from-scratch rules + alpha-beta + quiescence + FEN/UCI bridge
+│   │   └── engine.test.ts  # Vitest perft + rules tests
+│   └── activities/
+│       ├── base.ts         # shared overlay lifecycle + RAF dt-loop (chess/pool/music/workout)
+│       ├── chess.ts        # chess UI (vs. Drod) — Stockfish + fallback
+│       ├── pool.ts         # 8-ball pool: physics, rules, ghost-ball AI, UI (vs. Drod)
+│       ├── music.ts        # jukebox + beat pad
+│       └── workout.ts      # gym combo trainer
+└── public/
+    └── assets/             # static art/audio served at /assets/** (rooms, chars, portraits,
+                            #   chess, engine/ Stockfish WASM, props/ TV, audio, og, résumé)
 ```
 
 ## Getting started
 
 Visit **[ryanhuang.work](https://ryanhuang.work)**.
 
-Or run locally — because everything loads via relative paths and the browser blocks some of them from `file://`, serve the folder over HTTP:
+Or run locally with [Node.js](https://nodejs.org/):
 
 ```bash
-# from the project root
-python3 -m http.server 8000
-# then open http://localhost:8000
+npm install
+npm run dev        # Vite dev server with hot-reload
+# build / preview / quality gates:
+npm run build      # type-check (tsc) + production bundle to dist/
+npm run preview     # serve the production build
+npm run typecheck  # tsc --noEmit
+npm test           # Vitest (chess-engine perft + rules)
 ```
 
 ## Credits
