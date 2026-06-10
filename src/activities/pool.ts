@@ -175,20 +175,23 @@ const sunkAt = (id: number, px: number, py: number): boolean => {
   return !!b && b.out && b.px === px && b.py === py;
 };
 const TRICKS: TrickLayout[] = [
-  // Each stage is a single ball — no obstacle balls to puzzle over — testing
-  // one fundamental shot: a straight pot, a cut, a shot into the side pocket,
-  // or a bank off a cushion. Every cue/ball geometry was found with an offline
-  // port of THIS physics engine, so each shot is provably makeable with a
-  // comfortable margin. Corner pots are precise (~0.5deg, the aim guide makes
-  // them findable); side-pocket and bank shots are forgiving (~2.5deg).
-  { name: "Straight in", obj: "Line it up — sink the ball in the bottom-right corner.", cue: { x: 180, y: 120 }, balls: [{ id: 1, x: 540, y: 230 }], targets: [1], check: () => sunkAt(1, railR, railB) },
-  { name: "Side pocket", obj: "Roll it home into the bottom side pocket.", cue: { x: 300, y: 90 }, balls: [{ id: 1, x: 340, y: 200 }], targets: [1], check: () => sunkAt(1, midX, railB) },
-  { name: "Off the cushion", obj: "The ball hugs the right rail — bank it off a cushion and into any pocket.", cue: { x: 520, y: 200 }, balls: [{ id: 1, x: 560, y: 186 }], targets: [1], check: () => potted(1) && !!ballRail[1] },
-  { name: "Cut shot", obj: "Cut it cleanly into the bottom-right corner.", cue: { x: 220, y: 100 }, balls: [{ id: 1, x: 470, y: 250 }], targets: [1], check: () => sunkAt(1, railR, railB) },
-  { name: "The other side", obj: "Now the top side pocket. Roll it in.", cue: { x: 200, y: 250 }, balls: [{ id: 1, x: 320, y: 120 }], targets: [1], check: () => sunkAt(1, midX, railT) },
-  { name: "Across the table", obj: "The long one — sink it all the way in the top-right corner.", cue: { x: 200, y: 260 }, balls: [{ id: 1, x: 500, y: 140 }], targets: [1], check: () => sunkAt(1, railR, railT) },
-  { name: "Sharp angle", obj: "A tighter cut — thread it into the bottom-right corner.", cue: { x: 210, y: 95 }, balls: [{ id: 1, x: 520, y: 250 }], targets: [1], check: () => sunkAt(1, railR, railB) },
-  { name: "The closer", obj: "Last one. A long, sharp cut into the far corner.", cue: { x: 200, y: 90 }, balls: [{ id: 1, x: 510, y: 250 }], targets: [1], check: () => sunkAt(1, railR, railB) },
+  // Each stage is a single ball with one job: sink it. The objective never asks
+  // for anything but a clean pot — the variety lives in the cue/ball geometry,
+  // not in the brief. Across the eight, the layout walks through every kind of
+  // arrangement (a straight pot, two balls level for a horizontal shot, a long
+  // diagonal, cuts to either side, the two side pockets) and visits all six
+  // pockets so no two shots feel the same. Every cue/ball geometry was found
+  // with an offline port of THIS physics engine — each shot is provably
+  // makeable with a comfortable margin, best aim within ~3deg of straight at
+  // the ball, so the aim guide makes them findable.
+  { name: "Straight in", obj: "Sink the ball in the bottom-right corner.", cue: { x: 180, y: 120 }, balls: [{ id: 1, x: 540, y: 230 }], targets: [1], check: () => sunkAt(1, railR, railB) },
+  { name: "Side pocket", obj: "Sink the ball in the bottom side pocket.", cue: { x: 300, y: 90 }, balls: [{ id: 1, x: 340, y: 200 }], targets: [1], check: () => sunkAt(1, midX, railB) },
+  { name: "The long one", obj: "Sink the ball in the top-right corner.", cue: { x: 200, y: 260 }, balls: [{ id: 1, x: 500, y: 140 }], targets: [1], check: () => sunkAt(1, railR, railT) },
+  { name: "Cut to the left", obj: "Sink the ball in the bottom-left corner.", cue: { x: 360, y: 150 }, balls: [{ id: 1, x: 210, y: 250 }], targets: [1], check: () => sunkAt(1, railL, railB) },
+  { name: "The other side", obj: "Sink the ball in the top side pocket.", cue: { x: 200, y: 250 }, balls: [{ id: 1, x: 320, y: 120 }], targets: [1], check: () => sunkAt(1, midX, railT) },
+  { name: "The top corner", obj: "Sink the ball in the top-left corner.", cue: { x: 360, y: 230 }, balls: [{ id: 1, x: 210, y: 130 }], targets: [1], check: () => sunkAt(1, railL, railT) },
+  { name: "Dead level", obj: "Sink the ball in the bottom-right corner.", cue: { x: 300, y: 228 }, balls: [{ id: 1, x: 460, y: 228 }], targets: [1], check: () => sunkAt(1, railR, railB) },
+  { name: "The closer", obj: "Sink the ball in the top-right corner.", cue: { x: 330, y: 300 }, balls: [{ id: 1, x: 470, y: 150 }], targets: [1], check: () => sunkAt(1, railR, railT) },
 ];
 const trick = { li: 0, attempt: 1, stars: [0, 0, 0, 0, 0, 0, 0, 0] };
 function loadTrickStars(): void {
