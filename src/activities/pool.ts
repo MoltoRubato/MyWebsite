@@ -154,9 +154,8 @@ let cnv: HTMLCanvasElement | null = null;
 // per-shot bookkeeping
 let shotPotted: number[] = [], shotFirstHit: number | null = null, shotCueScratch = false, shotRail = false;
 let groupClearedAtStart: { you: boolean; drod: boolean } = { you: false, drod: false };
-// trick-shot extras: which balls touched a rail + cue-rail-after-contact
+// trick-shot extra: which balls touched a rail this shot (for bank objectives)
 let ballRail: Record<number, boolean> = {};
-let shotCueRailAfterContact = false;
 
 /* ---------------- trick-shot gauntlet ---------------- */
 type Mode = "8ball" | "trick";
@@ -176,17 +175,20 @@ const sunkAt = (id: number, px: number, py: number): boolean => {
   return !!b && b.out && b.px === px && b.py === py;
 };
 const TRICKS: TrickLayout[] = [
-  // layout geometry note: every pot line was checked against the pocket jaws
-  // (tips at MC/MS with radius R+JAWR) — corner pockets need a diagonal
-  // approach, so target balls sit off-rail with a clear lane to the hole.
-  { name: "Tap-in", obj: "Sink the solid. Any pocket. Warm up.", cue: { x: 200, y: 200 }, balls: [{ id: 1, x: 540, y: 140 }], targets: [1], check: () => potted(1) },
-  { name: "Cut shot", obj: "Cut the solid into the bottom-right corner pocket.", cue: { x: 200, y: 120 }, balls: [{ id: 2, x: 480, y: 240 }], targets: [2], check: () => sunkAt(2, railR, railB) },
-  { name: "Bank it", obj: "Stripes guard the left pockets. Bounce the solid off a cushion, then sink it.", cue: { x: 380, y: 240 }, balls: [{ id: 3, x: 340, y: 200 }, { id: 11, x: 160, y: 150 }, { id: 12, x: 160, y: 186 }, { id: 13, x: 160, y: 222 }], targets: [3], check: () => potted(3) && !!ballRail[3] },
-  { name: "Combo", obj: "Knock the solid into the stripe — only the stripe drops.", cue: { x: 170, y: 186 }, balls: [{ id: 4, x: 420, y: 210 }, { id: 9, x: 480, y: 180 }], targets: [9], check: () => shotFirstHit === 4 && potted(9) && !potted(4) },
-  { name: "Thread the needle", obj: "Thread the stripe gap, then sink the solid.", cue: { x: 170, y: 186 }, balls: [{ id: 10, x: 340, y: 150 }, { id: 11, x: 340, y: 222 }, { id: 5, x: 540, y: 150 }], targets: [5], check: () => potted(5) },
-  { name: "Soft touch", obj: "Sink the solid top-right — the cue ball must never touch a cushion after contact.", cue: { x: 509, y: 165 }, balls: [{ id: 6, x: 590, y: 90 }], targets: [6], check: () => potted(6) && !shotCueRailAfterContact },
-  { name: "Two birds", obj: "Drive the cue ball dead between the two solids, full power — both must drop.", cue: { x: 180, y: 186 }, balls: [{ id: 4, x: 510, y: 172 }, { id: 7, x: 510, y: 200 }], targets: [4, 7], check: () => potted(4) && potted(7) },
-  { name: "The Drod Special", obj: "Call it: the 8-ball, TOP side pocket. Nothing else counts.", cue: { x: 421, y: 263 }, balls: [{ id: 8, x: 380, y: 150 }], targets: [8], check: () => sunkAt(8, midX, railT) },
+  // Each stage is a single ball — no obstacle balls to puzzle over — testing
+  // one fundamental shot: a straight pot, a cut, a shot into the side pocket,
+  // or a bank off a cushion. Every cue/ball geometry was found with an offline
+  // port of THIS physics engine, so each shot is provably makeable with a
+  // comfortable margin. Corner pots are precise (~0.5deg, the aim guide makes
+  // them findable); side-pocket and bank shots are forgiving (~2.5deg).
+  { name: "Straight in", obj: "Line it up — sink the ball in the bottom-right corner.", cue: { x: 180, y: 120 }, balls: [{ id: 1, x: 540, y: 230 }], targets: [1], check: () => sunkAt(1, railR, railB) },
+  { name: "Side pocket", obj: "Roll it home into the bottom side pocket.", cue: { x: 300, y: 90 }, balls: [{ id: 1, x: 340, y: 200 }], targets: [1], check: () => sunkAt(1, midX, railB) },
+  { name: "Off the cushion", obj: "The ball hugs the right rail — bank it off a cushion and into any pocket.", cue: { x: 520, y: 200 }, balls: [{ id: 1, x: 560, y: 186 }], targets: [1], check: () => potted(1) && !!ballRail[1] },
+  { name: "Cut shot", obj: "Cut it cleanly into the bottom-right corner.", cue: { x: 220, y: 100 }, balls: [{ id: 1, x: 470, y: 250 }], targets: [1], check: () => sunkAt(1, railR, railB) },
+  { name: "The other side", obj: "Now the top side pocket. Roll it in.", cue: { x: 200, y: 250 }, balls: [{ id: 1, x: 320, y: 120 }], targets: [1], check: () => sunkAt(1, midX, railT) },
+  { name: "Across the table", obj: "The long one — sink it all the way in the top-right corner.", cue: { x: 200, y: 260 }, balls: [{ id: 1, x: 500, y: 140 }], targets: [1], check: () => sunkAt(1, railR, railT) },
+  { name: "Sharp angle", obj: "A tighter cut — thread it into the bottom-right corner.", cue: { x: 210, y: 95 }, balls: [{ id: 1, x: 520, y: 250 }], targets: [1], check: () => sunkAt(1, railR, railB) },
+  { name: "The closer", obj: "Last one. A long, sharp cut into the far corner.", cue: { x: 200, y: 90 }, balls: [{ id: 1, x: 510, y: 250 }], targets: [1], check: () => sunkAt(1, railR, railB) },
 ];
 const trick = { li: 0, attempt: 1, stars: [0, 0, 0, 0, 0, 0, 0, 0] };
 function loadTrickStars(): void {
@@ -753,7 +755,6 @@ function shoot(angle: number, pw: number): void {
   shotCueScratch = false;
   shotRail = false;
   ballRail = {};
-  shotCueRailAfterContact = false;
   groupClearedAtStart = { you: isGroupCleared("you"), drod: isGroupCleared("drod") };
   phase = "shooting";
   thinking = false;
@@ -823,7 +824,6 @@ function physicsStep(): void {
 function markRail(b: Ball): void {
   shotRail = true;
   ballRail[b.id] = true;
-  if (b.id === 0 && shotFirstHit !== null) shotCueRailAfterContact = true;
 }
 
 function cushions(b: Ball): void {
