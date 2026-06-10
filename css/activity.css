@@ -97,7 +97,7 @@
 
 /* ---- music (shared: jukebox + beat pad) ---- */
 .mz-wrap{flex-direction:column}
-.bp-wrap{width:min(560px,94vw)}
+.bp-wrap{width:min(760px,94vw)}
 .mz-head{display:flex;align-items:center;gap:18px}
 .mz-djs{display:flex;gap:10px}
 .mz-dj{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -309,22 +309,30 @@ body:not(.touch) .wk-dpad{display:none}
 .pn-wrap .mz-viz{height:92px}
 @media (max-height:540px){ .pn-wrap .mz-viz{display:none} }
 
-/* ---- Step sequencer: row labels, keys section, drum-machine grid ---- */
+/* ---- Step sequencer: KEYS + DRUMS pads side by side ---- */
+.bp-wrap .mz-viz{height:80px} /* slimmer viz so the whole window fits */
+.bp-pads{display:flex;gap:18px;align-items:flex-start}
+.bp-pad{flex:1;min-width:0}
+.bp-pad-h{display:flex;align-items:baseline;gap:7px;margin-bottom:9px;
+  font-family:'Silkscreen',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ui-gold)}
 .mz-rowlab{display:flex;align-items:center;justify-content:flex-end;padding-right:4px;
   font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;color:var(--ui-ink-soft);user-select:none}
 .pad-cell{touch-action:manipulation} /* no double-tap zoom delay on phones */
-.mz-pad .mz-sub{margin:0 0 7px}
-.mz-grid{margin-bottom:14px}
-/* melodic rows are denser than the drums — pitch lanes, DAW-style */
-.mz-grid.keys{gap:3px;margin-bottom:16px}
+/* melodic rows are denser than the drums — thin pitch lanes, DAW-style */
+.mz-grid.keys{gap:3px}
 .mz-grid.keys .pad-cell{aspect-ratio:auto;height:24px;border-radius:6px}
 .mz-grid.keys .pad-cell.on{background:linear-gradient(160deg,#7fb069,#5f8c46);box-shadow:0 0 9px rgba(127,176,105,.55)}
-/* consistent control row: three equal buttons, no wrapping, BPM on its own line */
-.mz-padctl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.mz-padctl .ctl-btn{min-height:46px;white-space:nowrap;padding:10px 8px}
-.bp-wrap .mz-bpm{margin:10px 2px 0;justify-content:flex-end}
-.mz-bpm input{flex:1;max-width:260px}
-@media (max-height:700px){ .bp-wrap .mz-viz{display:none} } /* keep both grids on screen */
+/* one tidy control row: buttons left, BPM pushed right */
+.mz-padctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mz-padctl .ctl-btn{flex:0 1 auto;min-height:44px;white-space:nowrap;padding:10px 16px}
+.bp-wrap .mz-bpm{margin-left:auto}
+.mz-bpm input{flex:1;min-width:120px;max-width:200px}
+/* narrow screens: stack the two pads (the overlay scrolls if needed) */
+@media (max-width:680px){
+  .bp-pads{flex-direction:column;gap:12px}
+  .mz-padctl .ctl-btn{flex:1 1 0}
+  .bp-wrap .mz-bpm{flex-basis:100%;margin-left:0}
+}
 
 /* ---- poker (heads-up vs. Drod) ---- */
 #pkTable{display:block;width:684px;max-width:min(70vw,684px);height:auto;touch-action:manipulation}

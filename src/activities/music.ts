@@ -532,17 +532,21 @@ function beatpadShell(): string {
         </div>
         <div class="mz-title"><div class="mz-kick">STEP SEQUENCER</div><div class="mz-say" id="mzSay"></div></div>
       </div>
-      <canvas id="mzViz" class="mz-viz" width="720" height="104"></canvas>
-      <div class="mz-pad">
-        <div class="mz-sub">Keys <span class="mz-hint">a note per row · 8 steps loop</span></div>
-        <div class="mz-grid keys" id="mzGridKeys"></div>
-        <div class="mz-sub">Drums <span class="mz-hint">click cells · space runs · auto-saves</span></div>
-        <div class="mz-grid" id="mzGrid"></div>
-        <div class="mz-padctl">
-          <button class="ctl-btn" id="mzPlay">▶ Run</button>
-          <button class="ctl-btn ghost" id="mzClear">Clear</button>
-          <button class="ctl-btn ghost" id="mzDl">⬇ Save beat</button>
+      <canvas id="mzViz" class="mz-viz" width="720" height="80"></canvas>
+      <div class="bp-pads">
+        <div class="bp-pad">
+          <div class="bp-pad-h">Keys <span class="mz-hint">a note per row</span></div>
+          <div class="mz-grid keys" id="mzGridKeys"></div>
         </div>
+        <div class="bp-pad">
+          <div class="bp-pad-h">Drums <span class="mz-hint">tap a groove</span></div>
+          <div class="mz-grid" id="mzGrid"></div>
+        </div>
+      </div>
+      <div class="mz-padctl">
+        <button class="ctl-btn" id="mzPlay">▶ Run</button>
+        <button class="ctl-btn ghost" id="mzClear">Clear</button>
+        <button class="ctl-btn ghost" id="mzDl">⬇ Save beat</button>
         <label class="mz-bpm">BPM <input type="range" id="mzBpm" min="${BPM_MIN}" max="${BPM_MAX}" value="110"></label>
       </div>
     </div>`;
@@ -609,9 +613,9 @@ function buildPad(fromStorage: boolean): void {
   refreshDl();
 }
 function stepClass(): void {
-  const pad = document.querySelector(".mz-pad");
-  if (!pad) return;
-  pad.querySelectorAll<HTMLElement>(".pad-cell").forEach((c) => c.classList.toggle("col", +c.dataset.c! === step));
+  const pads = document.querySelector(".bp-pads");
+  if (!pads) return;
+  pads.querySelectorAll<HTMLElement>(".pad-cell").forEach((c) => c.classList.toggle("col", +c.dataset.c! === step));
 }
 /** Two-tone alarm for the DO NOT PRESS button. Unlike blip(), this respects
     the header mute — the button's joke survives on shake + flicker alone. */
