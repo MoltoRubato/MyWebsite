@@ -205,6 +205,14 @@ function finish(): void {
   };
 }
 
+/** Plate width as a % of its peg (capped at the design px) so narrow phone
+    columns scale the whole set down while keeping the size ordering. */
+function sizePlate(el: HTMLElement, p: (typeof PLATES)[number]): void {
+  el.style.width = Math.round((p.w / 110) * 100) + "%";
+  el.style.maxWidth = p.w + "px";
+  el.style.background = p.color;
+}
+
 function render(): void {
   const floor = document.getElementById("rkFloor");
   if (!floor) return;
@@ -221,8 +229,7 @@ function render(): void {
       const p = PLATES[held.plate];
       const el = document.createElement("span");
       el.className = "rk-plate held";
-      el.style.width = p.w + "px";
-      el.style.background = p.color;
+      sizePlate(el, p);
       el.textContent = String(p.kg);
       peg.appendChild(el);
     }
@@ -233,8 +240,7 @@ function render(): void {
       const p = PLATES[items[k]];
       const el = document.createElement("span");
       el.className = "rk-plate";
-      el.style.width = p.w + "px";
-      el.style.background = p.color;
+      sizePlate(el, p);
       el.textContent = String(p.kg);
       stack.appendChild(el);
     }

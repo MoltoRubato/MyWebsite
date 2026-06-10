@@ -103,8 +103,8 @@ const OBJECTS: Partial<Record<RoomKey, ObjSpec[]>> = {
   ],
   lounge: [
     { type: "tv", name: "TV", px: 544, py: 372, hint: "Turn on TV", markerY: 100 },
-    // the book pile at the foot of the bookshelf (left of Batman's rug spot)
-    { type: "guestbook", name: "Guestbook", px: 578, py: 248, hint: "Sign the guestbook", markerY: 46 },
+    // the book pile by the shelf (trigger sits up-left of it, per taste)
+    { type: "guestbook", name: "Guestbook", px: 513, py: 203, hint: "Sign the guestbook", markerY: 46 },
   ],
   music: [
     { type: "music", name: "Speaker", tx: 13, ty: 12, hint: "Open jukebox", sprite: "speaker" },
@@ -118,8 +118,8 @@ const OBJECTS: Partial<Record<RoomKey, ObjSpec[]>> = {
     { type: "poker", name: "Card table", px: 350, py: 300, hint: "Play poker", markerY: 100 },
     // the chess board itself is playable too (Drod still offers it in dialogue)
     { type: "chess", name: "Chess table", px: 510, py: 297, hint: "Play chess", markerY: 96 },
-    // a small, subtle button recessed into the wall in the bottom-right corner
-    { type: "redbutton", name: "Red button", px: 598, py: 432, hint: "Do not press", markerY: 40 },
+    // a small, subtle button at the foot of the south wall, near the corner
+    { type: "redbutton", name: "Red button", px: 523, py: 482, hint: "Do not press", markerY: 40 },
   ],
 };
 

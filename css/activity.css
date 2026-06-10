@@ -327,9 +327,10 @@ body:not(.touch) .wk-dpad{display:none}
 .mz-padctl .ctl-btn{flex:0 1 auto;min-height:44px;white-space:nowrap;padding:10px 16px}
 .bp-wrap .mz-bpm{margin-left:auto}
 .mz-bpm input{flex:1;min-width:120px;max-width:200px}
-/* narrow screens: stack the two pads (the overlay scrolls if needed) */
+/* narrow screens: stack the two pads (the overlay scrolls if needed).
+   align-items:stretch — flex-start would shrink-wrap widths in column mode */
 @media (max-width:680px){
-  .bp-pads{flex-direction:column;gap:12px}
+  .bp-pads{flex-direction:column;gap:12px;align-items:stretch}
   .mz-padctl .ctl-btn{flex:1 1 0}
   .bp-wrap .mz-bpm{flex-basis:100%;margin-left:0}
 }
@@ -405,8 +406,9 @@ body:not(.touch) .wk-dpad{display:none}
 .rk-post{position:absolute;left:50%;top:14px;bottom:10px;width:8px;margin-left:-4px;border-radius:4px;
   background:linear-gradient(90deg,#8a5a30,#b87b42 45%,#8a5a30);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
 /* render loop appends top-of-stack (smallest) first; `column` puts it at the
-   visual top so the LARGEST plate sits at the bottom — proper Hanoi stack. */
-.rk-stack{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;z-index:2;justify-content:flex-end}
+   visual top so the LARGEST plate sits at the bottom — proper Hanoi stack.
+   width:100% so plate %-widths resolve against the PEG, not the shrink-wrap. */
+.rk-stack{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;z-index:2;justify-content:flex-end;width:100%}
 .rk-plate{display:grid;place-items:center;height:24px;border-radius:7px;z-index:2;
   font-family:'Silkscreen',monospace;font-size:10px;color:#f4ead6;text-shadow:0 1px 0 rgba(0,0,0,.45);
   box-shadow:inset 0 2px 0 rgba(255,255,255,.18),inset 0 -3px 0 rgba(0,0,0,.25),0 2px 3px rgba(0,0,0,.3);
