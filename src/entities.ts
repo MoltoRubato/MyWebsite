@@ -104,7 +104,7 @@ const OBJECTS: Partial<Record<RoomKey, ObjSpec[]>> = {
   lounge: [
     { type: "tv", name: "TV", px: 544, py: 372, hint: "Turn on TV", markerY: 100 },
     // the book pile by the shelf (trigger sits up-left of it, per taste)
-    { type: "guestbook", name: "Guestbook", px: 513, py: 203, hint: "Sign the guestbook", markerY: 46 },
+    { type: "guestbook", name: "Guestbook", px: 535, py: 203, hint: "Sign the guestbook", markerY: 46 },
   ],
   music: [
     { type: "music", name: "Speaker", tx: 13, ty: 12, hint: "Open jukebox", sprite: "speaker" },
@@ -119,7 +119,7 @@ const OBJECTS: Partial<Record<RoomKey, ObjSpec[]>> = {
     // the chess board itself is playable too (Drod still offers it in dialogue)
     { type: "chess", name: "Chess table", px: 510, py: 297, hint: "Play chess", markerY: 96 },
     // a small, subtle button at the foot of the south wall, near the corner
-    { type: "redbutton", name: "Red button", px: 523, py: 482, hint: "Do not press", markerY: 40 },
+    { type: "redbutton", name: "Red button", px: 585, py: 445, hint: "Do not press", markerY: 40 },
   ],
 };
 
