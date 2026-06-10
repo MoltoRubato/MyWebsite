@@ -227,10 +227,28 @@ function drawViz(cnv: HTMLCanvasElement | null): void {
   }
 }
 
+/* ====================== track preloading ============================= */
+// Warm the browser cache for every jukebox track the first time the jukebox is
+// opened, so picking one plays instantly. The full set is ~56 MB, so it's only
+// fetched once the user shows interest in music — never on a plain page load.
+let tracksPreloaded = false;
+const trackWarmers: HTMLAudioElement[] = [];
+export function preloadTracks(): void {
+  if (tracksPreloaded) return;
+  tracksPreloaded = true;
+  for (const t of C.tracks) {
+    const a = new Audio();
+    a.preload = "auto";
+    a.src = t.file; // begins fetching into the browser cache
+    trackWarmers.push(a); // keep a ref so it isn't GC'd mid-fetch
+  }
+}
+
 /* ====================== JUKEBOX WINDOW ================================== */
 export function openJukebox(opts?: OpenOpts): void {
   jkClose = opts?.onClose ?? null;
   ensureAC();
+  preloadTracks(); // warm all tracks so picking one is instant
   openOverlay(jukeboxShell());
   buildJukeTracks();
   onChange = refreshJuke;

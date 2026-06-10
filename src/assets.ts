@@ -66,6 +66,13 @@ load("tv_ch0", "assets/props/tv_news.png");
 load("tv_ch1", "assets/props/tv_hospital.png");
 load("tv_ch2", "assets/props/tv_hospital2.png");
 
+// room-map thumbnails — preloaded so the floor-plan / fast-travel modal opens
+// with no fetch delay (header.ts requests these same ?v=3 URLs, so the browser
+// serves them straight from cache).
+for (const n of ["lounge", "gym", "game", "music"]) {
+  load("map_" + n, "assets/maps/" + n + ".png?v=3");
+}
+
 export function getImage(key: string): HTMLImageElement | undefined {
   return images[key];
 }
