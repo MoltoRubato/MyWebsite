@@ -1,10 +1,2 @@
 # macOS
 .DS_Store
-
-# dependencies & build output
-node_modules/
-dist/
-
-# tooling caches & local env
-.vite/
-*.local
