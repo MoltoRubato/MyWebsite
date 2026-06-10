@@ -343,20 +343,19 @@ button.map-room:active .mr-frame{transform:translateY(-2px)}
 }
 
 /* ---------------- Activity overlay ---------------- */
-#activity{position:absolute;inset:0;z-index:38;display:grid;place-items:center;background:rgba(6,9,15,.72);backdrop-filter:blur(4px);
-  opacity:0;transition:opacity .35s ease}
+/* Flex column + `margin:auto` on the inner panel centres it when it fits but
+   collapses the auto-margins to 0 when the panel is taller than the viewport,
+   so a tall window (e.g. the step sequencer) scrolls from the top instead of
+   clipping. Applies on desktop AND mobile — no separate breakpoint needed.
+   touch-action:pan-y re-enables vertical drag over the touch-action:none body. */
+#activity{position:absolute;inset:0;z-index:38;display:flex;flex-direction:column;align-items:center;
+  overflow-y:auto;overflow-x:hidden;background:rgba(6,9,15,.72);backdrop-filter:blur(4px);
+  opacity:0;transition:opacity .35s ease;padding:16px 0;
+  touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #activity.in{opacity:1}
-#activityInner{transform:scale(.94) translateY(10px);transition:transform .4s cubic-bezier(.22,1,.36,1);max-width:96vw;max-height:92vh}
+#activityInner{margin:auto 0;flex:none;transform:scale(.94) translateY(10px);
+  transition:transform .4s cubic-bezier(.22,1,.36,1);max-width:96vw}
 #activity.in #activityInner{transform:scale(1) translateY(0)}
-/* On phones the stacked activity panels can exceed the viewport height;
-   centring would clip the top, so anchor to the top and let the overlay
-   scroll. touch-action:pan-y re-enables vertical drag over the
-   touch-action:none body (same idea as #panelInner). */
-@media(max-width:760px){
-  #activity{place-items:start center;overflow-y:auto;overflow-x:hidden;
-    touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:14px 0}
-  #activityInner{max-height:none}
-}
 
 /* ---------------- Touch controls ---------------- */
 #touch{position:absolute;inset:0;z-index:10;pointer-events:none;display:none}

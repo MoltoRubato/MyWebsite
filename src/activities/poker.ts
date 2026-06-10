@@ -861,6 +861,11 @@ function drawCard(g: CanvasRenderingContext2D, x: number, y: number, w: number, 
     g.fillStyle = "#b5442f";
     g.fill();
     g.shadowBlur = 0;
+    // stroke the card outline NOW, while the rounded-rect is the current path
+    // (the lattice loop below replaces the path with its diagonals)
+    g.strokeStyle = "#7d2417";
+    g.lineWidth = 2;
+    g.stroke();
     // lattice stays inside the rounded card: clip to the same path,
     // inset a hair so the pattern never kisses the border stroke
     g.save();
@@ -882,9 +887,6 @@ function drawCard(g: CanvasRenderingContext2D, x: number, y: number, w: number, 
     g.strokeStyle = "rgba(244,234,214,.5)";
     g.lineWidth = 1.5;
     g.strokeRect(3.5, 3.5, w - 7, h - 7);
-    g.strokeStyle = "#7d2417";
-    g.lineWidth = 2;
-    g.stroke();
   } else {
     g.fillStyle = "#f4f1e8";
     g.fill();

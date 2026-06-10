@@ -611,58 +611,38 @@ function render(): void {
       },
     }),
   );
-  // The DO NOT PRESS button — hung on the wall face beside the door,
-  // painted in the room's muted palette. Drawn flat (no floor shadow):
-  // it's wall furniture, like the paintings.
+  // The DO NOT PRESS button — a small, subtle thing recessed into the wall
+  // in the corner. No plate or placard: just a little red dome with a faint
+  // breathing glow, the kind of detail that nags at you to press it.
   (R.objs || []).forEach((o) => {
     if (o.type !== "redbutton") return;
     draw.push({
-      y: o.y - 30, // well behind anyone walking past below
+      y: o.y - 24, // sits on the wall, behind anyone walking past below
       fn: () => {
-        const bx = o.x, cy = o.y - 34; // dome centre on the wall face
+        const bx = o.x, cy = o.y - 26;
         const pressed = btnPressT > 0;
-        // mounting plate (warm dark metal, matching the room's shadow tones)
-        ctx.fillStyle = "#2b2622";
-        ctx.fillRect(bx - 13, cy - 17, 26, 34);
-        ctx.fillStyle = "#4c463f";
-        ctx.fillRect(bx - 12, cy - 16, 24, 32);
-        ctx.fillStyle = "rgba(255,255,255,.07)";
-        ctx.fillRect(bx - 12, cy - 16, 24, 3); // top sheen = light from above
-        // screws pin it to the wall
-        ctx.fillStyle = "#211d1a";
-        ctx.fillRect(bx - 10, cy - 14, 2, 2);
-        ctx.fillRect(bx + 8, cy - 14, 2, 2);
-        ctx.fillRect(bx - 10, cy + 12, 2, 2);
-        ctx.fillRect(bx + 8, cy + 12, 2, 2);
-        // small placard with a muted warning stripe
-        ctx.fillStyle = "#e8dcc2";
-        ctx.fillRect(bx - 8, cy - 12, 16, 5);
-        ctx.strokeStyle = "#8a4a3a";
-        ctx.lineWidth = 1.5;
+        const dy = pressed ? 1 : 0;
+        // recessed socket ring (just darker than the wall — barely there)
         ctx.beginPath();
-        ctx.moveTo(bx - 8, cy - 7.5);
-        ctx.lineTo(bx + 8, cy - 11.5);
-        ctx.stroke();
-        // dome — rust red, not fire-engine red (sinks 1.5px while pressed)
-        const dy = pressed ? 1.5 : 0;
-        ctx.beginPath();
-        ctx.arc(bx, cy + 5 + dy, 7.5, 0, 7);
-        ctx.fillStyle = "#5e2c22";
+        ctx.arc(bx, cy, 6, 0, 7);
+        ctx.fillStyle = "#2a2420";
         ctx.fill();
+        // dome — muted rust red, sinks a touch when pressed
         ctx.beginPath();
-        ctx.arc(bx, cy + 4 + dy, 6.5, 0, 7);
+        ctx.arc(bx, cy + dy, 4.4, 0, 7);
         ctx.fillStyle = "#9c4a3c";
         ctx.fill();
+        // tiny highlight
         ctx.beginPath();
-        ctx.arc(bx - 2, cy + 2 + dy, 2, 0, 7);
-        ctx.fillStyle = "#c97f63";
+        ctx.arc(bx - 1.3, cy - 1.3 + dy, 1.3, 0, 7);
+        ctx.fillStyle = "#cf8a6e";
         ctx.fill();
-        // a soft breathing glow — noticeable, not neon
-        const glow = pressed ? 0.55 : 0.14 + 0.1 * Math.sin(worldT * 2.2);
+        // faint breathing glow — a quiet "psst, over here"
+        const glow = pressed ? 0.6 : 0.1 + 0.1 * Math.sin(worldT * 2.2);
         ctx.beginPath();
-        ctx.arc(bx, cy + 4 + dy, 9, 0, 7);
-        ctx.strokeStyle = `rgba(190,110,85,${glow.toFixed(3)})`;
-        ctx.lineWidth = pressed ? 2.5 : 1.5;
+        ctx.arc(bx, cy + dy, 7, 0, 7);
+        ctx.strokeStyle = `rgba(196,110,82,${glow.toFixed(3)})`;
+        ctx.lineWidth = pressed ? 1.8 : 1;
         ctx.stroke();
       },
     });

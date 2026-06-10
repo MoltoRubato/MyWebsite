@@ -118,8 +118,8 @@ const OBJECTS: Partial<Record<RoomKey, ObjSpec[]>> = {
     { type: "poker", name: "Card table", px: 350, py: 300, hint: "Play poker", markerY: 100 },
     // the chess board itself is playable too (Drod still offers it in dialogue)
     { type: "chess", name: "Chess table", px: 510, py: 297, hint: "Play chess", markerY: 96 },
-    // a small wall-hung mystery beside the door you came in through
-    { type: "redbutton", name: "Red button", px: 606, py: 270, hint: "Do not press", markerY: 56 },
+    // a small, subtle button recessed into the wall in the bottom-right corner
+    { type: "redbutton", name: "Red button", px: 598, py: 432, hint: "Do not press", markerY: 40 },
   ],
 };
 
