@@ -7,7 +7,7 @@
 #           https://github.com/sgossner/VCSL
 # Outputs:
 #   public/assets/audio/piano/{C3,Fs3,C4,Fs4,C5,Fs5,C6,Fs6,C7}.m4a
-#   public/assets/audio/drums/{kick,snare,clap,hat,openhat,shaker}.wav
+#   public/assets/audio/drums/{kick,snare,hat,openhat,shaker}.wav
 # Requires: curl, afconvert (macOS), python3. Never bundled by the client.
 # ============================================================
 set -euo pipefail
@@ -47,7 +47,6 @@ DRUM_BASE="https://raw.githubusercontent.com/sgossner/VCSL/master"
 declare -a DRUMS=(
   "Membranophones/Struck%20Membranophones/Bass%20Drum%201/BDrumNew_hit_v3_rr1_Sum.wav:kick"
   "Membranophones/Struck%20Membranophones/Legacy%20Snares/OldSnare/snare_ff1.wav:snare"
-  "Idiophones/Struck%20Idiophones/Claps/SoloClap_vl2.wav:clap"
   "Idiophones/Struck%20Idiophones/Hi-Hat%20Cymbal/HiHat_HitC_v3_rr1_Mid.wav:hat"
   "Idiophones/Struck%20Idiophones/Hi-Hat%20Cymbal/HiHat_HitOC_rr5_Mid.wav:openhat"
   "Idiophones/Struck%20Idiophones/Shaker%2C%20Small/Mid_ShakerDouble_Down_rr1.wav:shaker"

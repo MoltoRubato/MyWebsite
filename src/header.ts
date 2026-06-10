@@ -138,6 +138,7 @@ function trophiesHTML(): string {
     { k: "8-ball wins", v: String(n("poolWins")), show: n("poolWins") + n("poolLosses") > 0 },
     { k: "Trick-shot stars", v: n("trickshotStars") + "/24", show: n("trickshotStars") > 0 },
     { k: "Best combo score", v: String(n("gymBest")), show: n("gymBest") > 0 },
+    { k: "Rack stars", v: n("rackStars") + "/3", show: n("rackStars") > 0 },
     { k: "Poker chips (peak)", v: String(n("pokerChips")), show: n("pokerHands") > 0 },
     { k: "Poker hands", v: String(n("pokerHands")), show: n("pokerHands") > 0 },
     { k: "Piano notes", v: String(n("pianoNotes")), show: n("pianoNotes") > 0 },

@@ -23,19 +23,21 @@ export type NumKey =
   | "beatsDownloaded"
   | "tracksPlayed"
   | "petsGiven"
-  | "buttonPresses";
+  | "buttonPresses"
+  | "rackStars";
 
 export type FlagKey =
   | "guestbookSigned"
   | "pressedButton"
   | "pokerBusted"
   | "pokerBigWin"
+  | "rackPar"
   | `room_${RoomKey}`
   | `pet_${string}`
   | `track_${string}`;
 
 // Keys where record() keeps the best value instead of overwriting.
-const MAX_KEYS: ReadonlySet<NumKey> = new Set<NumKey>(["gymBest", "pokerChips", "trickshotStars"]);
+const MAX_KEYS: ReadonlySet<NumKey> = new Set<NumKey>(["gymBest", "pokerChips", "trickshotStars", "rackStars"]);
 
 export interface ProgressData {
   v: 1;
@@ -171,6 +173,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "rack-champ", title: "Rack Champion", desc: "Won a game of 8-ball on Drod's own table.", cond: (p) => (p.nums.poolWins ?? 0) >= 1 },
   { id: "trick-artist", title: "Trickshot Artist", desc: "Earned 12 stars on the trick-shot table.", cond: (p) => (p.nums.trickshotStars ?? 0) >= 12 },
   { id: "combo-machine", title: "Combo Machine", desc: "Scored 600+ in Gojo's combo trainer.", cond: (p) => (p.nums.gymBest ?? 0) >= 600 },
+  { id: "plate-perfect", title: "Plate Perfect", desc: "Re-racked Amelia's weights in the minimum moves.", cond: (p) => !!p.flags.rackPar },
   { id: "card-shark", title: "Card Shark", desc: "Stacked 1,500 chips at the card table.", cond: (p) => (p.nums.pokerChips ?? 0) >= 1500 },
   { id: "bankrupt", title: "Bankrupt Speedrun", desc: "Lost every chip. The dealer sends condolences.", hidden: true, cond: (p) => !!p.flags.pokerBusted },
   { id: "resident-dj", title: "Resident DJ", desc: "Spun 5 different tracks on the jukebox.", cond: (p) => flagCountIn(p, "track_") >= 5 },

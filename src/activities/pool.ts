@@ -179,14 +179,14 @@ const TRICKS: TrickLayout[] = [
   // layout geometry note: every pot line was checked against the pocket jaws
   // (tips at MC/MS with radius R+JAWR) — corner pockets need a diagonal
   // approach, so target balls sit off-rail with a clear lane to the hole.
-  { name: "Tap-in", obj: "Pot the 1. Any pocket. Warm up.", cue: { x: 200, y: 200 }, balls: [{ id: 1, x: 540, y: 140 }], targets: [1], check: () => potted(1) },
-  { name: "Cut shot", obj: "Pot the 2 in the bottom-right corner.", cue: { x: 200, y: 120 }, balls: [{ id: 2, x: 480, y: 240 }], targets: [2], check: () => sunkAt(2, railR, railB) },
-  { name: "Bank it", obj: "Wall's in the way. Bank the 3 off a cushion.", cue: { x: 180, y: 186 }, balls: [{ id: 3, x: 500, y: 186 }, { id: 11, x: 600, y: 150 }, { id: 12, x: 600, y: 186 }, { id: 13, x: 600, y: 222 }], targets: [3], check: () => potted(3) && !!ballRail[3] },
-  { name: "Combo", obj: "Hit the 4 into the 9. Only the 9 drops.", cue: { x: 170, y: 186 }, balls: [{ id: 4, x: 420, y: 210 }, { id: 9, x: 480, y: 180 }], targets: [9], check: () => shotFirstHit === 4 && potted(9) && !potted(4) },
-  { name: "Thread the needle", obj: "Thread the gap. Pot the 5.", cue: { x: 170, y: 186 }, balls: [{ id: 10, x: 340, y: 150 }, { id: 11, x: 340, y: 222 }, { id: 5, x: 540, y: 150 }], targets: [5], check: () => potted(5) },
-  { name: "Soft touch", obj: "Pot the 6 top-right — cue ball can't touch a cushion after contact.", cue: { x: 509, y: 165 }, balls: [{ id: 6, x: 590, y: 90 }], targets: [6], check: () => potted(6) && !shotCueRailAfterContact },
-  { name: "Two birds", obj: "Split the frozen pair. Both drop, one shot.", cue: { x: 180, y: 186 }, balls: [{ id: 7, x: 520, y: 176 }, { id: 15, x: 520, y: 196 }], targets: [7, 15], check: () => potted(7) && potted(15) },
-  { name: "The Drod Special", obj: "Call it: 8-ball, TOP side pocket. Nothing else counts.", cue: { x: 421, y: 263 }, balls: [{ id: 8, x: 380, y: 150 }], targets: [8], check: () => sunkAt(8, midX, railT) },
+  { name: "Tap-in", obj: "Sink the solid. Any pocket. Warm up.", cue: { x: 200, y: 200 }, balls: [{ id: 1, x: 540, y: 140 }], targets: [1], check: () => potted(1) },
+  { name: "Cut shot", obj: "Cut the solid into the bottom-right corner pocket.", cue: { x: 200, y: 120 }, balls: [{ id: 2, x: 480, y: 240 }], targets: [2], check: () => sunkAt(2, railR, railB) },
+  { name: "Bank it", obj: "Stripes guard the left pockets. Bounce the solid off a cushion, then sink it.", cue: { x: 380, y: 240 }, balls: [{ id: 3, x: 340, y: 200 }, { id: 11, x: 160, y: 150 }, { id: 12, x: 160, y: 186 }, { id: 13, x: 160, y: 222 }], targets: [3], check: () => potted(3) && !!ballRail[3] },
+  { name: "Combo", obj: "Knock the solid into the stripe — only the stripe drops.", cue: { x: 170, y: 186 }, balls: [{ id: 4, x: 420, y: 210 }, { id: 9, x: 480, y: 180 }], targets: [9], check: () => shotFirstHit === 4 && potted(9) && !potted(4) },
+  { name: "Thread the needle", obj: "Thread the stripe gap, then sink the solid.", cue: { x: 170, y: 186 }, balls: [{ id: 10, x: 340, y: 150 }, { id: 11, x: 340, y: 222 }, { id: 5, x: 540, y: 150 }], targets: [5], check: () => potted(5) },
+  { name: "Soft touch", obj: "Sink the solid top-right — the cue ball must never touch a cushion after contact.", cue: { x: 509, y: 165 }, balls: [{ id: 6, x: 590, y: 90 }], targets: [6], check: () => potted(6) && !shotCueRailAfterContact },
+  { name: "Two birds", obj: "Drive the cue ball dead between the two solids, full power — both must drop.", cue: { x: 180, y: 186 }, balls: [{ id: 4, x: 510, y: 172 }, { id: 7, x: 510, y: 200 }], targets: [4, 7], check: () => potted(4) && potted(7) },
+  { name: "The Drod Special", obj: "Call it: the 8-ball, TOP side pocket. Nothing else counts.", cue: { x: 421, y: 263 }, balls: [{ id: 8, x: 380, y: 150 }], targets: [8], check: () => sunkAt(8, midX, railT) },
 ];
 const trick = { li: 0, attempt: 1, stars: [0, 0, 0, 0, 0, 0, 0, 0] };
 function loadTrickStars(): void {
@@ -550,11 +550,21 @@ function loadTrick(i: number): void {
 function trickRackUI(): void {
   const rack = document.getElementById("plTrickRack");
   if (!rack) return;
-  rack.innerHTML = TRICKS.map((t, i) => {
-    const stars = trick.stars[i];
-    const cls = i === trick.li ? "pl-tk active" : "pl-tk";
-    return `<span class="${cls}" title="${t.name}">${i + 1}<i>${"★".repeat(stars)}${"☆".repeat(3 - stars)}</i></span>`;
-  }).join("");
+  rack.innerHTML = "";
+  TRICKS.forEach((t, i) => {
+    const chip = document.createElement("button");
+    chip.className = i === trick.li ? "pl-tk active" : "pl-tk";
+    chip.title = t.name;
+    chip.innerHTML = `${i + 1}<i>${"★".repeat(trick.stars[i])}${"☆".repeat(3 - trick.stars[i])}</i>`;
+    // free level select — jump to any shot whenever balls aren't rolling
+    chip.onclick = () => {
+      if (phase === "shooting" || i === trick.li) return;
+      hideOver();
+      trick.attempt = 1;
+      loadTrick(i);
+    };
+    rack.appendChild(chip);
+  });
 }
 
 function trickResolve(): void {
@@ -574,8 +584,17 @@ function trickResolve(): void {
     trickCard(false, 0);
   } else {
     trick.attempt++;
-    const why = shotCueScratch ? "Scratch!" : strayPot ? "Wrong ball dropped!" : "Missed.";
-    say(why + " Reset. Again.", 2200);
+    // explain WHY — especially when the right ball dropped but broke the
+    // shot's condition (no cushion first, wrong pocket, cue touched a rail...)
+    const targetDropped = L.targets.some((id) => potted(id));
+    const why = shotCueScratch
+      ? "Scratch!"
+      : strayPot
+        ? "Wrong ball dropped!"
+        : targetDropped
+          ? "It dropped — but not the way the brief asks. Read it again."
+          : "Missed.";
+    say(why + " Reset. Again.", 2600);
     loadTrick(trick.li); // same layout, fresh balls
   }
   trickRackUI();

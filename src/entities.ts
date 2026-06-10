@@ -69,13 +69,16 @@ const NPCS: Record<RoomKey, NpcSpec[]> = {
     { char: "Dino", name: "Dino", tx: 13, ty: 8, dir: "left", behavior: "wander", speed: 0.85, region: { x0: 12, y0: 7, x1: 14, y1: 9 } },
   ],
   gym: [
-    { char: "Girl", name: "Amelia", tx: 12, ty: 9, dir: "down", behavior: "wander", speed: 0.85, region: { x0: 8, y0: 6, x1: 13, y1: 9 } },
+    { char: "Girl", name: "Amelia", tx: 12, ty: 9, dir: "down", behavior: "wander", speed: 0.85, region: { x0: 8, y0: 6, x1: 13, y1: 9 }, interact: "rack" },
     { char: "Gojo", name: "Gojo", tx: 20, ty: 8, dir: "left", behavior: "wander", speed: 0.85, region: { x0: 17, y0: 6, x1: 21, y1: 9 }, interact: "workout" },
   ],
-  game: [{ char: "Drod", name: "Drod", tx: 16, ty: 9, dir: "down", behavior: "wander", speed: 0.8, region: { x0: 13, y0: 9, x1: 17, y1: 11 }, interact: "chess" }],
+  // Drod's region starts a row lower so he never out-nears the chess-table anchor
+  game: [{ char: "Drod", name: "Drod", tx: 16, ty: 10, dir: "down", behavior: "wander", speed: 0.8, region: { x0: 13, y0: 10, x1: 17, y1: 11 }, interact: "chess" }],
   music: [
     { char: "Alex", name: "Alex", tx: 9, ty: 7, dir: "down", behavior: "wander", speed: 0.85, region: { x0: 8, y0: 6, x1: 11, y1: 8 }, interact: "music" },
-    { char: "DJ", name: "DJ", tx: 18, ty: 11, dir: "left", behavior: "wander", speed: 0.85, region: { x0: 17, y0: 10, x1: 18, y1: 12 }, interact: "music" },
+    // DJ hangs out mid-room, between the piano and the big rug — far enough
+    // from the piano anchor (522,408) that he never steals its interaction
+    { char: "DJ", name: "DJ", tx: 15, ty: 10, dir: "left", behavior: "wander", speed: 0.85, region: { x0: 14, y0: 9, x1: 15, y1: 10 }, interact: "music" },
   ],
 };
 
@@ -94,10 +97,14 @@ interface ObjSpec {
 // sprite, see game.ts render). TV and pool table use a world-px anchor (px/py)
 // on the floor in front of them, with markerY floating the prompt up.
 const OBJECTS: Partial<Record<RoomKey, ObjSpec[]>> = {
+  gym: [
+    // the dumbbell rack at the top-left wall hosts the re-racking puzzle
+    { type: "rack", name: "Weight rack", px: 225, py: 170, hint: "Re-rack the weights", markerY: 88 },
+  ],
   lounge: [
     { type: "tv", name: "TV", px: 544, py: 372, hint: "Turn on TV", markerY: 100 },
-    // the open book on the flower side-table, clear of the vases and of Mimi
-    { type: "guestbook", name: "Guestbook", px: 368, py: 400, hint: "Sign the guestbook", markerY: 58 },
+    // the book pile at the foot of the bookshelf (left of Batman's rug spot)
+    { type: "guestbook", name: "Guestbook", px: 578, py: 248, hint: "Sign the guestbook", markerY: 46 },
   ],
   music: [
     { type: "music", name: "Speaker", tx: 13, ty: 12, hint: "Open jukebox", sprite: "speaker" },
@@ -107,10 +114,12 @@ const OBJECTS: Partial<Record<RoomKey, ObjSpec[]>> = {
   ],
   game: [
     { type: "pool", name: "Pool table", px: 354, py: 430, hint: "Play pool", markerY: 104 },
-    // floor strip south of the diamond card table with the blue chairs
-    { type: "poker", name: "Card table", px: 514, py: 438, hint: "Play poker", markerY: 102 },
-    // a small wall-mounted mystery on the south wall between the tables
-    { type: "redbutton", name: "Red button", px: 435, py: 444, hint: "Do not press", markerY: 34 },
+    // the plain wooden table beside the chess table hosts the card game
+    { type: "poker", name: "Card table", px: 350, py: 300, hint: "Play poker", markerY: 100 },
+    // the chess board itself is playable too (Drod still offers it in dialogue)
+    { type: "chess", name: "Chess table", px: 510, py: 297, hint: "Play chess", markerY: 96 },
+    // a small wall-hung mystery beside the door you came in through
+    { type: "redbutton", name: "Red button", px: 606, py: 270, hint: "Do not press", markerY: 56 },
   ],
 };
 

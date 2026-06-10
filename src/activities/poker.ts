@@ -861,21 +861,30 @@ function drawCard(g: CanvasRenderingContext2D, x: number, y: number, w: number, 
     g.fillStyle = "#b5442f";
     g.fill();
     g.shadowBlur = 0;
-    g.strokeStyle = "#7d2417";
-    g.lineWidth = 2;
-    g.stroke();
-    g.strokeStyle = "rgba(244,234,214,.35)";
+    // lattice stays inside the rounded card: clip to the same path,
+    // inset a hair so the pattern never kisses the border stroke
+    g.save();
+    g.clip();
+    g.strokeStyle = "rgba(244,234,214,.3)";
     g.lineWidth = 1;
     for (let d = -h; d < w + h; d += 7) {
       g.beginPath();
-      g.moveTo(d, 2);
-      g.lineTo(d + h - 4, h - 2);
+      g.moveTo(d, 3);
+      g.lineTo(d + h - 6, h - 3);
       g.stroke();
       g.beginPath();
-      g.moveTo(d + h - 4, 2);
-      g.lineTo(d, h - 2);
+      g.moveTo(d + h - 6, 3);
+      g.lineTo(d, h - 3);
       g.stroke();
     }
+    g.restore();
+    // inner frame line gives the back a printed-card look
+    g.strokeStyle = "rgba(244,234,214,.5)";
+    g.lineWidth = 1.5;
+    g.strokeRect(3.5, 3.5, w - 7, h - 7);
+    g.strokeStyle = "#7d2417";
+    g.lineWidth = 2;
+    g.stroke();
   } else {
     g.fillStyle = "#f4f1e8";
     g.fill();

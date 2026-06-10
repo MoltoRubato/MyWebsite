@@ -12,7 +12,7 @@ import wave
 from pathlib import Path
 
 # seconds to keep per one-shot (tail gets an 80ms linear fade)
-TRIMS = {"kick": 0.5, "snare": 0.4, "clap": 0.45, "hat": 0.3, "openhat": 1.0, "shaker": 0.35}
+TRIMS = {"kick": 0.5, "snare": 0.4, "hat": 0.3, "openhat": 1.0, "shaker": 0.35}
 FADE_S = 0.08
 
 

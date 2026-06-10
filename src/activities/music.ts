@@ -38,24 +38,37 @@ let jkLoop: LoopHandle | null = null;
 let jkClose: (() => void) | null = null;
 let jkKey: ((e: KeyboardEvent) => void) | null = null;
 
-/* ---------- beat pad window state ---------- */
+/* ---------- step sequencer window state ---------- */
 let bpLoop: LoopHandle | null = null;
 let bpClose: (() => void) | null = null;
 let bpKey: ((e: KeyboardEvent) => void) | null = null;
 const padCols = 8;
-const padRows = 6;
-let pattern: boolean[][] = [];
+let drumPattern: boolean[][] = [];
+let keyPattern: boolean[][] = [];
 let step = 0;
 let bpm = 110;
 let padPlaying = false;
 let bpSayUntil = 0;
 let bpSayText = "";
 let bpT = 0;
-const PAD_LS_KEY = "beatPad1"; // auto-saved pattern + bpm
+const PAD_LS_KEY = "beatPad1"; // auto-saved patterns + bpm (v2)
+
+/* ---------- melodic rows (C-major pentatonic, high to low) ----------
+   The classic two-section grid sequencer: KEYS on top, DRUMS below. */
+const KEYS: { label: string; freq: number }[] = [
+  { label: "C5", freq: 523.25 },
+  { label: "A4", freq: 440 },
+  { label: "G4", freq: 392 },
+  { label: "E4", freq: 329.63 },
+  { label: "D4", freq: 293.66 },
+  { label: "C4", freq: 261.63 },
+  { label: "A3", freq: 220 },
+  { label: "G3", freq: 196 },
+];
 
 /* ---------- drum kit (CC0 one-shots from VCSL, synth fallback) ----------
-   Rows top -> bottom. Samples lazy-load on first beat-pad open; any row
-   whose file fails to fetch/decode keeps its synthesized voice forever. */
+   Rows top -> bottom. Samples lazy-load on first open; any row whose file
+   fails to fetch/decode keeps its synthesized voice forever. */
 interface DrumDef {
   key: string;
   label: string;
@@ -67,7 +80,6 @@ const KIT: DrumDef[] = [
   { key: "shaker", label: "SHK", file: "assets/audio/drums/shaker.wav", gain: 0.5, synth: (w) => synthNoise(w, 5000, "bandpass", 0.12, 0.1) },
   { key: "openhat", label: "OHH", file: "assets/audio/drums/openhat.wav", gain: 0.5, synth: (w) => synthNoise(w, 7000, "highpass", 0.4, 0.12) },
   { key: "hat", label: "HAT", file: "assets/audio/drums/hat.wav", gain: 0.55, synth: (w) => synthNoise(w, 7000, "highpass", 0.06, 0.14) },
-  { key: "clap", label: "CLP", file: "assets/audio/drums/clap.wav", gain: 0.8, synth: synthClap },
   { key: "snare", label: "SNR", file: "assets/audio/drums/snare.wav", gain: 0.9, synth: synthSnare },
   { key: "kick", label: "KCK", file: "assets/audio/drums/kick.wav", gain: 1.0, synth: synthKick },
 ];
@@ -128,6 +140,30 @@ function hit(r: number, when: number): void {
   src.start(when);
 }
 
+/** Trigger melodic row `r` at time `when` — a soft kalimba-ish pluck. */
+function hitKey(r: number, when: number): void {
+  ensureDrumGraph();
+  const freq = KEYS[r].freq;
+  const g = ac!.createGain();
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(0.16, when + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.45);
+  const f = ac!.createBiquadFilter();
+  f.type = "lowpass";
+  f.frequency.value = freq * 4;
+  [-5, 5].forEach((cents) => {
+    const o = ac!.createOscillator();
+    o.type = "triangle";
+    o.frequency.value = freq;
+    o.detune.value = cents;
+    o.connect(f);
+    o.start(when);
+    o.stop(when + 0.5);
+  });
+  f.connect(g);
+  g.connect(drumGain!); // through the same bus so recordings include the melody
+}
+
 // ---- synth kit (also the offline fallback) ----
 let noiseBuf: AudioBuffer | null = null;
 function noise(): AudioBuffer {
@@ -176,9 +212,6 @@ function synthSnare(when: number): void {
   g.connect(drumGain!);
   o.start(when);
   o.stop(when + 0.11);
-}
-function synthClap(when: number): void {
-  for (let i = 0; i < 3; i++) synthNoise(when + i * 0.01, 1200, "bandpass", 0.12, 0.16);
 }
 
 const AudioCtor: typeof AudioContext =
@@ -491,24 +524,26 @@ export function closeBeatpad(): void {
 }
 function beatpadShell(): string {
   return `<div class="mz-wrap bp-wrap">
-      <button class="chess-x" id="bpClose">✕</button>
+      <button class="chess-x" id="bpClose" aria-label="Close">✕</button>
       <div class="mz-head">
         <div class="mz-djs">
           <div class="mz-dj"><canvas id="mzPortA" width="64" height="64"></canvas><span>Alex</span></div>
           <div class="mz-dj"><canvas id="mzPortD" width="64" height="64"></canvas><span>DJ</span></div>
         </div>
-        <div class="mz-title"><div class="mz-kick">BEAT PAD</div><div class="mz-say" id="mzSay"></div></div>
+        <div class="mz-title"><div class="mz-kick">STEP SEQUENCER</div><div class="mz-say" id="mzSay"></div></div>
       </div>
       <canvas id="mzViz" class="mz-viz" width="720" height="104"></canvas>
       <div class="mz-pad">
-        <div class="mz-sub">Tap a beat <span class="mz-hint">click cells · space runs · beats auto-save</span></div>
+        <div class="mz-sub">Keys <span class="mz-hint">a note per row · 8 steps loop</span></div>
+        <div class="mz-grid keys" id="mzGridKeys"></div>
+        <div class="mz-sub">Drums <span class="mz-hint">click cells · space runs · auto-saves</span></div>
         <div class="mz-grid" id="mzGrid"></div>
         <div class="mz-padctl">
           <button class="ctl-btn" id="mzPlay">▶ Run</button>
           <button class="ctl-btn ghost" id="mzClear">Clear</button>
           <button class="ctl-btn ghost" id="mzDl">⬇ Save beat</button>
-          <label class="mz-bpm">BPM <input type="range" id="mzBpm" min="${BPM_MIN}" max="${BPM_MAX}" value="110"></label>
         </div>
+        <label class="mz-bpm">BPM <input type="range" id="mzBpm" min="${BPM_MIN}" max="${BPM_MAX}" value="110"></label>
       </div>
     </div>`;
 }
@@ -518,15 +553,40 @@ function savePad(): void {
   if (padSaveTimer) clearTimeout(padSaveTimer);
   padSaveTimer = setTimeout(() => {
     try {
-      localStorage.setItem(PAD_LS_KEY, serializePattern(pattern, bpm));
+      localStorage.setItem(PAD_LS_KEY, serializePattern(drumPattern, keyPattern, bpm));
     } catch {
       /* quota / private mode */
     }
   }, 250);
 }
 
+function buildGrid(el: HTMLElement, pattern: boolean[][], labels: string[], preview: (r: number) => void): void {
+  el.style.gridTemplateColumns = `36px repeat(${padCols},1fr)`;
+  el.innerHTML = "";
+  for (let r = 0; r < pattern.length; r++) {
+    const lab = document.createElement("span");
+    lab.className = "mz-rowlab";
+    lab.textContent = labels[r];
+    el.appendChild(lab);
+    for (let c = 0; c < padCols; c++) {
+      const cell = document.createElement("button");
+      cell.className = "pad-cell" + (pattern[r][c] ? " on" : "");
+      cell.dataset.c = String(c);
+      cell.onclick = () => {
+        pattern[r][c] = !pattern[r][c];
+        cell.classList.toggle("on", pattern[r][c]);
+        if (pattern[r][c]) preview(r);
+        savePad();
+        refreshDl();
+      };
+      el.appendChild(cell);
+    }
+  }
+}
+
 function buildPad(fromStorage: boolean): void {
-  pattern = Array.from({ length: padRows }, () => Array(padCols).fill(false));
+  drumPattern = Array.from({ length: KIT.length }, () => Array(padCols).fill(false));
+  keyPattern = Array.from({ length: KEYS.length }, () => Array(padCols).fill(false));
   if (fromStorage) {
     let raw: string | null = null;
     try {
@@ -534,43 +594,24 @@ function buildPad(fromStorage: boolean): void {
     } catch {
       /* private mode */
     }
-    const saved = parsePattern(raw, padRows, padCols);
+    const saved = parsePattern(raw, KIT.length, KEYS.length, padCols);
     if (saved) {
-      pattern = saved.pattern;
+      drumPattern = saved.drums;
+      keyPattern = saved.keys;
       bpm = saved.bpm;
       const slider = document.getElementById("mzBpm") as HTMLInputElement | null;
       if (slider) slider.value = String(bpm);
     }
   }
-  const g = document.getElementById("mzGrid")!;
-  g.style.gridTemplateColumns = `36px repeat(${padCols},1fr)`;
-  g.innerHTML = "";
-  for (let r = 0; r < padRows; r++) {
-    const lab = document.createElement("span");
-    lab.className = "mz-rowlab";
-    lab.textContent = KIT[r].label;
-    g.appendChild(lab);
-    for (let c = 0; c < padCols; c++) {
-      const cell = document.createElement("button");
-      cell.className = "pad-cell" + (pattern[r][c] ? " on" : "");
-      cell.dataset.r = String(r);
-      cell.dataset.c = String(c);
-      cell.onclick = () => {
-        pattern[r][c] = !pattern[r][c];
-        cell.classList.toggle("on", pattern[r][c]);
-        if (pattern[r][c]) hit(r, ac!.currentTime);
-        savePad();
-        refreshDl();
-      };
-      g.appendChild(cell);
-    }
-  }
+  ensureDrumGraph();
+  buildGrid(document.getElementById("mzGridKeys")!, keyPattern, KEYS.map((k) => k.label), (r) => hitKey(r, ac!.currentTime));
+  buildGrid(document.getElementById("mzGrid")!, drumPattern, KIT.map((k) => k.label), (r) => hit(r, ac!.currentTime));
   refreshDl();
 }
 function stepClass(): void {
-  const g = document.getElementById("mzGrid");
-  if (!g) return;
-  g.querySelectorAll<HTMLElement>(".pad-cell").forEach((c) => c.classList.toggle("col", +c.dataset.c! === step));
+  const pad = document.querySelector(".mz-pad");
+  if (!pad) return;
+  pad.querySelectorAll<HTMLElement>(".pad-cell").forEach((c) => c.classList.toggle("col", +c.dataset.c! === step));
 }
 /** Two-tone alarm for the DO NOT PRESS button. Unlike blip(), this respects
     the header mute — the button's joke survives on shake + flicker alone. */
@@ -606,7 +647,8 @@ const stepDur = (): number => 60 / bpm / 2; // 8 steps = 4 beats
 function schedule(): void {
   const now = ac!.currentTime;
   while (nextStepTime < now + LOOKAHEAD_S) {
-    for (let r = 0; r < padRows; r++) if (pattern[r][schedStep]) hit(r, nextStepTime);
+    for (let r = 0; r < KIT.length; r++) if (drumPattern[r][schedStep]) hit(r, nextStepTime);
+    for (let r = 0; r < KEYS.length; r++) if (keyPattern[r][schedStep]) hitKey(r, nextStepTime);
     stepQueue.push({ step: schedStep, time: nextStepTime });
     nextStepTime += stepDur();
     schedStep = (schedStep + 1) % padCols;
@@ -654,16 +696,19 @@ function recMime(): { mime: string; ext: string } {
   if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) return { mime: "audio/webm;codecs=opus", ext: "webm" };
   return { mime: "audio/webm", ext: "webm" };
 }
+function hasAnyStep(): boolean {
+  return drumPattern.some((row) => row.some(Boolean)) || keyPattern.some((row) => row.some(Boolean));
+}
 function refreshDl(): void {
   const b = document.getElementById("mzDl") as HTMLButtonElement | null;
   if (!b) return;
   const supported = recMime().mime !== "";
   b.style.display = supported ? "" : "none";
-  if (!recorder) b.disabled = !pattern.some((row) => row.some(Boolean));
+  if (!recorder) b.disabled = !hasAnyStep();
 }
 function startDownload(): void {
   if (recorder || recMime().mime === "") return;
-  if (!pattern.some((row) => row.some(Boolean))) return;
+  if (!hasAnyStep()) return;
   ensureDrumGraph();
   if (!recDest) {
     recDest = ac!.createMediaStreamDestination();

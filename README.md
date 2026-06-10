@@ -7,9 +7,9 @@ A walkable pixel-art world that doubles as my portfolio. Instead of scrolling a 
 Four rooms, connected through doorways with a soft phase in/out transition:
 
 - **Lounge** (center) — the hub. Home to **Bob** and **Dino**, plus a **guestbook** real visitors can sign.
-- **Gym** (north) — **Amelia** and **Gojo**. Step up to the heavy bag for the **Combo Trainer** mini-game.
+- **Gym** (north) — **Amelia** and **Gojo**. Step up to the heavy bag for the **Combo Trainer**, or help Amelia **re-rack the weights** (a sneaky logic puzzle).
 - **Game Room** (west) — **Drod**. Sit at the board to play **chess** against real **Stockfish** (with a from-scratch engine as the offline fallback), step up to the **pool table** for **8-ball** or the **Trick-Shot Gauntlet**, pull up a chair for **heads-up poker** — and whatever you do, don't press the red button.
-- **Music Studio** (east) — **Alex** and **DJ**. A **jukebox**, a drum-machine **beat pad**, and a **grand piano** you can actually play.
+- **Music Studio** (east) — **Alex** and **DJ**. A **jukebox**, a two-section **step sequencer** (keys + drums), and a **grand piano** you can actually play.
 
 Each room is alive: NPCs wander and do their own thing, tall objects (TVs, plants, mic stands) correctly draw in front of or behind you via baseline depth-sorting.
 
@@ -22,11 +22,12 @@ Each room is alive: NPCs wander and do their own thing, tall objects (TVs, plant
 - **Trick-Shot Gauntlet** — 8 set-piece pool puzzles (banks, combos, threading the needle, a called 8-ball) with 3 attempts and a ★★★ rating each, on the same physics
 - **Heads-up poker vs. Drod** — real Texas Hold'em: escalating blinds, min-raise/BB-option rules, all-in run-outs, a Monte-Carlo opponent with a signature bluff, chip stacks that survive page reloads
 - **Playable grand piano** — pixel-art keys (RagnaPixel's *Pixel Piano*), real sampled piano (FreePats, CC0) with a synth fallback, DAW-style keybinds on desktop and multi-touch chords + glissando on phones
-- **Beat Pad 2.0** — a 6-instrument drum machine with real CC0 one-shots (VCSL), a jitter-free lookahead scheduler, hi-hat choking, auto-saved patterns, and a **"Download my beat"** button that hands you an audio file
+- **Step sequencer** — a melody grid (pentatonic keys) over a 5-instrument drum machine with real CC0 one-shots (VCSL), hi-hat choking, a jitter-free lookahead scheduler, auto-saved patterns, and a **"Download my beat"** button that hands you an audio file
 - **Jukebox** — 18 lo-fi tracks that keep playing site-wide while you explore
 - **Gym Combo Trainer** — call-and-respond directional punch combos with a pixel-art heavy bag and POW bursts
+- **Rack 'em Right** — Amelia's weight-plate logic puzzle: move the whole stack across three uprights without resting a big plate on a small one (move counter, par, stars)
 - **Guestbook** — a real one; entries live in Cloudflare KV (rate-limited, honeypotted) and the last 50 visitors are on the page
-- **Trophy Shelf** — a header panel tracking your whole visit (chess record, trick-shot stars, poker peak, pets befriended…) with 14 achievements, several of them hidden
+- **Trophy Shelf** — a header panel tracking your whole visit (chess record, trick-shot stars, poker peak, pets befriended…) with 15 achievements, several of them hidden
 - **A red button** — it says DO NOT PRESS
 - **Website header** — About / Experience / Projects / Contact / Trophies slide-over panels, room-map fast-travel, and a sound toggle, with smooth motion throughout
 - **Animated loading screen** — title card over a live, animated room scene
@@ -96,7 +97,8 @@ MyWebsite/
 │       ├── chess.ts        # chess UI (vs. Drod) — Stockfish + fallback
 │       ├── pool.ts         # 8-ball + trick-shot gauntlet: physics, rules, ghost-ball AI
 │       ├── poker.ts        # heads-up hold'em: state machine, Monte-Carlo AI, canvas table
-│       ├── music.ts        # jukebox + beat pad 2.0 (sample kit, lookahead scheduler, recorder)
+│       ├── music.ts        # jukebox + step sequencer (keys + drum kit, lookahead scheduler, recorder)
+│       ├── rack.ts         # Rack 'em Right: Amelia's weight-plate logic puzzle
 │       ├── beat-util.ts    # beat-pad pattern (de)serialization (+ tests)
 │       ├── piano.ts        # playable grand piano: sprite keyboard, sampler + synth voices
 │       ├── guestbook.ts    # guestbook overlay (optimistic sign, dev mock)

@@ -8,7 +8,7 @@ export type Dir = "up" | "down" | "left" | "right";
 export type RoomKey = "lounge" | "gym" | "game" | "music";
 
 /** A station an NPC or object can launch (drives the end-of-dialogue menu). */
-export type ActivityKind = "chess" | "music" | "workout" | "pool";
+export type ActivityKind = "chess" | "music" | "workout" | "pool" | "rack";
 
 /** Header panel a character can pull up at the end of dialogue. */
 export type PanelKey = "about" | "experience" | "projects" | "contact" | "trophies";
@@ -221,6 +221,8 @@ export interface Character {
   /** Header panel this character can open at the end of dialogue. */
   opens?: PanelKey;
   openLabel?: string;
+  /** Pixel-icon override for the open choice (defaults to the panel's icon). */
+  openIcon?: string;
   actLabel?: string;
   noLabel?: string;
   /** Session-memory openers, checked in order — first match wins. */

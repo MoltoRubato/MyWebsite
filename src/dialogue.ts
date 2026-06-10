@@ -2,10 +2,13 @@
    DIALOGUE — modern UI text box with an animated talking portrait.
    ============================================================ */
 import { drawPortraitFrame } from "./sprites";
+import { PIX_ICONS } from "./core/icons";
 
 export interface DialogueChoice {
   label: string;
   value: string;
+  /** Optional pixel-icon name from PIX_ICONS, rendered before the label. */
+  icon?: string;
 }
 export interface DialogueOptions {
   charKey?: string;
@@ -91,7 +94,8 @@ function afterLine(): void {
     choices.forEach((c) => {
       const b = document.createElement("button");
       b.className = "dlg-choice";
-      b.innerHTML = c.label;
+      const icon = c.icon && PIX_ICONS[c.icon] ? `<span class="dlg-ci">${PIX_ICONS[c.icon]}</span>` : "";
+      b.innerHTML = icon + `<span>${c.label}</span>`;
       b.onclick = () => {
         const fn = onChoice;
         const val = c.value;

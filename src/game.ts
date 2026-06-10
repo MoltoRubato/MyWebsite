@@ -20,6 +20,7 @@ import * as WORKOUT from "./activities/workout";
 import * as PIANO from "./activities/piano";
 import * as POKER from "./activities/poker";
 import * as GUESTBOOK from "./activities/guestbook";
+import * as RACK from "./activities/rack";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
@@ -197,6 +198,7 @@ function anyOverlayOpen(): boolean {
     PIANO.isOpen() ||
     POKER.isOpen() ||
     GUESTBOOK.isOpen() ||
+    RACK.isOpen() ||
     !document.getElementById("panel")!.classList.contains("hidden") ||
     !document.getElementById("mapModal")!.classList.contains("hidden")
   );
@@ -235,8 +237,10 @@ function interact(): void {
   else if (near.ref.type === "music") openJukebox();
   else if (near.ref.type === "pool") openPool();
   else if (near.ref.type === "poker") openPoker();
+  else if (near.ref.type === "chess") openChess();
   else if (near.ref.type === "piano") openPiano();
   else if (near.ref.type === "guestbook") openGuestbook();
+  else if (near.ref.type === "rack") openRack();
   else if (near.ref.type === "tv") cycleTV();
   else if (near.ref.type === "redbutton") pressRedButton();
 }
@@ -272,19 +276,22 @@ function talkTo(npc: NPC): void {
   // face the player
   const dx = player.x - npc.x, dy = player.y - npc.y;
   npc.watchDir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : dy < 0 ? "up" : "down";
-  const choices: { label: string; value: string }[] = [];
+  const choices: { label: string; value: string; icon?: string }[] = [];
   const actions: Record<string, () => void> = {};
-  const ACT: Record<string, { def: string; run: () => void }> = {
-    chess: { def: "♟ Play a game", run: openChess },
-    music: { def: "♫ Tap out a beat", run: openBeatpad },
-    workout: { def: "◉ Hit the bag", run: openWorkout },
+  const ACT: Record<string, { def: string; icon: string; run: () => void }> = {
+    chess: { def: "Play a game", icon: "pawn", run: openChess },
+    music: { def: "Tap out a beat", icon: "note", run: openBeatpad },
+    workout: { def: "Hit the bag", icon: "glove", run: openWorkout },
+    rack: { def: "Re-rack the weights", icon: "plates", run: openRack },
   };
+  // pixel icons per header panel (the dialogue strips its old unicode glyphs)
+  const PANEL_ICON: Record<string, string> = { about: "folder", experience: "list", projects: "flask", contact: "phone" };
   if (npc.interact && ACT[npc.interact]) {
-    choices.push({ label: data.actLabel || ACT[npc.interact].def, value: "act" });
+    choices.push({ label: data.actLabel || ACT[npc.interact].def, value: "act", icon: ACT[npc.interact].icon });
     actions.act = ACT[npc.interact].run;
   }
   if (data.opens) {
-    choices.push({ label: data.openLabel || "Show me", value: "open" });
+    choices.push({ label: data.openLabel || "Show me", value: "open", icon: data.openIcon || PANEL_ICON[data.opens] });
     actions.open = () => HEADER.openPanel(data.opens!);
   }
   const opts: Parameters<typeof DIALOGUE.start>[0] = { charKey: npc.key, name: data.name, color: data.color, lines: data.lines.slice() };
@@ -349,6 +356,10 @@ function openPoker(): void {
 function openGuestbook(): void {
   paused = true;
   GUESTBOOK.open({ onClose: () => (paused = false) });
+}
+function openRack(): void {
+  paused = true;
+  RACK.open({ onClose: () => (paused = false) });
 }
 
 function setHitboxes(v: boolean): void {
@@ -600,46 +611,57 @@ function render(): void {
       },
     }),
   );
-  // The DO NOT PRESS button — wall plate + glowing dome, drawn procedurally.
+  // The DO NOT PRESS button — hung on the wall face beside the door,
+  // painted in the room's muted palette. Drawn flat (no floor shadow):
+  // it's wall furniture, like the paintings.
   (R.objs || []).forEach((o) => {
     if (o.type !== "redbutton") return;
     draw.push({
-      y: o.y + 8, // wall-mounted at the bottom edge: always in front of feet
+      y: o.y - 30, // well behind anyone walking past below
       fn: () => {
-        const bx = o.x, by = o.y + 2; // plate anchor on the south-wall baseboard
+        const bx = o.x, cy = o.y - 34; // dome centre on the wall face
         const pressed = btnPressT > 0;
-        // steel plate
-        ctx.fillStyle = "#20202a";
-        ctx.fillRect(bx - 12, by - 1, 24, 16);
-        ctx.fillStyle = "#3a3a44";
-        ctx.fillRect(bx - 11, by, 22, 14);
-        // warning placard
-        ctx.fillStyle = "#f4ead6";
-        ctx.fillRect(bx - 8, by - 7, 16, 5);
-        ctx.strokeStyle = "#d5392c";
+        // mounting plate (warm dark metal, matching the room's shadow tones)
+        ctx.fillStyle = "#2b2622";
+        ctx.fillRect(bx - 13, cy - 17, 26, 34);
+        ctx.fillStyle = "#4c463f";
+        ctx.fillRect(bx - 12, cy - 16, 24, 32);
+        ctx.fillStyle = "rgba(255,255,255,.07)";
+        ctx.fillRect(bx - 12, cy - 16, 24, 3); // top sheen = light from above
+        // screws pin it to the wall
+        ctx.fillStyle = "#211d1a";
+        ctx.fillRect(bx - 10, cy - 14, 2, 2);
+        ctx.fillRect(bx + 8, cy - 14, 2, 2);
+        ctx.fillRect(bx - 10, cy + 12, 2, 2);
+        ctx.fillRect(bx + 8, cy + 12, 2, 2);
+        // small placard with a muted warning stripe
+        ctx.fillStyle = "#e8dcc2";
+        ctx.fillRect(bx - 8, cy - 12, 16, 5);
+        ctx.strokeStyle = "#8a4a3a";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(bx - 8, by - 2.5);
-        ctx.lineTo(bx + 8, by - 6.5);
+        ctx.moveTo(bx - 8, cy - 7.5);
+        ctx.lineTo(bx + 8, cy - 11.5);
         ctx.stroke();
-        // dome (sits 2px lower while pressed)
-        const dy = pressed ? 2 : 0;
-        const glow = 0.25 + 0.2 * Math.sin(worldT * 2.2);
+        // dome — rust red, not fire-engine red (sinks 1.5px while pressed)
+        const dy = pressed ? 1.5 : 0;
         ctx.beginPath();
-        ctx.arc(bx, by + 7 + dy, 8, 0, 7);
-        ctx.fillStyle = "#7d1c12";
+        ctx.arc(bx, cy + 5 + dy, 7.5, 0, 7);
+        ctx.fillStyle = "#5e2c22";
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(bx, by + 6 + dy, 7, 0, 7);
-        ctx.fillStyle = "#d5392c";
+        ctx.arc(bx, cy + 4 + dy, 6.5, 0, 7);
+        ctx.fillStyle = "#9c4a3c";
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(bx - 2, by + 4 + dy, 2.5, 0, 7);
-        ctx.fillStyle = "#ff8a70";
+        ctx.arc(bx - 2, cy + 2 + dy, 2, 0, 7);
+        ctx.fillStyle = "#c97f63";
         ctx.fill();
+        // a soft breathing glow — noticeable, not neon
+        const glow = pressed ? 0.55 : 0.14 + 0.1 * Math.sin(worldT * 2.2);
         ctx.beginPath();
-        ctx.arc(bx, by + 6 + dy, 9.5, 0, 7);
-        ctx.strokeStyle = `rgba(255,90,60,${(pressed ? 0.8 : glow).toFixed(3)})`;
+        ctx.arc(bx, cy + 4 + dy, 9, 0, 7);
+        ctx.strokeStyle = `rgba(190,110,85,${glow.toFixed(3)})`;
         ctx.lineWidth = pressed ? 2.5 : 1.5;
         ctx.stroke();
       },
