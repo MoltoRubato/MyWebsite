@@ -73,6 +73,9 @@ for (const n of ["lounge", "gym", "game", "music"]) {
   load("map_" + n, "assets/maps/" + n + ".png?v=3");
 }
 
+// About-panel portrait — preloaded so the About panel shows the photo instantly.
+load("photo_ryan", "assets/photo/ryan.jpg");
+
 export function getImage(key: string): HTMLImageElement | undefined {
   return images[key];
 }
