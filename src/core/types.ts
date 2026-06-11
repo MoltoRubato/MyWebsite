@@ -8,10 +8,10 @@ export type Dir = "up" | "down" | "left" | "right";
 export type RoomKey = "lounge" | "gym" | "game" | "music";
 
 /** A station an NPC or object can launch (drives the end-of-dialogue menu). */
-export type ActivityKind = "chess" | "music" | "workout" | "pool";
+export type ActivityKind = "chess" | "music" | "workout" | "pool" | "rack";
 
 /** Header panel a character can pull up at the end of dialogue. */
-export type PanelKey = "about" | "experience" | "projects" | "contact";
+export type PanelKey = "about" | "experience" | "projects" | "contact" | "trophies";
 
 // ---- geometry / camera ----------------------------------------------------
 
@@ -194,6 +194,25 @@ export interface Contact {
   lead: string;
 }
 
+/** What a dialogue reaction can see — keeps content.ts free of imports. */
+export interface ReactionCtx {
+  num(key: string): number;
+  has(flag: string): boolean;
+  /** Name of the track currently playing site-wide, or null. */
+  trackName: string | null;
+}
+/**
+ * A session-memory opener: the first matching reaction replaces the
+ * character's first line, once per page load. `flag` is shorthand for
+ * `when: (c) => c.has(flag)`. Lines may interpolate `{track}` or any
+ * numeric progress key, e.g. `{gymBest}`.
+ */
+export interface Reaction {
+  flag?: string;
+  when?: (ctx: ReactionCtx) => boolean;
+  lines: string[];
+}
+
 export interface Character {
   name: string;
   room: RoomKey;
@@ -202,8 +221,12 @@ export interface Character {
   /** Header panel this character can open at the end of dialogue. */
   opens?: PanelKey;
   openLabel?: string;
+  /** Pixel-icon override for the open choice (defaults to the panel's icon). */
+  openIcon?: string;
   actLabel?: string;
   noLabel?: string;
+  /** Session-memory openers, checked in order — first match wins. */
+  reactions?: Reaction[];
 }
 
 export interface Track {

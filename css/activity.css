@@ -13,9 +13,20 @@
 #cbBoard{display:block;image-rendering:pixelated;cursor:pointer}
 .cb-status{font-size:18px;color:var(--ui-ink);font-weight:600;letter-spacing:.5px;min-height:24px;text-align:center}
 .chess-right{position:relative;width:288px;display:flex;flex-direction:column;gap:14px}
-.chess-x{position:absolute;top:-10px;right:-10px;width:32px;height:32px;border-radius:9px;font-size:16px;color:var(--ui-ink);
-  background:rgba(90,60,35,.14);transition:background .2s,transform .2s,color .2s;z-index:3}
-.chess-x:hover{background:rgba(181,68,47,.9);color:#fff;transform:rotate(90deg)}
+/* Close button — a proper wood button INSIDE the panel corner, so it can
+   never fall off-screen, and it presses like every other control. */
+.chess-wrap,.mz-wrap,.pool-wrap,.wk-wrap{position:relative}
+.chess-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:10px;z-index:6;
+  display:grid;place-items:center;font-family:'Silkscreen',monospace;font-size:15px;line-height:1;color:var(--ui-ink);
+  background:rgba(90,60,35,.14);border:2px solid var(--ui-frame);box-shadow:0 3px 0 var(--ui-frame-d);
+  transition:background .15s,color .15s,transform .12s,box-shadow .12s}
+.chess-x:hover{background:rgba(181,68,47,.85);color:#fff;border-color:#7d2417;box-shadow:0 3px 0 #5e1a10}
+.chess-x:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ui-frame-d)}
+/* two-column shells anchor the X to their right column — nudge to the corner */
+.chess-right .chess-x,.pool-right .chess-x,.wk-right .chess-x{top:-8px;right:-8px}
+/* keep header rows clear of the button on the single-column shells */
+.jk-head,.gb-head{padding-right:40px}
+.bp-wrap .mz-title{padding-right:34px}
 .drod-card{display:flex;align-items:center;gap:14px}
 .drod-port{width:92px;height:92px;border-radius:14px;overflow:hidden;display:grid;place-items:center;
   background:#b9a079;border:4px solid var(--ui-frame);box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d)}
@@ -86,7 +97,7 @@
 
 /* ---- music (shared: jukebox + beat pad) ---- */
 .mz-wrap{flex-direction:column}
-.bp-wrap{width:min(560px,94vw)}
+.bp-wrap{width:min(760px,94vw)}
 .mz-head{display:flex;align-items:center;gap:18px}
 .mz-djs{display:flex;gap:10px}
 .mz-dj{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -124,7 +135,7 @@
 .pad-cell.on{background:linear-gradient(160deg,#e0a64a,#c98a36);box-shadow:0 0 10px rgba(224,166,74,.55)}
 .pad-cell.col{outline:2px solid rgba(78,122,54,.9);outline-offset:-2px}
 .pad-cell.on.col{transform:scale(1.08)}
-.mz-padctl{display:flex;align-items:center;gap:10px}
+.mz-padctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .mz-bpm{font-size:13px;color:var(--ui-ink-soft);display:flex;align-items:center;gap:8px;margin-left:auto}
 .mz-bpm input{accent-color:var(--ui-gold)}
 
@@ -285,3 +296,132 @@ body:not(.touch) .wk-dpad{display:none}
   #cbBoard{max-width:100%;height:auto}
   #plTable{max-width:100%}
 }
+
+/* ---- piano (RagnaPixel keyboard, canvas-upscaled) ---- */
+.pn-wrap{width:min(760px,94vw);gap:16px}
+.pn-oct{display:flex;align-items:center;gap:8px;flex:none;align-self:center}
+.pn-oct .ctl-btn{flex:none;padding:8px 14px;min-width:52px}
+.pn-octlbl{font-family:'Silkscreen',monospace;font-size:12px;letter-spacing:1px;color:var(--ui-ink);min-width:74px;text-align:center}
+.pn-kbdwrap{display:flex;justify-content:center;padding:6px 0 2px}
+#pnKbd{width:100%;max-width:712px;height:auto;image-rendering:pixelated;touch-action:none;cursor:pointer;
+  border:4px solid var(--ui-frame);border-radius:8px;
+  box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 1px var(--ui-frame-d),0 10px 26px rgba(0,0,0,.45)}
+.pn-wrap .mz-viz{height:92px}
+@media (max-height:540px){ .pn-wrap .mz-viz{display:none} }
+
+/* ---- Step sequencer: KEYS + DRUMS pads side by side ---- */
+.bp-wrap .mz-viz{height:80px} /* slimmer viz so the whole window fits */
+.bp-pads{display:flex;gap:18px;align-items:flex-start}
+.bp-pad{flex:1;min-width:0}
+.bp-pad-h{display:flex;align-items:baseline;gap:7px;margin-bottom:9px;
+  font-family:'Silkscreen',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ui-gold)}
+.mz-rowlab{display:flex;align-items:center;justify-content:flex-end;padding-right:4px;
+  font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;color:var(--ui-ink-soft);user-select:none}
+.pad-cell{touch-action:manipulation} /* no double-tap zoom delay on phones */
+/* melodic rows are denser than the drums — thin pitch lanes, DAW-style */
+.mz-grid.keys{gap:3px}
+.mz-grid.keys .pad-cell{aspect-ratio:auto;height:24px;border-radius:6px}
+.mz-grid.keys .pad-cell.on{background:linear-gradient(160deg,#7fb069,#5f8c46);box-shadow:0 0 9px rgba(127,176,105,.55)}
+/* one tidy control row: buttons left, BPM pushed right */
+.mz-padctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mz-padctl .ctl-btn{flex:0 1 auto;min-height:44px;white-space:nowrap;padding:10px 16px}
+.bp-wrap .mz-bpm{margin-left:auto}
+.mz-bpm input{flex:1;min-width:120px;max-width:200px}
+/* narrow screens: stack the two pads (the overlay scrolls if needed).
+   align-items:stretch — flex-start would shrink-wrap widths in column mode */
+@media (max-width:680px){
+  .bp-pads{flex-direction:column;gap:12px;align-items:stretch}
+  .mz-padctl .ctl-btn{flex:1 1 0}
+  .bp-wrap .mz-bpm{flex-basis:100%;margin-left:0}
+}
+
+/* ---- poker (heads-up vs. Drod) ---- */
+#pkTable{display:block;width:684px;max-width:min(70vw,684px);height:auto;touch-action:manipulation}
+.pk-hud .wk-stat b{font-size:18px}
+.pk-actions{display:flex;gap:8px}
+.pk-actions .ctl-btn,.pk-raise .ctl-btn{min-height:44px}
+.pk-actions .ctl-btn small,.pk-raise .ctl-btn small,#pkAllin small{font-size:10px;opacity:.6;margin-left:4px}
+.pk-raise{display:flex;align-items:center;gap:10px}
+.pk-raise input{flex:1;accent-color:var(--ui-gold);min-width:0}
+.pk-raise .ctl-btn{flex:none;min-width:132px}
+#pkAllin{min-height:40px}
+.ctl-btn:disabled{opacity:.45;pointer-events:none}
+.pl-over.pk-next{background:transparent;backdrop-filter:none;pointer-events:none;align-items:end;padding-bottom:14px}
+.pl-over.pk-next .ctl-btn{pointer-events:auto;box-shadow:0 3px 0 #8a5a25,0 8px 22px rgba(0,0,0,.5)}
+@media(max-width:760px){ #pkTable{max-width:100%} .pk-wrap .pool-right{width:min(540px,92vw)} }
+
+/* ---- pool trick-shot rack (8 chips with star meters) ---- */
+.pl-trickrack{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.pl-tk{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 2px 5px;border-radius:11px;
+  font-family:'Silkscreen',monospace;font-size:13px;color:var(--ui-ink);
+  background:rgba(90,60,35,.1);border:2px solid var(--ui-frame)}
+.pl-tk i{font-style:normal;font-size:9px;letter-spacing:1px;color:var(--ui-gold)}
+.pl-tk.active{border-color:var(--ui-gold);background:rgba(156,90,37,.16);
+  box-shadow:0 0 0 2px rgba(231,163,62,.4)}
+.pl-over-card .ctl-btn+.ctl-btn{margin-top:2px}
+
+/* ---- guestbook (lounge side table) ---- */
+.gb-wrap{width:min(560px,94vw);max-height:min(640px,90vh);gap:14px}
+.gb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.gb-sub{font-size:14px;color:var(--ui-ink-soft)}
+.gb-tabs{display:flex;gap:6px;flex:none}
+.gb-tab{padding:9px 16px;border-radius:10px;font-size:15px;font-weight:600;color:var(--ui-ink);
+  background:rgba(90,60,35,.12);border:2px solid var(--ui-frame);box-shadow:0 3px 0 var(--ui-frame-d)}
+.gb-tab.on{background:linear-gradient(180deg,#e0a64a,#c98a36);color:#3a2410}
+.gb-tab:disabled{opacity:.6;pointer-events:none}
+.gb-page{flex:1;min-height:240px;max-height:380px;overflow-y:auto;padding:14px 16px;border-radius:12px;
+  background:#f4ead6;border:3px solid var(--ui-frame);box-shadow:inset 0 2px 8px rgba(0,0,0,.12);
+  scrollbar-width:thin;scrollbar-color:var(--ui-frame) transparent}
+.gb-note{font-size:13px;color:var(--ui-ink-soft);font-style:italic;padding:4px 0 10px}
+.gb-row{padding:10px 2px 9px;border-bottom:1px dashed rgba(74,53,38,.3)}
+.gb-row.pending{opacity:.55}
+.gb-row-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.gb-row-name{font-family:'Silkscreen',monospace;font-size:12px;color:var(--ui-gold);overflow-wrap:anywhere}
+.gb-row-when{font-size:11px;color:var(--ui-ink-soft);flex:none}
+.gb-row-msg{margin:3px 0 0;font-size:15px;line-height:1.45;color:var(--ui-ink);overflow-wrap:anywhere}
+.gb-form{display:flex;flex-direction:column;gap:12px}
+.gb-field{display:flex;flex-direction:column;gap:5px;position:relative;
+  font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ui-gold)}
+.gb-field input,.gb-field textarea{font-family:'Pixelify Sans',sans-serif;font-size:16px;color:var(--ui-ink);
+  padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.55);border:2px solid var(--ui-frame);resize:none}
+.gb-field input:focus,.gb-field textarea:focus{outline:2px solid var(--ui-gold)}
+.gb-count{position:absolute;right:4px;bottom:-16px;font-size:10px;letter-spacing:0;color:var(--ui-ink-soft);text-transform:none}
+.gb-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.gb-err{min-height:18px;font-size:13px;color:#b5442f;line-height:1.35}
+#gbSubmit{min-height:46px}
+.pl-tk:not(.active):hover{border-color:var(--ui-gold);background:rgba(156,90,37,.12);cursor:pointer}
+
+/* ---- Rack 'em Right (gym plate puzzle) ---- */
+.rk-wrap{width:min(620px,94vw);gap:14px}
+.rk-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-right:40px;flex-wrap:wrap}
+.rk-hud{flex:1;min-width:128px;max-width:180px}
+.rk-floor{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;position:relative;min-height:250px}
+.rk-peg{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  min-height:250px;padding:10px 4px 12px;border-radius:14px;background:rgba(90,60,35,.07);
+  border:2px solid rgba(90,60,35,.18);transition:background .15s,border-color .15s;cursor:pointer}
+.rk-peg:hover{background:rgba(156,90,37,.12);border-color:var(--ui-frame)}
+.rk-peg.lift{border-color:var(--ui-gold);background:rgba(156,90,37,.14)}
+.rk-peg.no{animation:rkNo .35s ease}
+@keyframes rkNo{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.rk-post{position:absolute;left:50%;top:14px;bottom:10px;width:8px;margin-left:-4px;border-radius:4px;
+  background:linear-gradient(90deg,#8a5a30,#b87b42 45%,#8a5a30);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+/* render loop appends top-of-stack (smallest) first; `column` puts it at the
+   visual top so the LARGEST plate sits at the bottom — proper Hanoi stack.
+   width:100% so plate %-widths resolve against the PEG, not the shrink-wrap. */
+.rk-stack{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;z-index:2;justify-content:flex-end;width:100%}
+.rk-plate{display:grid;place-items:center;height:24px;border-radius:7px;z-index:2;
+  font-family:'Silkscreen',monospace;font-size:10px;color:#f4ead6;text-shadow:0 1px 0 rgba(0,0,0,.45);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.18),inset 0 -3px 0 rgba(0,0,0,.25),0 2px 3px rgba(0,0,0,.3);
+  animation:rkDrop .16s ease}
+@keyframes rkDrop{0%{transform:translateY(-8px) scale(1.04)}100%{transform:translateY(0) scale(1)}}
+.rk-plate.held{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:3;
+  box-shadow:0 8px 14px rgba(0,0,0,.4),inset 0 2px 0 rgba(255,255,255,.18);animation:rkBob 1.1s ease-in-out infinite}
+@keyframes rkBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-4px)}}
+.rk-base{position:absolute;left:8%;right:8%;bottom:6px;height:8px;border-radius:4px;z-index:1;
+  background:linear-gradient(180deg,#8a5a30,#5d3720);box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.rk-tip{font-size:12.5px;color:var(--ui-ink-soft);text-align:center}
+.rk-done{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:color-mix(in srgb, var(--ui-fill) 86%, transparent);border-radius:14px;backdrop-filter:blur(1px)}
+.rk-done-stars{font-size:34px;letter-spacing:5px;color:var(--ui-gold)}
+.rk-done-sub{font-size:14px;color:var(--ui-ink-soft)}
+.rk-done .ctl-btn{flex:none;min-width:200px}

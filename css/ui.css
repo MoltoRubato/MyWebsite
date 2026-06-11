@@ -51,7 +51,12 @@
   box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),
              inset 0 3px 0 2px rgba(255,255,255,.16),0 14px 26px rgba(0,0,0,.5)}
 .dlg-choice{position:relative;padding:7px 14px 7px 30px;font-size:18px;color:var(--ui-ink);font-weight:500;
-  background:none;text-align:left;border-radius:8px;transition:color .15s, background .15s, transform .12s}
+  background:none;text-align:left;border-radius:8px;transition:color .15s, background .15s, transform .12s;
+  display:flex;align-items:center;gap:9px}
+/* pixel-grid choice icons (src/core/icons.ts) — ink at rest, gold on hover */
+.dlg-ci{width:15px;height:15px;flex:none;color:var(--ui-ink-soft)}
+.dlg-ci svg{width:100%;height:100%;display:block}
+.dlg-choice:hover .dlg-ci{color:var(--ui-gold)}
 .dlg-choice::before{content:"";position:absolute;left:9px;top:50%;transform:translateY(-50%) scale(0);
   border-left:9px solid var(--ui-gold);border-top:6px solid transparent;border-bottom:6px solid transparent;
   transition:transform .15s cubic-bezier(.22,1,.36,1)}
@@ -211,7 +216,7 @@
 }
 @media(prefers-reduced-motion:reduce){
   .panel-card,.pn-kicker,.pn-title,.pn-lead,.ab-hero,.ab-tagline,.ab-bio,.ab-facts,.ab-skills,
-  .xp-row,.pj-row,.ct-row{animation:none !important}
+  .xp-row,.pj-row,.ct-row,.tr-row,.tr-stats,.tr-count,.toast{animation:none !important}
   #panel.in .panel-card{transform:none}
   .panel-close:hover{transform:none}
   .ct-link,.ct-go,.ct-ic,.pj-link,.pj-ext{transition:none}
@@ -338,20 +343,19 @@ button.map-room:active .mr-frame{transform:translateY(-2px)}
 }
 
 /* ---------------- Activity overlay ---------------- */
-#activity{position:absolute;inset:0;z-index:38;display:grid;place-items:center;background:rgba(6,9,15,.72);backdrop-filter:blur(4px);
-  opacity:0;transition:opacity .35s ease}
+/* Flex column + `margin:auto` on the inner panel centres it when it fits but
+   collapses the auto-margins to 0 when the panel is taller than the viewport,
+   so a tall window (e.g. the step sequencer) scrolls from the top instead of
+   clipping. Applies on desktop AND mobile — no separate breakpoint needed.
+   touch-action:pan-y re-enables vertical drag over the touch-action:none body. */
+#activity{position:absolute;inset:0;z-index:38;display:flex;flex-direction:column;align-items:center;
+  overflow-y:auto;overflow-x:hidden;background:rgba(6,9,15,.72);backdrop-filter:blur(4px);
+  opacity:0;transition:opacity .35s ease;padding:16px 0;
+  touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #activity.in{opacity:1}
-#activityInner{transform:scale(.94) translateY(10px);transition:transform .4s cubic-bezier(.22,1,.36,1);max-width:96vw;max-height:92vh}
+#activityInner{margin:auto 0;flex:none;transform:scale(.94) translateY(10px);
+  transition:transform .4s cubic-bezier(.22,1,.36,1);max-width:96vw}
 #activity.in #activityInner{transform:scale(1) translateY(0)}
-/* On phones the stacked activity panels can exceed the viewport height;
-   centring would clip the top, so anchor to the top and let the overlay
-   scroll. touch-action:pan-y re-enables vertical drag over the
-   touch-action:none body (same idea as #panelInner). */
-@media(max-width:760px){
-  #activity{place-items:start center;overflow-y:auto;overflow-x:hidden;
-    touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:14px 0}
-  #activityInner{max-height:none}
-}
 
 /* ---------------- Touch controls ---------------- */
 #touch{position:absolute;inset:0;z-index:10;pointer-events:none;display:none}
@@ -407,3 +411,42 @@ body.touch #touch{display:block}
 @keyframes enterPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 .load-controls{margin-top:26px;font-size:14px;letter-spacing:1px;color:#6f7d94}
 #loader.out{opacity:0;transition:opacity .6s ease;pointer-events:none}
+
+/* ---------------- Achievement toasts ---------------- */
+/* One at a time, bottom-center, above activities (z-38) and the map (z-40)
+   but under the loader (z-60). pointer-events:none — never eats input. */
+#toasts{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);
+  z-index:50;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:8px}
+body.touch #toasts{bottom:150px} /* clear the round action button */
+.toast{display:flex;align-items:center;gap:12px;padding:10px 18px 11px 14px;
+  background:var(--ui-fill);border:3px solid var(--ui-frame);border-radius:12px;
+  box-shadow:0 0 0 2px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),0 10px 22px rgba(0,0,0,.45);
+  opacity:0;transform:translateY(14px);transition:opacity .3s ease,transform .35s cubic-bezier(.22,1,.36,1)}
+.toast.in{opacity:1;transform:translateY(0)}
+.toast-ic{width:26px;height:26px;color:var(--ui-gold);flex:none}
+.toast-ic svg{width:100%;height:100%;fill:currentColor;display:block}
+.toast-body{display:flex;flex-direction:column;line-height:1.25}
+.toast-kick{font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:2px;color:var(--ui-ink-soft)}
+.toast-title{font-family:'Pixelify Sans',sans-serif;font-weight:700;font-size:17px;color:var(--ui-ink)}
+
+/* ---------------- Trophy Shelf panel ---------------- */
+.tr-stats{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;margin:0 0 18px;padding:0;
+  animation:pnRise .5s ease .14s both}
+.tr-stat{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 2px;
+  border-top:1px solid rgba(74,53,38,.16)}
+.tr-stat dt{font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--ui-gold);padding-top:2px;margin:0}
+.tr-stat dd{margin:0;font-size:14.5px;font-weight:700;color:var(--ui-ink);text-align:right}
+.tr-count{font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;color:var(--ui-ink-soft);
+  margin:0 0 8px;animation:pnRise .5s ease .18s both}
+.tr-list{list-style:none;margin:0;padding:0}
+.tr-row{display:flex;align-items:center;gap:14px;padding:12px 2px;border-top:1px solid rgba(74,53,38,.16);
+  animation:pnRise .5s ease both;animation-delay:var(--d)}
+.tr-badge{width:30px;height:30px;flex:none;color:var(--ui-gold)}
+.tr-badge svg{width:100%;height:100%;fill:currentColor;display:block}
+.tr-row.locked .tr-badge{color:rgba(74,53,38,.32)}
+.tr-row.locked .tr-name,.tr-row.locked .tr-desc{color:rgba(74,53,38,.45)}
+.tr-name{margin:0;font-size:16px;line-height:1.2;color:var(--ui-ink)}
+.tr-desc{margin:1px 0 0;font-size:13px;line-height:1.4;color:var(--ui-ink-soft)}
+.tr-tick{margin-left:auto;font-weight:700;color:var(--ui-gold)}
+@media (max-width:640px){ .tr-stats{grid-template-columns:1fr} }

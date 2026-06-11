@@ -8,3 +8,6 @@ dist/
 # tooling caches & local env
 .vite/
 *.local
+
+# wrangler local dev cache
+.wrangler/

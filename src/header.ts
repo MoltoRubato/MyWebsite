@@ -5,6 +5,7 @@
    ============================================================ */
 import { CONTENT as C } from "./content";
 import { ROOMS } from "./world";
+import * as P from "./progress";
 import type { GameApi, PanelKey, RoomKey } from "./core/types";
 
 const header = document.getElementById("siteHeader") as HTMLElement;
@@ -108,7 +109,71 @@ function contactHTML(): string {
   return panelHead(c.kicker, c.title, c.lead) + `<ul class="ct-list">${rows}</ul>`;
 }
 
-const RENDER: Record<PanelKey, () => string> = { about: aboutHTML, experience: experienceHTML, projects: projectsHTML, contact: contactHTML };
+// ---------- trophies (stats + achievements from src/progress.ts) ----------
+// Same crisp inline-SVG recipe as ICON above; per-achievement pick with a
+// trophy fallback. All text content comes from code, never from the visitor.
+const BADGE: Record<string, string> = {
+  trophy: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v2h3v4a4 4 0 0 1-4 4h-.35A6 6 0 0 1 13 15.92V18h3v2l1 2H7l1-2v-2h3v-2.08A6 6 0 0 1 7.35 12H7a4 4 0 0 1-4-4V4h3V2zm13 4h-1v3.5c0 .17 0 .34-.02.5H18a2 2 0 0 0 2-2V6zM5 6h1v4H6a2 2 0 0 1-2-2V6h1z"/></svg>',
+  crown: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-1.5 12h-15L3 7zm3.2 10h11.6l.7-5.6-2.6 2.3L12 8l-3.9 5.7-2.6-2.3.7 5.6z"/></svg>',
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z"/></svg>',
+  paw: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.4 3.8c1.2 0 2.1 1.3 2.1 2.9S9.6 9.6 8.4 9.6 6.3 8.3 6.3 6.7s.9-2.9 2.1-2.9zm7.2 0c1.2 0 2.1 1.3 2.1 2.9s-.9 2.9-2.1 2.9-2.1-1.3-2.1-2.9.9-2.9 2.1-2.9zM3.6 9.2c1.1 0 2 1.1 2 2.5s-.9 2.5-2 2.5-2-1.1-2-2.5.9-2.5 2-2.5zm16.8 0c1.1 0 2 1.1 2 2.5s-.9 2.5-2 2.5-2-1.1-2-2.5.9-2.5 2-2.5zM12 11c2.6 0 6 3.2 6 5.9 0 1.6-1.1 2.6-2.6 2.6-1.1 0-2.2-.5-3.4-.5s-2.3.5-3.4.5c-1.5 0-2.6-1-2.6-2.6C6 14.2 9.4 11 12 11z"/></svg>',
+  note: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3z"/></svg>',
+  skull: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a9 9 0 0 0-9 9c0 3.6 2.1 6.6 5 8.1V22h2v-2.5h1.5V22h1V19.5H14V22h2v-2.9c2.9-1.5 5-4.5 5-8.1a9 9 0 0 0-9-9zM8.5 13.5A2 2 0 1 1 10.5 11.5a2 2 0 0 1-2 2zm7 0a2 2 0 1 1 2-2 2 2 0 0 1-2 2z"/></svg>',
+};
+const ACH_BADGE: Record<string, string> = {
+  "drod-slayer": "crown", "card-shark": "crown", "trick-artist": "star", "combo-machine": "star",
+  "good-human": "paw", "resident-dj": "note", "open-mic": "note", "producer": "note",
+  "bankrupt": "skull", "humbled": "skull", "warned-you": "skull",
+};
+
+function trophiesHTML(): string {
+  const p = P.get();
+  const n = (k: Parameters<typeof P.num>[0]): number => P.num(k);
+  const roomsSeen = (["lounge", "gym", "game", "music"] as const).filter((r) => P.hasFlag(`room_${r}`)).length;
+  const petsSeen = (p.flags["pet_Mimi"] ? 1 : 0) + (p.flags["pet_Batman"] ? 1 : 0);
+  // Stats only appear once they have something to say — no wall of zeros.
+  const rows: { k: string; v: string; show: boolean }[] = [
+    { k: "Rooms explored", v: roomsSeen + "/4", show: true },
+    { k: "Chess record", v: `${n("chessWins")}W–${n("chessLosses")}L–${n("chessDraws")}D`, show: n("chessWins") + n("chessLosses") + n("chessDraws") > 0 },
+    { k: "8-ball wins", v: String(n("poolWins")), show: n("poolWins") + n("poolLosses") > 0 },
+    { k: "Trick-shot stars", v: n("trickshotStars") + "/24", show: n("trickshotStars") > 0 },
+    { k: "Best combo score", v: String(n("gymBest")), show: n("gymBest") > 0 },
+    { k: "Rack stars", v: n("rackStars") + "/3", show: n("rackStars") > 0 },
+    { k: "Poker chips (peak)", v: String(n("pokerChips")), show: n("pokerHands") > 0 },
+    { k: "Poker hands", v: String(n("pokerHands")), show: n("pokerHands") > 0 },
+    { k: "Piano notes", v: String(n("pianoNotes")), show: n("pianoNotes") > 0 },
+    { k: "Beats downloaded", v: String(n("beatsDownloaded")), show: n("beatsDownloaded") > 0 },
+    { k: "Tracks spun", v: P.flagCount("track_") + "/18", show: n("tracksPlayed") > 0 },
+    { k: "Pets befriended", v: petsSeen + "/2", show: n("petsGiven") > 0 },
+    { k: "Guestbook", v: P.hasFlag("guestbookSigned") ? "Signed ✓" : "—", show: true },
+  ];
+  const stats = rows.filter((r) => r.show).map((r) => `<div class="tr-stat"><dt>${r.k}</dt><dd>${r.v}</dd></div>`).join("");
+  const all = P.achievements();
+  const got = all.filter((a) => a.unlocked).length;
+  const items = all
+    .map(({ def, unlocked }, i) => {
+      const icon = BADGE[ACH_BADGE[def.id] || "trophy"];
+      const title = !unlocked && def.hidden ? "???" : def.title;
+      const desc = !unlocked && def.hidden ? "Keep poking around…" : def.desc;
+      return `
+      <li class="tr-row ${unlocked ? "got" : "locked"}" style="--d:${0.06 + i * 0.035}s">
+        <span class="tr-badge">${icon}</span>
+        <div class="tr-body"><h3 class="tr-name">${title}</h3><p class="tr-desc">${desc}</p></div>
+        ${unlocked ? '<span class="tr-tick" aria-hidden="true">✓</span>' : ""}
+      </li>`;
+    })
+    .join("");
+  return (
+    panelHead("Trophies", "Trophy Shelf", "Everything you've poked, played, and petted in Ryan's place.") +
+    `<dl class="tr-stats">${stats}</dl>
+     <div class="tr-count">${got}/${all.length} unlocked</div>
+     <ol class="tr-list">${items}</ol>`
+  );
+}
+
+const RENDER: Record<PanelKey, () => string> = { about: aboutHTML, experience: experienceHTML, projects: projectsHTML, contact: contactHTML, trophies: trophiesHTML };
+// The trophies panel has no Content entry, so kickers live here, not on C.
+const PANEL_KICKER: Record<PanelKey, string> = { about: "About", experience: "Experience", projects: "Projects", contact: "Contact", trophies: "Trophies" };
 let panelHideTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function openPanel(kind: PanelKey): void {
@@ -121,7 +186,7 @@ export function openPanel(kind: PanelKey): void {
   panelInner.innerHTML = render();
   panelInner.scrollTop = 0;
   panel.setAttribute("aria-hidden", "false");
-  panel.setAttribute("aria-label", C[kind]?.kicker || "Section");
+  panel.setAttribute("aria-label", PANEL_KICKER[kind] || "Section");
   panel.classList.remove("hidden");
   scrim.classList.remove("hidden");
   requestAnimationFrame(() => {
@@ -225,7 +290,7 @@ export function init(g: GameApi): void {
         setMenu(!header.classList.contains("nav-open"));
         return;
       }
-      if (k === "about" || k === "experience" || k === "projects" || k === "contact") {
+      if (k === "about" || k === "experience" || k === "projects" || k === "contact" || k === "trophies") {
         openPanel(k);
         setMenu(false);
       } else if (k === "map") {

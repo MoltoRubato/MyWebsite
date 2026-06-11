@@ -5,6 +5,7 @@
    ============================================================ */
 import { drawPortraitFrame } from "../sprites";
 import { pick } from "../core/util";
+import * as P from "../progress";
 import { openOverlay, closeOverlay, isOverlayOpen, overlayInner, startLoop, type LoopHandle } from "./base";
 
 interface OpenOpts {
@@ -94,6 +95,11 @@ const LINES = {
   win: ["GG. The table remembers who built it.", "Rematch? I'm magnanimous in victory.", "Don't feel bad. I'm literally made of angles."],
   lose: ["...okay. That was genuinely good. Respect.", "You beat me. I'm telling Ryan to nerf you.", "Fine! Take the win. I'll be over here recalculating."],
   idle: ["Take your time. The felt's not going anywhere.", "Line it up. I can wait all day, I don't blink.", "You good? The balls aren't moving on their own.", "Ryan watches these, you know. No pressure."],
+  trickIntro: ["Trick shots? The owner set these up, then made me practice the failures.", "Eight shots. Three tries each. The felt remembers everything."],
+  trickPass: ["Clean. Annoyingly clean.", "Okay, that worked. Don't let it go to your head.", "The pocket accepts your offering."],
+  trickPerfect: ["Three stars. Fine. FINE.", "First try?! I'm checking the replay for wires."],
+  trickFail: ["That's a zero. The balls reset, the shame lingers.", "Washout. Even the cue ball looked away."],
+  trickDone: ["Gauntlet's done. The table will be talking about this either way.", "That's the lot. Want the owner's scores? No you don't. They're embarrassing."],
 };
 
 /* ---------------- state ---------------- */
@@ -148,6 +154,65 @@ let cnv: HTMLCanvasElement | null = null;
 // per-shot bookkeeping
 let shotPotted: number[] = [], shotFirstHit: number | null = null, shotCueScratch = false, shotRail = false;
 let groupClearedAtStart: { you: boolean; drod: boolean } = { you: false, drod: false };
+// trick-shot extra: which balls touched a rail this shot (for bank objectives)
+let ballRail: Record<number, boolean> = {};
+
+/* ---------------- trick-shot gauntlet ---------------- */
+type Mode = "8ball" | "trick";
+let mode: Mode = "8ball";
+const TRICK_LS_KEY = "rw_pool_trick";
+interface TrickLayout {
+  name: string;
+  obj: string;
+  cue: Vec2;
+  balls: { id: number; x: number; y: number }[];
+  targets: number[]; // potting anything else fails the attempt
+  check(): boolean;
+}
+const potted = (id: number): boolean => shotPotted.includes(id);
+const sunkAt = (id: number, px: number, py: number): boolean => {
+  const b = balls.find((x) => x.id === id);
+  return !!b && b.out && b.px === px && b.py === py;
+};
+const TRICKS: TrickLayout[] = [
+  // Each stage is a single ball with one job: sink it. The objective never asks
+  // for anything but a clean pot — the variety lives in the cue/ball geometry,
+  // not in the brief. Across the eight, the layout walks through every kind of
+  // arrangement (a straight pot, two balls level for a horizontal shot, a long
+  // diagonal, cuts to either side, the two side pockets) and visits all six
+  // pockets so no two shots feel the same. Every cue/ball geometry was found
+  // with an offline port of THIS physics engine — each shot is provably
+  // makeable with a comfortable margin, best aim within ~3deg of straight at
+  // the ball, so the aim guide makes them findable.
+  { name: "Straight in", obj: "Sink the ball in the bottom-right corner.", cue: { x: 180, y: 120 }, balls: [{ id: 1, x: 540, y: 230 }], targets: [1], check: () => sunkAt(1, railR, railB) },
+  { name: "Side pocket", obj: "Sink the ball in the bottom side pocket.", cue: { x: 300, y: 90 }, balls: [{ id: 1, x: 340, y: 200 }], targets: [1], check: () => sunkAt(1, midX, railB) },
+  { name: "The long one", obj: "Sink the ball in the top-right corner.", cue: { x: 200, y: 260 }, balls: [{ id: 1, x: 500, y: 140 }], targets: [1], check: () => sunkAt(1, railR, railT) },
+  { name: "Cut to the left", obj: "Sink the ball in the bottom-left corner.", cue: { x: 360, y: 150 }, balls: [{ id: 1, x: 210, y: 250 }], targets: [1], check: () => sunkAt(1, railL, railB) },
+  { name: "The other side", obj: "Sink the ball in the top side pocket.", cue: { x: 200, y: 250 }, balls: [{ id: 1, x: 320, y: 120 }], targets: [1], check: () => sunkAt(1, midX, railT) },
+  { name: "The top corner", obj: "Sink the ball in the top-left corner.", cue: { x: 360, y: 230 }, balls: [{ id: 1, x: 210, y: 130 }], targets: [1], check: () => sunkAt(1, railL, railT) },
+  { name: "Dead level", obj: "Sink the ball in the bottom-right corner.", cue: { x: 300, y: 228 }, balls: [{ id: 1, x: 460, y: 228 }], targets: [1], check: () => sunkAt(1, railR, railB) },
+  { name: "The closer", obj: "Sink the ball in the top-right corner.", cue: { x: 330, y: 300 }, balls: [{ id: 1, x: 470, y: 150 }], targets: [1], check: () => sunkAt(1, railR, railT) },
+];
+const trick = { li: 0, attempt: 1, stars: [0, 0, 0, 0, 0, 0, 0, 0] };
+function loadTrickStars(): void {
+  try {
+    const raw = localStorage.getItem(TRICK_LS_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw) as number[];
+      if (Array.isArray(arr) && arr.length === 8 && arr.every((n) => typeof n === "number")) for (let i = 0; i < 8; i++) trick.stars[i] = Math.max(0, Math.min(3, arr[i]));
+    }
+  } catch {
+    /* corrupted */
+  }
+}
+function saveTrickStars(): void {
+  try {
+    localStorage.setItem(TRICK_LS_KEY, JSON.stringify(trick.stars));
+  } catch {
+    /* private mode */
+  }
+  P.record("trickshotStars", trick.stars.reduce((a, b) => a + b, 0));
+}
 
 // portrait / bubble
 let portT = 0, talkUntil = 0, bubble = "", thinking = false, lastIdle = 0;
@@ -244,7 +309,10 @@ export function open(opts?: OpenOpts): void {
   thinking = false;
   over = false;
   winner = null;
-  showDiff(true);
+  balls = [];
+  loadTrickStars();
+  showScreen("mode");
+  setStatus("Pick a game");
   acc = 0;
   loop = startLoop(step);
 }
@@ -295,29 +363,42 @@ function shell(): string {
           <div class="drod-meta"><div class="drod-name">DROD</div><div class="drod-sub" id="plLevel">rack &amp; ruin</div></div>
         </div>
         <div class="drod-bubble" id="plBubble"></div>
-        <div class="chess-diff" id="plDiff">
+        <div class="chess-diff" id="plMode">
+          <div class="diff-title">What's the game?</div>
+          <button class="diff-btn" id="plMode8"><b>8-Ball vs Drod</b><small>the classic — solids, stripes, trash talk</small></button>
+          <button class="diff-btn" id="plModeTrick"><b>Trick Shots</b><small>8 set-piece puzzles · 3 tries · ★★★</small></button>
+        </div>
+        <div class="chess-diff hidden" id="plDiff">
           <div class="diff-title">Pick your poison</div>
           ${Object.entries(LEVELS).map(([k, v]) => `<button class="diff-btn" data-lv="${k}"><b>${v.name}</b><small>${v.label}</small></button>`).join("")}
         </div>
         <div class="pool-play hidden" id="plPlay">
-          <div class="pl-groups">
+          <div class="pl-groups" id="plGroups">
             <div class="pl-side" id="plSideYou"><span class="pl-who">YOU</span><div class="pl-balls" id="plRackYou"></div></div>
             <div class="pl-turn" id="plTurn">●</div>
             <div class="pl-side" id="plSideDrod"><span class="pl-who">DROD</span><div class="pl-balls" id="plRackDrod"></div></div>
           </div>
+          <div class="pl-trickrack hidden" id="plTrickRack"></div>
           <div class="pl-power"><span class="pl-power-lbl">POWER</span><div class="pl-power-bar"><div class="pl-power-fill" id="plPowerFill"></div></div></div>
           <div class="ctl-btns">
-            <button class="ctl-btn" id="plNew">↺ New game</button>
+            <button class="ctl-btn" id="plNew">↺ Menu</button>
             <button class="ctl-btn ghost" id="plResign">Resign</button>
           </div>
         </div>
-        <div class="pool-tip" id="plTip">Drag back from the cue ball to aim and load power · release to shoot</div>
+        <div class="pool-tip" id="plTip">Drag back from the cue ball to aim and load power · release to shoot · or ←/→ aim, ↑/↓ power, space shoots</div>
       </div>
     </div>`;
 }
 
+let kbPower = 0; // keyboard-aim power (0..1)
 function wire(): void {
   (document.getElementById("plClose") as HTMLElement).onclick = close;
+  (document.getElementById("plMode8") as HTMLElement).onclick = () => {
+    mode = "8ball";
+    showScreen("diff");
+    setStatus("Choose a difficulty");
+  };
+  (document.getElementById("plModeTrick") as HTMLElement).onclick = () => startTrick();
   overlayInner().querySelectorAll<HTMLElement>("#plDiff .diff-btn").forEach((b) => {
     b.onclick = () => {
       level = LEVELS[b.getAttribute("data-lv")!];
@@ -325,7 +406,34 @@ function wire(): void {
     };
   });
   poolKey = (e: KeyboardEvent): void => {
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") {
+      close();
+      return;
+    }
+    // keyboard aiming — both modes, only while it's your shot
+    if (phase !== "aim" || turn !== "you" || over || cueGlide) return;
+    const k = e.key;
+    const rot = e.shiftKey ? 0.05 : 0.012;
+    if (k === "ArrowLeft" || k === "ArrowRight") {
+      e.preventDefault();
+      aimAngle += (k === "ArrowLeft" ? -1 : 1) * rot;
+    } else if (k === "ArrowUp" || k === "ArrowDown") {
+      e.preventDefault();
+      kbPower = Math.max(0, Math.min(1, kbPower + (k === "ArrowUp" ? 0.06 : -0.06)));
+      power = kbPower;
+      const pf = document.getElementById("plPowerFill");
+      if (pf) pf.style.width = kbPower * 100 + "%";
+    } else if (k === " " || e.code === "Space") {
+      e.preventDefault();
+      if (kbPower > 0.04) {
+        const pw = kbPower;
+        kbPower = 0;
+        power = 0;
+        const pf = document.getElementById("plPowerFill");
+        if (pf) pf.style.width = "0%";
+        shoot(aimAngle, pw);
+      }
+    }
   };
   window.addEventListener("keydown", poolKey);
   // pointer (aim + cue placement)
@@ -333,11 +441,20 @@ function wire(): void {
   cnv!.addEventListener("pointermove", onMove);
   window.addEventListener("pointerup", onUp);
 }
-function showDiff(show: boolean): void {
-  document.getElementById("plDiff")!.classList.toggle("hidden", !show);
-  document.getElementById("plPlay")!.classList.toggle("hidden", show);
+/** Which right-panel screen is visible: mode select, difficulty, or play. */
+function showScreen(which: "mode" | "diff" | "play"): void {
+  document.getElementById("plMode")!.classList.toggle("hidden", which !== "mode");
+  document.getElementById("plDiff")!.classList.toggle("hidden", which !== "diff");
+  document.getElementById("plPlay")!.classList.toggle("hidden", which !== "play");
   const bub = document.getElementById("plBubble");
-  if (bub) bub.classList.toggle("no-slot", show);
+  if (bub) bub.classList.toggle("no-slot", which !== "play");
+}
+function showDiff(show: boolean): void {
+  showScreen(show ? "diff" : "play");
+  // 8-ball vs trick chrome inside the play panel
+  document.getElementById("plGroups")!.classList.toggle("hidden", mode === "trick");
+  document.getElementById("plTrickRack")!.classList.toggle("hidden", mode !== "trick");
+  (document.getElementById("plResign") as HTMLElement).style.display = mode === "trick" ? "none" : "";
 }
 
 /* ====================== game setup ====================== */
@@ -379,13 +496,165 @@ function startGame(): void {
   updateTurn();
   (document.getElementById("plNew") as HTMLElement).onclick = () => {
     phase = "diff";
-    showDiff(true);
-    setStatus("Choose a difficulty");
+    hideOver();
+    showScreen("mode");
+    setStatus("Pick a game");
     say(pick(LINES.intro.normal), 2600);
   };
   (document.getElementById("plResign") as HTMLElement).onclick = () => {
     if (!over) finish("drod", "You resigned. Drod gloats.");
   };
+}
+
+/* ====================== trick-shot mode ====================== */
+function startTrick(): void {
+  mode = "trick";
+  level = LEVELS.normal;
+  document.getElementById("plLevel")!.textContent = "Trick Shots — ★ hunting";
+  groups = { you: null, drod: null };
+  openTable = false;
+  isBreak = false;
+  turn = "you";
+  over = false;
+  winner = null;
+  ballInHand = false;
+  aiming = false;
+  power = 0;
+  kbPower = 0;
+  cueGlide = null;
+  trick.li = 0;
+  trick.attempt = 1;
+  showDiff(false);
+  hideOver();
+  say(pick(LINES.trickIntro), 3400);
+  loadTrick(0);
+  (document.getElementById("plNew") as HTMLElement).onclick = () => {
+    phase = "diff";
+    hideOver();
+    showScreen("mode");
+    setStatus("Pick a game");
+  };
+}
+
+function loadTrick(i: number): void {
+  const L = TRICKS[i];
+  trick.li = i;
+  balls = [{ id: 0, x: L.cue.x, y: L.cue.y, vx: 0, vy: 0, out: false }, ...L.balls.map((b) => ({ id: b.id, x: b.x, y: b.y, vx: 0, vy: 0, out: false }))];
+  phase = "aim";
+  turn = "you";
+  ballInHand = false;
+  aiming = false;
+  power = 0;
+  kbPower = 0;
+  // sensible default for keyboard aimers: point at the first layout ball
+  aimAngle = Math.atan2(L.balls[0].y - L.cue.y, L.balls[0].x - L.cue.x);
+  setStatus(`Shot ${i + 1}/8 · ${L.obj} · Attempt ${trick.attempt}/3`);
+  trickRackUI();
+}
+
+function trickRackUI(): void {
+  const rack = document.getElementById("plTrickRack");
+  if (!rack) return;
+  rack.innerHTML = "";
+  TRICKS.forEach((t, i) => {
+    const chip = document.createElement("button");
+    chip.className = i === trick.li ? "pl-tk active" : "pl-tk";
+    chip.title = t.name;
+    chip.innerHTML = `${i + 1}<i>${"★".repeat(trick.stars[i])}${"☆".repeat(3 - trick.stars[i])}</i>`;
+    // free level select — jump to any shot whenever balls aren't rolling
+    chip.onclick = () => {
+      if (phase === "shooting" || i === trick.li) return;
+      hideOver();
+      trick.attempt = 1;
+      loadTrick(i);
+    };
+    rack.appendChild(chip);
+  });
+}
+
+function trickResolve(): void {
+  const L = TRICKS[trick.li];
+  const strayPot = shotPotted.some((id) => !L.targets.includes(id));
+  const ok = !shotCueScratch && !strayPot && L.check();
+  phase = "aim";
+  if (ok) {
+    const earned = Math.max(1, 4 - trick.attempt);
+    trick.stars[trick.li] = Math.max(trick.stars[trick.li], earned);
+    saveTrickStars();
+    say(pick(earned === 3 ? LINES.trickPerfect : LINES.trickPass), 2600);
+    trickCard(true, earned);
+  } else if (trick.attempt >= 3) {
+    say(pick(LINES.trickFail), 2600);
+    saveTrickStars();
+    trickCard(false, 0);
+  } else {
+    trick.attempt++;
+    // explain WHY — especially when the right ball dropped but broke the
+    // shot's condition (no cushion first, wrong pocket, cue touched a rail...)
+    const targetDropped = L.targets.some((id) => potted(id));
+    const why = shotCueScratch
+      ? "Scratch!"
+      : strayPot
+        ? "Wrong ball dropped!"
+        : targetDropped
+          ? "It dropped — but not the way the brief asks. Read it again."
+          : "Missed.";
+    say(why + " Reset. Again.", 2600);
+    loadTrick(trick.li); // same layout, fresh balls
+  }
+  trickRackUI();
+}
+
+function trickCard(success: boolean, stars: number): void {
+  phase = "over"; // input off while the card is up
+  const last = trick.li >= TRICKS.length - 1;
+  const o = document.getElementById("plOver");
+  if (!o) return;
+  o.className = "pl-over";
+  const total = trick.stars.reduce((a, b) => a + b, 0);
+  o.innerHTML = last
+    ? `<div class="pl-over-card ${total >= 12 ? "win" : "lose"}">
+        <div class="pl-over-title">${"★".repeat(Math.min(3, Math.round(total / 8)))} ${total}/24</div>
+        <div class="pl-over-sub">${TRICKS.map((_, i) => `${i + 1}·${trick.stars[i]}★`).join("  ")}</div>
+        <button class="ctl-btn" id="plTkNext">↺ Run it back</button>
+        <button class="ctl-btn ghost" id="plTkMenu">Menu</button>
+      </div>`
+    : `<div class="pl-over-card ${success ? "win" : "lose"}">
+        <div class="pl-over-title">${success ? "★".repeat(stars) + "☆".repeat(3 - stars) : "WASHOUT"}</div>
+        <div class="pl-over-sub">${TRICKS[trick.li].name} — ${success ? `${stars} star${stars > 1 ? "s" : ""}` : "zero stars, full reset"}</div>
+        <button class="ctl-btn" id="plTkNext">▶ ${last ? "Done" : "Next shot"}</button>
+        ${success ? "" : `<button class="ctl-btn ghost" id="plTkRetry">↻ Retry shot</button>`}
+      </div>`;
+  requestAnimationFrame(() => o.classList.add("show"));
+  const next = document.getElementById("plTkNext") as HTMLElement | null;
+  if (next)
+    next.onclick = () => {
+      hideOver();
+      if (last) {
+        say(pick(LINES.trickDone), 3200);
+        trick.li = 0;
+        trick.attempt = 1;
+        loadTrick(0);
+      } else {
+        trick.attempt = 1;
+        loadTrick(trick.li + 1);
+      }
+    };
+  const retry = document.getElementById("plTkRetry") as HTMLElement | null;
+  if (retry)
+    retry.onclick = () => {
+      hideOver();
+      trick.attempt = 1;
+      loadTrick(trick.li);
+    };
+  const menu = document.getElementById("plTkMenu") as HTMLElement | null;
+  if (menu)
+    menu.onclick = () => {
+      hideOver();
+      phase = "diff";
+      showScreen("mode");
+      setStatus("Pick a game");
+    };
 }
 
 /* ====================== input: aim + place ====================== */
@@ -488,6 +757,7 @@ function shoot(angle: number, pw: number): void {
   shotFirstHit = null;
   shotCueScratch = false;
   shotRail = false;
+  ballRail = {};
   groupClearedAtStart = { you: isGroupCleared("you"), drod: isGroupCleared("drod") };
   phase = "shooting";
   thinking = false;
@@ -553,6 +823,12 @@ function physicsStep(): void {
   }
 }
 
+// rail bookkeeping shared by cushions() and jaws() (trick-shot objectives)
+function markRail(b: Ball): void {
+  shotRail = true;
+  ballRail[b.id] = true;
+}
+
 function cushions(b: Ball): void {
   if (b.out) return;
   const sp = Math.hypot(b.vx, b.vy);
@@ -560,13 +836,13 @@ function cushions(b: Ball): void {
     b.x = railL + R;
     b.vx = -b.vx * CUSH;
     b.vy *= CUSH;
-    shotRail = true;
+    markRail(b);
     sfxCushion(sp);
   } else if (b.vx > 0 && b.x + R > railR && b.y > railT + MC && b.y < railB - MC) {
     b.x = railR - R;
     b.vx = -b.vx * CUSH;
     b.vy *= CUSH;
-    shotRail = true;
+    markRail(b);
     sfxCushion(sp);
   }
   const onTopSpan = (b.x > railL + MC && b.x < midX - MS) || (b.x > midX + MS && b.x < railR - MC);
@@ -574,13 +850,13 @@ function cushions(b: Ball): void {
     b.y = railT + R;
     b.vy = -b.vy * CUSH;
     b.vx *= CUSH;
-    shotRail = true;
+    markRail(b);
     sfxCushion(sp);
   } else if (b.vy > 0 && b.y + R > railB && onTopSpan) {
     b.y = railB - R;
     b.vy = -b.vy * CUSH;
     b.vx *= CUSH;
-    shotRail = true;
+    markRail(b);
     sfxCushion(sp);
   }
 }
@@ -598,7 +874,7 @@ function jaws(b: Ball): void {
     if (vn < 0) {
       b.vx -= (1 + CUSH) * vn * nx;
       b.vy -= (1 + CUSH) * vn * ny;
-      shotRail = true;
+      markRail(b);
       sfxCushion(Math.hypot(b.vx, b.vy));
     }
   }
@@ -813,6 +1089,7 @@ function finish(who: Side, msg: string): void {
   setStatus(msg);
   say(who === "you" ? pick(LINES.lose) : pick(LINES.win), 5200);
   showOver(who === "you", msg);
+  P.inc(who === "you" ? "poolWins" : "poolLosses");
 }
 
 /* ====================== Drod AI ====================== */
@@ -1335,7 +1612,8 @@ function step(dt: number): void {
       }
       if (allStopped()) {
         acc = 0;
-        resolveShot();
+        if (mode === "trick") trickResolve();
+        else resolveShot();
       }
     }
     // smooth cue-ball reposition (Drod taking ball in hand)

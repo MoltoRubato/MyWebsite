@@ -71,67 +71,96 @@ export const CONTENT: Content = {
   characters: {
     Drod: {
       name: "Drod", room: "game", color: "#caa23a",
-      opens: "projects", openLabel: "✦ See the experiments",
-      actLabel: "♟ Play a game", noLabel: "Maybe later",
+      opens: "projects", openLabel: "See the experiments",
+      actLabel: "Play a game", noLabel: "Maybe later",
       lines: [
         "Ah, another brave soul sent here to be 'humbled.' Apparently that's my entire purpose.",
         "Fun fact: I'm not real. Some guy coded me up over a weekend. I try not to dwell on it.",
         "Anyway. Face me at the board, or go gawk at his other little experiments. I'm exhibit A, by the way.",
       ],
+      // Session memory — first match wins, shown once per visit.
+      reactions: [
+        { flag: "pokerBigWin", lines: ["Word from the card room is you went on a HEATER. The chips are fake, but the dealer's tears? Real."] },
+        { flag: "pokerBusted", lines: ["Heard you went bust at the card table. Hey, house money. The house is still laughing though."] },
+        { flag: "pressedButton", lines: ["You pressed the big red button, didn't you. Don't bother denying it — I read the logs. Every. Single. Visitor."] },
+        { when: (c) => c.num("chessWins") > 0, lines: ["Oh. You're back. About last game — I LET you win. That's my story, Ryan's already heard it, and we're both pretending to believe it."] },
+        { when: (c) => c.num("chessLosses") > 0, lines: ["Back for revenge? Adorable. Last time ended in checkmate; this time let's aim for 'respectably close.'"] },
+      ],
     },
     Alex: {
       name: "Alex", room: "music", color: "#5fb0c9",
-      actLabel: "♫ Tap out a beat", noLabel: "Just vibing",
+      actLabel: "Tap out a beat", noLabel: "Just vibing",
       lines: [
         "Ayy, you found the studio! Watch the cables, a couple of 'em bite.",
         "The owner? Oh, he basically haunts this room. Pops in for a 'quick break,' leaves at 4am. Every time.",
         "Anyway, enough about the ghost who pays rent. Hop on the booth and let's hear you.",
       ],
+      reactions: [
+        { when: (c) => c.num("pianoNotes") >= 50, lines: ["I heard you on the piano earlier. {pianoNotes} notes! The owner plays it nightly and calls it 'lo-fi research.' Yours was better. Don't tell him."] },
+      ],
     },
     DJ: {
       name: "DJ", room: "music", color: "#b07acb",
-      actLabel: "♪ Hop on the pad", noLabel: "Just vibing",
+      actLabel: "Hop on the pad", noLabel: "Just vibing",
       lines: [
         "Shh. Oh, false alarm, you're cool. Thought you were here about the noise complaint.",
         "Every track in this place got hand-picked by you-know-who. Man has VERY strong opinions about hi-hats.",
         "Enough chitchat. Get on the decks and cook something. I totally won't judge. (I'm judging.)",
       ],
+      reactions: [
+        { when: (c) => c.trackName !== null, lines: ["Ohhh, '{track}'? Good ears. The owner claims he 'curated' that one. He found it at 3am and got emotional, but sure — curated."] },
+        { when: (c) => c.num("beatsDownloaded") > 0, lines: ["Wait, you DOWNLOADED your beat? Respect. The owner's never shipped one of his. It's 'in post.' It's been 'in post' for a year."] },
+      ],
     },
     Bob: {
       name: "Bob", room: "lounge", color: "#d98a5a",
-      opens: "experience", openLabel: "☰ Show me the rundown", noLabel: "Nah, just resting",
+      opens: "experience", openLabel: "Show me the rundown", noLabel: "Nah, just resting",
       lines: [
         "Sit, sit. This couch has held fancier people than me, but it'll cope.",
         "Asking about the owner, huh? I've watched a lotta folks pass through this lounge.",
         "That Ryan's worked more places than I've taken naps, and buddy, I nap competitively. Want the rundown?",
       ],
+      reactions: [
+        { when: (c) => c.has("room_gym") && c.has("room_game") && c.has("room_music"), lines: ["Full lap of the place already? Most folks nap on this couch first. You hustle harder than the owner — don't tell him I said that."] },
+      ],
     },
     Dino: {
       name: "Dino", room: "lounge", color: "#69b06a",
-      opens: "about", openLabel: "▤ Show me his file", noLabel: "I'll keep snooping",
+      opens: "about", openLabel: "Show me his file", noLabel: "I'll keep snooping",
       lines: [
         "Oh! A real-life person. We mostly get pigeons in here, so honestly this is big.",
         "Word is some guy named 'Ryan' owns this whole place. Never seen him. Little bit sus, if you ask me.",
         "I'm nosy though, so I looked him up. Wanna see what kind of person builds a dinosaur his own lounge?",
       ],
+      reactions: [
+        { flag: "guestbookSigned", lines: ["You signed the guestbook!! I read it every night before bed. ...Don't make it weird that I just told you that."] },
+      ],
     },
     Girl: {
       name: "Amelia", room: "gym", color: "#e58aa6",
-      opens: "contact", openLabel: "✆ Grab his contact", noLabel: "Just stretching",
+      opens: "contact", openLabel: "Grab his contact",
+      actLabel: "Re-rack the weights", noLabel: "Just stretching",
       lines: [
         "Spotter's here! Drop the bar on your face and I'll gasp real convincing-like.",
         "Lemme guess: you're after the guy whose name's plastered all over this building?",
         "I'm not his secretary, but his contact's just sorta lying around over here. Don't make it weird.",
       ],
+      reactions: [
+        { flag: "rackPar", lines: ["Minimum-move re-rack. I told Gojo. He did the 'hm' thing. That's his highest honor."] },
+        { when: (c) => c.has("pet_Mimi") && c.has("pet_Batman"), lines: ["Heard you've been petting everything that moves in the lounge. Mimi rates you. Batman is 'reserving judgment,' which is cat for obsessed."] },
+      ],
     },
     Gojo: {
       name: "Gojo", room: "gym", color: "#7aa0e5",
-      opens: "projects", openLabel: "◆ Show me his builds",
-      actLabel: "◉ Hit the bag", noLabel: "Just stretching",
+      opens: "projects", openLabel: "Show me his builds", openIcon: "hammer",
+      actLabel: "Hit the bag", noLabel: "Just stretching",
       lines: [
         "Throughout heaven and earth, I alone am the strongest… spotter in this gym, anyway.",
         "You wondering if the owner actually does stuff, or just hires cool guys to stand around? Valid question.",
         "So pick: throw hands with the bag, or I pull up the pile of things he's built. You leave impressed regardless.",
+      ],
+      reactions: [
+        { when: (c) => c.num("gymBest") > 0, lines: ["{gymBest} points on the bag. Not bad. For reference, the owner once pulled a muscle reaching for his mouse, so the bar here is underground."] },
       ],
     },
   },

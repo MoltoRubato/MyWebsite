@@ -2,7 +2,7 @@
    GAME — main loop, rendering, input, transitions, interactions.
    ============================================================ */
 import { TS } from "./core/constants";
-import type { Camera, GameApi, GameObject, NPC, Pet, Point, Room, RoomKey } from "./core/types";
+import type { Camera, GameApi, GameObject, NPC, Pet, Point, ReactionCtx, Room, RoomKey } from "./core/types";
 import { ROOMS } from "./world";
 import * as A from "./assets";
 import * as S from "./sprites";
@@ -12,10 +12,15 @@ import * as HITBOXES from "./hitboxes";
 import * as DIALOGUE from "./dialogue";
 import * as HEADER from "./header";
 import * as EDITOR from "./editor";
+import * as P from "./progress";
 import * as CHESS from "./activities/chess";
 import * as POOL from "./activities/pool";
 import * as MUSIC from "./activities/music";
 import * as WORKOUT from "./activities/workout";
+import * as PIANO from "./activities/piano";
+import * as POKER from "./activities/poker";
+import * as GUESTBOOK from "./activities/guestbook";
+import * as RACK from "./activities/rack";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
@@ -53,6 +58,12 @@ let tvAnimT = 0; // channel playback clock
 let tvLabelT = 0; // seconds left to flash the channel name after a switch
 let showHitboxes = /[?&]dev=1\b/.test(location.search); // DEV overlay (?dev=1)
 let intro: Intro | null = null; // opening cinematic
+const consumedReactions = new Set<string>(); // session-memory openers shown this page load
+// DO NOT PRESS button — camera shake + press feedback timers (seconds left)
+const shake = { t: 0, dur: 0, amp: 0 };
+let btnCooldown = 0;
+let btnPressT = 0;
+let worldT = 0; // ambient clock for in-world object animation (button glow)
 
 interface Intro {
   sx: number;
@@ -184,6 +195,10 @@ function anyOverlayOpen(): boolean {
     MUSIC.isOpen() ||
     POOL.isOpen() ||
     WORKOUT.isOpen() ||
+    PIANO.isOpen() ||
+    POKER.isOpen() ||
+    GUESTBOOK.isOpen() ||
+    RACK.isOpen() ||
     !document.getElementById("panel")!.classList.contains("hidden") ||
     !document.getElementById("mapModal")!.classList.contains("hidden")
   );
@@ -211,11 +226,42 @@ function interact(): void {
   const near = findNear();
   if (!near) return;
   if (near.kind === "npc") talkTo(near.ref);
-  else if (near.kind === "pet") EN.petStart(near.ref);
+  else if (near.kind === "pet") {
+    // count only pets that actually start (petStart ignores non-idle pets)
+    if (near.ref.state === "idle") {
+      P.flag(`pet_${near.ref.name}`);
+      P.inc("petsGiven");
+    }
+    EN.petStart(near.ref);
+  }
   else if (near.ref.type === "music") openJukebox();
   else if (near.ref.type === "pool") openPool();
+  else if (near.ref.type === "poker") openPoker();
+  else if (near.ref.type === "chess") openChess();
+  else if (near.ref.type === "piano") openPiano();
+  else if (near.ref.type === "guestbook") openGuestbook();
+  else if (near.ref.type === "rack") openRack();
   else if (near.ref.type === "tv") cycleTV();
+  else if (near.ref.type === "redbutton") pressRedButton();
 }
+// The big red button. It says not to. People press it. Shake, flicker,
+// klaxon... and then, very deliberately, nothing. Drod remembers, though.
+function pressRedButton(): void {
+  if (btnCooldown > 0) return;
+  btnCooldown = 3;
+  btnPressT = 0.2;
+  shake.t = 0;
+  shake.dur = 0.9;
+  shake.amp = 7;
+  veil.classList.remove("flicker");
+  void veil.offsetWidth; // restart the animation on repeat presses
+  veil.classList.add("flicker");
+  veil.addEventListener("animationend", () => veil.classList.remove("flicker"), { once: true });
+  MUSIC.klaxon(); // respects the header mute
+  P.flag("pressedButton");
+  P.inc("buttonPresses");
+}
+
 // One-button remote: off -> ch1 -> ch2 -> ch3 -> off.
 function cycleTV(): void {
   tvCh = tvCh >= TV_CHANNELS.length - 1 ? -1 : tvCh + 1;
@@ -230,22 +276,44 @@ function talkTo(npc: NPC): void {
   // face the player
   const dx = player.x - npc.x, dy = player.y - npc.y;
   npc.watchDir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : dy < 0 ? "up" : "down";
-  const choices: { label: string; value: string }[] = [];
+  const choices: { label: string; value: string; icon?: string }[] = [];
   const actions: Record<string, () => void> = {};
-  const ACT: Record<string, { def: string; run: () => void }> = {
-    chess: { def: "♟ Play a game", run: openChess },
-    music: { def: "♫ Tap out a beat", run: openBeatpad },
-    workout: { def: "◉ Hit the bag", run: openWorkout },
+  const ACT: Record<string, { def: string; icon: string; run: () => void }> = {
+    chess: { def: "Play a game", icon: "pawn", run: openChess },
+    music: { def: "Tap out a beat", icon: "note", run: openBeatpad },
+    workout: { def: "Hit the bag", icon: "glove", run: openWorkout },
+    rack: { def: "Re-rack the weights", icon: "plates", run: openRack },
   };
+  // pixel icons per header panel (the dialogue strips its old unicode glyphs)
+  const PANEL_ICON: Record<string, string> = { about: "folder", experience: "list", projects: "flask", contact: "phone" };
   if (npc.interact && ACT[npc.interact]) {
-    choices.push({ label: data.actLabel || ACT[npc.interact].def, value: "act" });
+    choices.push({ label: data.actLabel || ACT[npc.interact].def, value: "act", icon: ACT[npc.interact].icon });
     actions.act = ACT[npc.interact].run;
   }
   if (data.opens) {
-    choices.push({ label: data.openLabel || "Show me", value: "open" });
+    choices.push({ label: data.openLabel || "Show me", value: "open", icon: data.openIcon || PANEL_ICON[data.opens] });
     actions.open = () => HEADER.openPanel(data.opens!);
   }
   const opts: Parameters<typeof DIALOGUE.start>[0] = { charKey: npc.key, name: data.name, color: data.color, lines: data.lines.slice() };
+  // Session memory: the first matching unconsumed reaction replaces the
+  // opening line, once per page load. Reactions read progress through ctx
+  // only, so content.ts stays import-free (no ESM cycle with music.ts).
+  const ctx: ReactionCtx = {
+    num: (k) => P.num(k as Parameters<typeof P.num>[0]),
+    has: (f) => P.hasFlag(f as Parameters<typeof P.hasFlag>[0]),
+    trackName: MUSIC.nowPlaying(),
+  };
+  const fmt = (l: string): string =>
+    l.replace(/\{(\w+)\}/g, (_, k: string) => (k === "track" ? (ctx.trackName ?? "the music") : String(ctx.num(k))));
+  const reactions = data.reactions || [];
+  for (let i = 0; i < reactions.length; i++) {
+    const r = reactions[i], id = npc.key + ":" + i;
+    if (consumedReactions.has(id)) continue;
+    if (!(r.flag ? ctx.has(r.flag) : r.when ? r.when(ctx) : false)) continue;
+    consumedReactions.add(id);
+    opts.lines = [...r.lines.map(fmt), ...data.lines.slice(1)];
+    break;
+  }
   if (choices.length) {
     choices.push({ label: data.noLabel || "Maybe later", value: "no" });
     opts.choices = choices;
@@ -276,6 +344,22 @@ function openBeatpad(): void {
 function openWorkout(): void {
   paused = true;
   WORKOUT.open({ onClose: () => (paused = false) });
+}
+function openPiano(): void {
+  paused = true;
+  PIANO.open({ onClose: () => (paused = false) });
+}
+function openPoker(): void {
+  paused = true;
+  POKER.open({ onClose: () => (paused = false) });
+}
+function openGuestbook(): void {
+  paused = true;
+  GUESTBOOK.open({ onClose: () => (paused = false) });
+}
+function openRack(): void {
+  paused = true;
+  RACK.open({ onClose: () => (paused = false) });
 }
 
 function setHitboxes(v: boolean): void {
@@ -357,6 +441,7 @@ function enterRoom(to: RoomKey, fromRoom?: RoomKey): void {
   veil.classList.add("show");
   setTimeout(() => {
     curRoom = to;
+    P.flag(`room_${to}`);
     ensureRoom(to);
     placeAtSpawn(to, fromRoom);
     doorGuard = true;
@@ -490,8 +575,15 @@ interface Drawable {
 function render(): void {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const cam = camera();
+  // red-button camera shake — random jitter that eases out over shake.dur
+  let shx = 0, shy = 0;
+  if (shake.dur > 0 && shake.t < shake.dur) {
+    const k = 1 - shake.t / shake.dur;
+    shx = (Math.random() * 2 - 1) * shake.amp * k * k;
+    shy = (Math.random() * 2 - 1) * shake.amp * k * k;
+  }
   ctx.save();
-  ctx.translate(cam.ox, cam.oy);
+  ctx.translate(cam.ox + shx, cam.oy + shy);
   ctx.scale(cam.s, cam.s);
   ctx.translate(-cam.vx, -cam.vy);
   const img = A.getImage(ROOM_IMG[curRoom]);
@@ -519,6 +611,43 @@ function render(): void {
       },
     }),
   );
+  // The DO NOT PRESS button — a small, subtle thing recessed into the wall
+  // in the corner. No plate or placard: just a little red dome with a faint
+  // breathing glow, the kind of detail that nags at you to press it.
+  (R.objs || []).forEach((o) => {
+    if (o.type !== "redbutton") return;
+    draw.push({
+      y: o.y - 24, // sits on the wall, behind anyone walking past below
+      fn: () => {
+        const bx = o.x, cy = o.y - 26;
+        const pressed = btnPressT > 0;
+        const dy = pressed ? 1 : 0;
+        // recessed socket ring (just darker than the wall — barely there)
+        ctx.beginPath();
+        ctx.arc(bx, cy, 6, 0, 7);
+        ctx.fillStyle = "#2a2420";
+        ctx.fill();
+        // dome — muted rust red, sinks a touch when pressed
+        ctx.beginPath();
+        ctx.arc(bx, cy + dy, 4.4, 0, 7);
+        ctx.fillStyle = "#9c4a3c";
+        ctx.fill();
+        // tiny highlight
+        ctx.beginPath();
+        ctx.arc(bx - 1.3, cy - 1.3 + dy, 1.3, 0, 7);
+        ctx.fillStyle = "#cf8a6e";
+        ctx.fill();
+        // faint breathing glow — a quiet "psst, over here"
+        const glow = pressed ? 0.6 : 0.1 + 0.1 * Math.sin(worldT * 2.2);
+        ctx.beginPath();
+        ctx.arc(bx, cy + dy, 7, 0, 7);
+        ctx.strokeStyle = `rgba(196,110,82,${glow.toFixed(3)})`;
+        ctx.lineWidth = pressed ? 1.8 : 1;
+        ctx.stroke();
+      },
+    });
+  });
+
   // Animated jukebox speaker
   (R.objs || []).forEach((o) => {
     if (o.sprite !== "speaker") return;
@@ -737,7 +866,11 @@ function frame(ts: number): void {
     player.frame = Math.floor(player.animT * (player.moving ? 9 : 3));
     musicAnimT += dt;
     tvAnimT += dt;
+    worldT += dt;
     if (tvLabelT > 0) tvLabelT = Math.max(0, tvLabelT - dt);
+    if (shake.dur > 0) shake.t += dt;
+    if (btnCooldown > 0) btnCooldown = Math.max(0, btnCooldown - dt);
+    if (btnPressT > 0) btnPressT = Math.max(0, btnPressT - dt);
     render();
     DIALOGUE.tick(ts);
   } catch (err) {
@@ -748,6 +881,7 @@ function frame(ts: number): void {
 
 function start(): void {
   ensureRoom("lounge");
+  P.flag("room_lounge");
   placeAtSpawn("lounge");
   startIntro();
   resize();

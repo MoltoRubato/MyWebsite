@@ -8,8 +8,18 @@
 const host = document.getElementById("activity") as HTMLElement;
 const inner = document.getElementById("activityInner") as HTMLElement;
 
+// Pending hide scheduled by closeOverlay(). Tracked so a reopen within the
+// 350ms close window can cancel it — otherwise the stale timer fires and
+// hides/clears the freshly-mounted window, which reads as a window "flashing"
+// away (open, then vanish ~350ms later). Affects every overlay activity.
+let closeTimer: ReturnType<typeof setTimeout> | null = null;
+
 /** Mount `html` into the activity host and play the open transition. */
 export function openOverlay(html: string): void {
+  if (closeTimer !== null) {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+  }
   inner.innerHTML = html;
   host.classList.remove("hidden");
   requestAnimationFrame(() => host.classList.add("in"));
@@ -17,10 +27,12 @@ export function openOverlay(html: string): void {
 
 /** Play the close transition, then hide and clear the host (350ms). */
 export function closeOverlay(): void {
+  if (closeTimer !== null) clearTimeout(closeTimer);
   host.classList.remove("in");
-  setTimeout(() => {
+  closeTimer = setTimeout(() => {
     host.classList.add("hidden");
     inner.innerHTML = "";
+    closeTimer = null;
   }, 350);
 }
 
