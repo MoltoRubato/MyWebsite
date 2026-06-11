@@ -546,7 +546,7 @@ function beatpadShell(): string {
       <div class="mz-padctl">
         <button class="ctl-btn" id="mzPlay">▶ Run</button>
         <button class="ctl-btn ghost" id="mzClear">Clear</button>
-        <button class="ctl-btn ghost" id="mzDl">⬇ Save beat</button>
+        <button class="ctl-btn ghost" id="mzDl">⬇\uFE0E Save beat</button>
         <label class="mz-bpm">BPM <input type="range" id="mzBpm" min="${BPM_MIN}" max="${BPM_MAX}" value="110"></label>
       </div>
     </div>`;
@@ -731,7 +731,7 @@ function startDownload(): void {
   recorder.onstop = () => {
     recorder = null;
     const b = document.getElementById("mzDl") as HTMLButtonElement | null;
-    if (b) b.textContent = "⬇ Save beat";
+    if (b) b.textContent = "⬇\uFE0E Save beat";
     refreshDl();
     if (recCancelled || !chunks.length) return;
     const blob = new Blob(chunks, { type: mime });

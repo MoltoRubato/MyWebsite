@@ -157,15 +157,17 @@
 
 @media(max-width:760px){
   .chess-wrap{flex-direction:column;align-items:center}
-  .chess-right{width:min(426px,90vw)}
+  /* 100% (the wrap's padded content box) — NOT 90vw, which is wider than the
+     padded wrap and shoves the corner ✕ (right:-8px) onto the wood border. */
+  .chess-right{width:min(426px,100%)}
   .mz-cols{grid-template-columns:1fr}
   .jk-tracks{grid-template-columns:1fr;max-height:46vh}
   .jk-head{flex-direction:column;align-items:stretch}
   .jk-stop{align-self:flex-end}
   .wk-wrap{flex-direction:column;align-items:center}
-  .wk-right{width:min(420px,90vw)}
+  .wk-right{width:min(420px,100%)}
   .pool-wrap{flex-direction:column;align-items:center}
-  .pool-right{width:min(540px,92vw)}
+  .pool-right{width:min(540px,100%)}
 }
 
 /* ---- pool (8-ball vs. Drod) ---- */
@@ -221,6 +223,17 @@
 @media (prefers-reduced-motion: reduce){
   .pl-over,.pl-over .pl-over-card,.pl-power-fill,.pl-side{transition:opacity .2s ease}
   .pl-over .pl-over-card{transform:none}
+}
+/* mobile: the table scales down to a short strip, but the result card keeps
+   its intrinsic height — so .pl-frame{overflow:hidden} clips the card's lower
+   buttons. Lift the card's overlay to a full-window modal (fixed escapes the
+   frame clip via #activityInner's transform CB; z-index lifts the dim above
+   the .pool-right controls so nothing pokes through) and centre the card in it.
+   Scoped to overlays holding a card, so poker's "Deal next" strip is untouched. */
+@media(max-width:760px){
+  .pl-over:has(.pl-over-card){position:fixed;inset:0;z-index:20}
+  .pl-over-card{padding:22px 26px;gap:10px;max-height:88vh;overflow-y:auto}
+  .pl-over-title{font-size:28px}
 }
 
 /* ---- workout (combo trainer) ---- */
@@ -278,6 +291,17 @@ body:not(.touch) .wk-dpad{display:none}
   60%{transform:translate(-50%,-50%) rotate(var(--rot,0deg)) scale(1)}
   100%{opacity:0;transform:translate(-50%,-62%) rotate(var(--rot,0deg)) scale(1.05)}
 }
+/* mobile: the only touch control is the d-pad (#wkDpad), so it MUST stay on
+   screen with the combo prompts. Stacked, the full-size bag pushed the d-pad
+   off the bottom (unplayable). Shrink the bag to a viewport-relative cap and
+   float the play-critical bits highest: combo prompts → d-pad, with stats and
+   Gojo's bubble below. Keeps prompts + d-pad both visible down to ~iPhone SE. */
+@media (max-width:760px){
+  #wkBag{max-height:min(180px,24vh);width:auto;height:auto}
+  .wk-right .wk-dpad{order:1}
+  .wk-right .wk-stats{order:2}
+  .wk-right .drod-bubble{order:3}
+}
 
 /* ============================================================
    Mobile fit — keep the game canvases inside the overlay.
@@ -327,6 +351,15 @@ body:not(.touch) .wk-dpad{display:none}
 .mz-padctl .ctl-btn{flex:0 1 auto;min-height:44px;white-space:nowrap;padding:10px 16px}
 .bp-wrap .mz-bpm{margin-left:auto}
 .mz-bpm input{flex:1;min-width:120px;max-width:200px}
+/* mobile: the title shares its row with the DJ portraits, so at 30px
+   "STEP SEQUENCER" can't fit and runs off the panel (and under the ✕).
+   Stack the portraits above a full-width, slightly smaller title so it
+   stays on one line and well clear of the corner button. */
+@media (max-width:760px){
+  .mz-head{flex-direction:column;align-items:flex-start;gap:10px}
+  .bp-wrap .mz-title{min-width:0}
+  .bp-wrap .mz-kick{font-size:24px;letter-spacing:1.5px}
+}
 /* narrow screens: stack the two pads (the overlay scrolls if needed).
    align-items:stretch — flex-start would shrink-wrap widths in column mode */
 @media (max-width:680px){
@@ -348,7 +381,7 @@ body:not(.touch) .wk-dpad{display:none}
 .ctl-btn:disabled{opacity:.45;pointer-events:none}
 .pl-over.pk-next{background:transparent;backdrop-filter:none;pointer-events:none;align-items:end;padding-bottom:14px}
 .pl-over.pk-next .ctl-btn{pointer-events:auto;box-shadow:0 3px 0 #8a5a25,0 8px 22px rgba(0,0,0,.5)}
-@media(max-width:760px){ #pkTable{max-width:100%} .pk-wrap .pool-right{width:min(540px,92vw)} }
+@media(max-width:760px){ #pkTable{max-width:100%} .pk-wrap .pool-right{width:min(540px,100%)} }
 
 /* ---- pool trick-shot rack (8 chips with star meters) ---- */
 .pl-trickrack{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
@@ -389,6 +422,13 @@ body:not(.touch) .wk-dpad{display:none}
 .gb-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .gb-err{min-height:18px;font-size:13px;color:#b5442f;line-height:1.35}
 #gbSubmit{min-height:46px}
+/* mobile: title + Read/Sign can't share a row on a narrow phone — the row
+   overflows and Sign lands under the corner ✕. Stack so the tabs get their
+   own row, clear of the button. */
+@media(max-width:760px){
+  .gb-head{flex-direction:column;align-items:flex-start;gap:11px}
+  .gb-tabs{align-self:flex-start}
+}
 .pl-tk:not(.active):hover{border-color:var(--ui-gold);background:rgba(156,90,37,.12);cursor:pointer}
 
 /* ---- Rack 'em Right (gym plate puzzle) ---- */
