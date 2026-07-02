@@ -6,11 +6,11 @@
 import { CONTENT as C } from "./content";
 import { ROOMS } from "./world";
 import * as P from "./progress";
+import { cheer } from "./fx";
 import type { GameApi, PanelKey, RoomKey } from "./core/types";
 
 const header = document.getElementById("siteHeader") as HTMLElement;
 const panel = document.getElementById("panel") as HTMLElement;
-const panelPlate = document.getElementById("panelPlate") as HTMLElement;
 const panelInner = document.getElementById("panelInner") as HTMLElement;
 const scrim = document.getElementById("panelScrim") as HTMLElement;
 const panelClose = document.getElementById("panelClose") as HTMLElement;
@@ -36,9 +36,11 @@ const ICON: Record<string, string> = {
 
 // Split a (trusted, content.ts-authored) heading into per-letter spans so CSS
 // can stagger them. Screen readers get the plain string via aria-label.
+// Spaces become their own span (white-space:pre) — flex parents like .pj-link
+// drop whitespace-only text nodes, which would glue the words together.
 function lettersHTML(text: string): string {
   return [...text]
-    .map((ch, i) => (ch === " " ? " " : `<span class="ltr" style="--i:${i}">${ch}</span>`))
+    .map((ch, i) => (ch === " " ? `<span class="ltr-sp"> </span>` : `<span class="ltr" style="--i:${i}">${ch}</span>`))
     .join("");
 }
 
@@ -71,10 +73,10 @@ function aboutHTML(): string {
 function experienceHTML(): string {
   const e = C.experience;
   const rows = (e.items || []).map((it, i) => `
-      <li class="xp-row" style="--d:${0.06 + i * 0.05}s">
+      <li class="xp-row" style="--d:${0.06 + i * 0.05}s${it.accent ? `;--pc:${it.accent}` : ""}">
         <span class="xp-logo"><img src="${it.logo}" alt="${it.company} logo" loading="lazy" draggable="false"></span>
         <div class="xp-body">
-          <div class="xp-line"><h3 class="xp-role">${it.role}</h3><span class="xp-period">${it.period}</span></div>
+          <div class="xp-line"><h3 class="xp-role" aria-label="${it.role}">${lettersHTML(it.role)}</h3><span class="xp-period">${it.period}</span></div>
           <div class="xp-company">${it.company}</div>
           <p class="xp-desc">${it.p}</p>
         </div>
@@ -87,13 +89,13 @@ function projectsHTML(): string {
   const ext = 'target="_blank" rel="noopener"';
   const rows = (p.items || []).map((it, i) => {
     const title = it.link
-      ? `<h3 class="pj-title"><a class="pj-link" href="${it.link}" ${ext}>${it.h}<span class="pj-ext" aria-hidden="true">↗</span></a></h3>`
-      : `<h3 class="pj-title">${it.h}</h3>`;
+      ? `<h3 class="pj-title"><a class="pj-link" href="${it.link}" ${ext} aria-label="${it.h}">${lettersHTML(it.h)}<span class="pj-ext" aria-hidden="true">↗</span></a></h3>`
+      : `<h3 class="pj-title" aria-label="${it.h}">${lettersHTML(it.h)}</h3>`;
     const mark = it.logo
       ? `<span class="pj-logo"><img src="${it.logo}" alt="" loading="lazy" draggable="false"></span>`
       : `<span class="pj-logo pj-logo--glyph" aria-hidden="true">${it.h.charAt(0)}</span>`;
     return `
-      <li class="pj-row" style="--d:${0.06 + i * 0.045}s">
+      <li class="pj-row" style="--d:${0.06 + i * 0.045}s${it.accent ? `;--pc:${it.accent}` : ""}">
         <span class="pj-num">${String(i + 1).padStart(2, "0")}</span>
         ${mark}
         <div class="pj-body">${title}<p class="pj-desc">${it.p}</p></div>
@@ -106,12 +108,12 @@ function contactHTML(): string {
   const c = C.contact, o = C.owner;
   const ext = 'target="_blank" rel="noopener"';
   const rows = [
-    { ic: "mail", label: "Email", val: o.email, href: "mailto:" + o.email },
-    { ic: "phone", label: "Phone", val: o.phoneDisplay, href: "tel:" + o.phoneIntl },
-    { ic: "linkedin", label: "LinkedIn", val: "kerui-huang", href: o.linkedin, ext: true },
-    { ic: "instagram", label: "Instagram", val: "@itsryianx", href: o.instagram, ext: true },
+    { ic: "mail", label: "Email", val: o.email, href: "mailto:" + o.email, pc: "#e7a33e" },
+    { ic: "phone", label: "Phone", val: o.phoneDisplay, href: "tel:" + o.phoneIntl, pc: "#69b06a" },
+    { ic: "linkedin", label: "LinkedIn", val: "kerui-huang", href: o.linkedin, ext: true, pc: "#3d7dc4" },
+    { ic: "instagram", label: "Instagram", val: "@itsryianx", href: o.instagram, ext: true, pc: "#d6449b" },
   ].map((r, i) => `
-      <li class="ct-row" style="--d:${0.06 + i * 0.05}s">
+      <li class="ct-row" style="--d:${0.06 + i * 0.05}s;--pc:${r.pc}">
         <a class="ct-link" href="${r.href}" ${r.ext ? ext : ""}>
           <span class="ct-ic">${ICON[r.ic]}</span>
           <span class="ct-text"><span class="ct-label">${r.label}</span><span class="ct-val">${r.val}</span></span>
@@ -136,6 +138,10 @@ const ACH_BADGE: Record<string, string> = {
   "drod-slayer": "crown", "card-shark": "crown", "trick-artist": "star", "combo-machine": "star",
   "good-human": "paw", "resident-dj": "note", "open-mic": "note", "producer": "note",
   "bankrupt": "skull", "humbled": "skull", "warned-you": "skull",
+};
+// per-badge hue for unlocked rows (hover tint, badge color, particles)
+const BADGE_COLOR: Record<string, string> = {
+  trophy: "#d59a37", crown: "#e7a33e", star: "#5fb0c9", paw: "#e58aa6", note: "#b07acb", skull: "#c94f4f",
 };
 
 function trophiesHTML(): string {
@@ -164,11 +170,12 @@ function trophiesHTML(): string {
   const got = all.filter((a) => a.unlocked).length;
   const items = all
     .map(({ def, unlocked }, i) => {
-      const icon = BADGE[ACH_BADGE[def.id] || "trophy"];
+      const kind = ACH_BADGE[def.id] || "trophy";
+      const icon = BADGE[kind];
       const title = !unlocked && def.hidden ? "???" : def.title;
       const desc = !unlocked && def.hidden ? "Keep poking around…" : def.desc;
       return `
-      <li class="tr-row ${unlocked ? "got" : "locked"}" style="--d:${0.06 + i * 0.035}s">
+      <li class="tr-row ${unlocked ? "got" : "locked"}" style="--d:${0.06 + i * 0.035}s;--pc:${BADGE_COLOR[kind]}">
         <span class="tr-badge">${icon}</span>
         <div class="tr-body"><h3 class="tr-name">${title}</h3><p class="tr-desc">${desc}</p></div>
         ${unlocked ? '<span class="tr-tick" aria-hidden="true">✓</span>' : ""}
@@ -203,7 +210,6 @@ export function openPanel(kind: PanelKey): void {
     clearTimeout(panelHideTimer);
     panelHideTimer = null;
   }
-  panelPlate.textContent = PANEL_KICKER[kind] || "";
   panelInner.innerHTML = render();
   panelInner.scrollTop = 0;
   requestAnimationFrame(updatePanelFade);
@@ -215,6 +221,8 @@ export function openPanel(kind: PanelKey): void {
     panel.classList.add("in");
     scrim.classList.add("in");
   });
+  // confetti off the top corners once the card has landed
+  setTimeout(() => cheer(panel.querySelector(".panel-card")!), 250);
   game?.pause(true);
 }
 export function closePanel(): void {

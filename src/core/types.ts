@@ -167,6 +167,7 @@ export interface ExperienceItem {
   logo: string;
   period: string;
   p: string;
+  accent?: string; // per-company hue: drives the row's hover tint, letter wave, and particles
 }
 
 export interface Experience {
@@ -180,6 +181,7 @@ export interface ProjectItem {
   link?: string;
   p: string;
   logo?: string; // square-ish mark shown beside the entry; rows without one get a glyph tile
+  accent?: string; // per-project hue: drives the row's hover tint, letter wave, and particles
 }
 
 export interface Projects {
