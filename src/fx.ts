@@ -9,13 +9,14 @@
 
 const GOLD = "#e7a33e", GOLD_D = "#d59a37", CREAM = "#efe2c2";
 const MAX_LIVE = 170; // hard cap on particles in flight
-const HOVER_COOLDOWN = 320; // ms per element
+const HOVER_COOLDOWN = 650; // ms per element
 
-// anything that should shed sparkles when the pointer wanders over it
+// hover sparkles are reserved for identity elements (titles, rows, nav) —
+// plain prose stays quiet, and the emission is a whisper, not a spray
 const HOVER_SEL = [
-  ".pn-title", ".ab-name", ".pn-lead", ".ab-tagline", ".ab-fact",
+  ".pn-title", ".ab-name",
   ".hd-link", ".hd-logo", ".load-enter",
-  ".pj-row", ".xp-row", ".ct-link", ".pn-tag", ".tr-row.got", ".tr-stat",
+  ".pj-row", ".xp-row", ".ct-link", ".tr-row.got",
   ".ab-photo", ".map-room", ".map-title", ".gb-tab", ".dlg-choice",
 ].join(",");
 const CLICK_SEL = "button,a";
@@ -66,9 +67,9 @@ function sparkle(el: Element): void {
   const r = el.getBoundingClientRect();
   if (!r.width) return;
   const colors = palette(el);
-  const n = 5 + ((Math.random() * 4) | 0);
+  const n = 2 + ((Math.random() * 2) | 0);
   for (let i = 0; i < n; i++) {
-    burst(r.left + Math.random() * r.width, r.top + Math.random() * Math.max(6, r.height * 0.6), [colors[i % colors.length]], 1, 24);
+    burst(r.left + Math.random() * r.width, r.top + Math.random() * Math.max(6, r.height * 0.6), [colors[i % colors.length]], 1, 16);
   }
 }
 
