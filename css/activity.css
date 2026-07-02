@@ -465,3 +465,6 @@ body:not(.touch) .wk-dpad{display:none}
 .rk-done-stars{font-size:34px;letter-spacing:5px;color:var(--ui-gold)}
 .rk-done-sub{font-size:14px;color:var(--ui-ink-soft)}
 .rk-done .ctl-btn{flex:none;min-width:200px}
+
+/* ---- guestbook moderation (appended) ---- */
+.gb-hint{font-size:12px;color:var(--ui-ink-soft);font-style:italic;line-height:1.4;text-align:center}
