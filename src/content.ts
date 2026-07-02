@@ -52,10 +52,10 @@ export const CONTENT: Content = {
     title: "Side Projects",
     lead: "Things I build on my own time, outside of work.",
     items: [
-      { h: "Airtable Clone", link: "https://airtable-clone-ryan.vercel.app/", p: "Airtable clone built with the T3 stack." },
-      { h: "Chessformer Puzzle Solver", link: "https://github.com/MoltoRubato/Chessformer-Puzzle-Solver", p: "AI puzzle solver using optimized search techniques and duplicate-state reduction." },
+      { h: "Airtable Clone", link: "https://airtable-clone-ryan.vercel.app/", logo: "assets/projects/airtable.png", p: "Airtable clone built with the T3 stack." },
+      { h: "Ryloom", link: "https://ryloom-web.vercel.app/", logo: "assets/projects/ryloom.svg", p: "Loom clone — record your screen in the browser or the desktop app, get a shareable link the moment you stop." },
       { h: "Pinochle", link: "https://github.com/MoltoRubato/Pinochle", p: "Desktop card game featuring GUI gameplay and an intelligent computer opponent." },
-      { h: "This Website", link: "https://github.com/MoltoRubato/MyWebsite", p: "The interactive pixel-art world you're exploring right now — built with vanilla JavaScript and an HTML5 canvas." },
+      { h: "This Website", link: "https://github.com/MoltoRubato/MyWebsite", logo: "assets/projects/mywebsite.png", p: "The interactive pixel-art world you're exploring right now — built with vanilla JavaScript and an HTML5 canvas." },
     ],
   },
   contact: {

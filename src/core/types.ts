@@ -179,6 +179,7 @@ export interface ProjectItem {
   h: string;
   link?: string;
   p: string;
+  logo?: string; // square-ish mark shown beside the entry; rows without one get a glyph tile
 }
 
 export interface Projects {
