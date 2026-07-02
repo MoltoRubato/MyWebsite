@@ -163,10 +163,11 @@
 
 /* ===== Experience ===== */
 .xp-list{list-style:none;margin:0;padding:0}
-/* --pc is each item's identity hue (particles, tints, rings); --pc-ink is the
-   same hue pulled toward ink so it stays readable as TEXT on the cream card —
-   bright golds/yellows especially vanish on this background at full strength */
-.xp-row{--pc:#9c5a25;--pc-ink:color-mix(in oklab, var(--pc) 42%, #3a2415);--fx-color:var(--pc);
+/* --pc is each item's identity hue (particles, tints, rings); --pc-ink is what
+   TEXT uses: same hue and chroma, but lightness capped so pale accents (gold,
+   lime) stay legible on the cream card. Dark vivid accents pass through
+   untouched — blue stays blue, purple stays purple, at full strength. */
+.xp-row{--pc:#9c5a25;--pc-ink:oklch(from var(--pc) min(l, 0.58) c h);--fx-color:var(--pc);
   display:flex;gap:16px;padding:18px 10px;margin:0 -10px;border-radius:12px;
   border-top:1px solid rgba(74,53,38,.16);
   animation:pnRise .5s ease both;animation-delay:var(--d);
@@ -194,7 +195,7 @@
 
 /* ===== Projects ===== */
 .pj-list{list-style:none;margin:0;padding:0}
-.pj-row{--pc:#9c5a25;--pc-ink:color-mix(in oklab, var(--pc) 42%, #3a2415);--fx-color:var(--pc);
+.pj-row{--pc:#9c5a25;--pc-ink:oklch(from var(--pc) min(l, 0.58) c h);--fx-color:var(--pc);
   display:flex;gap:18px;padding:17px 10px;margin:0 -10px;border-radius:12px;
   border-top:1px solid rgba(74,53,38,.16);
   animation:pnRise .5s ease both;animation-delay:var(--d);
@@ -229,7 +230,7 @@
 
 /* ===== Contact ===== */
 .ct-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
-.ct-row{--pc:#9c5a25;--pc-ink:color-mix(in oklab, var(--pc) 42%, #3a2415);--fx-color:var(--pc);
+.ct-row{--pc:#9c5a25;--pc-ink:oklch(from var(--pc) min(l, 0.58) c h);--fx-color:var(--pc);
   animation:pnRise .5s ease both;animation-delay:var(--d)}
 .ct-link{display:flex;align-items:center;gap:15px;padding:13px 15px;border-radius:13px;text-decoration:none;
   background:rgba(74,53,38,.06);border:1px solid rgba(74,53,38,.14);
@@ -510,7 +511,7 @@ body.touch #toasts{bottom:150px} /* clear the round action button */
   animation:trFill .7s cubic-bezier(.22,1,.36,1) .35s both}
 @keyframes trFill{from{transform:scaleX(0)}to{transform:scaleX(var(--p,0))}}
 .tr-list{list-style:none;margin:0;padding:0}
-.tr-row{--pc:#d59a37;--pc-ink:color-mix(in oklab, var(--pc) 42%, #3a2415);
+.tr-row{--pc:#d59a37;--pc-ink:oklch(from var(--pc) min(l, 0.58) c h);
   display:flex;align-items:center;gap:14px;padding:12px 10px;margin:0 -10px;border-radius:12px;
   border-top:1px solid rgba(74,53,38,.16);
   animation:pnRise .5s ease both;animation-delay:var(--d);transition:background .2s ease}
