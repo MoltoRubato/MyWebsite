@@ -15,11 +15,11 @@
 /* Close button — a proper wood button INSIDE the panel corner, so it can
    never fall off-screen, and it presses like every other control. */
 .chess-wrap,.mz-wrap,.pool-wrap,.wk-wrap{position:relative}
-.chess-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:10px;z-index:6;
-  display:grid;place-items:center;font-family:'Silkscreen',monospace;font-size:15px;line-height:1;color:var(--ui-ink);
+.chess-x{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:8px;z-index:6;
+  display:grid;place-items:center;font-family:'Silkscreen',monospace;font-size:12px;line-height:1;color:var(--ui-ink);
   background:rgba(90,60,35,.14);border:2px solid var(--ui-frame);box-shadow:0 3px 0 var(--ui-frame-d);
   transition:background .15s,color .15s,transform .12s,box-shadow .12s}
-.chess-x:hover{background:rgba(181,68,47,.85);color:#fff;border-color:#7d2417;box-shadow:0 3px 0 #5e1a10}
+.chess-x:hover{background:rgba(156,90,37,.2);border-color:var(--ui-frame-d);transform:translateY(-1px);box-shadow:0 4px 0 var(--ui-frame-d)}
 .chess-x:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ui-frame-d)}
 /* two-column shells anchor the X to their right column — nudge to the corner */
 .chess-right .chess-x,.pool-right .chess-x,.wk-right .chess-x{top:-8px;right:-8px}

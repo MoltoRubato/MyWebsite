@@ -24,27 +24,31 @@
 #dialogue{position:absolute;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);
   width:min(720px,92vw);z-index:24;opacity:0;transition:opacity .3s ease, transform .35s cubic-bezier(.22,1,.36,1)}
 #dialogue.in{opacity:1;transform:translateX(-50%) translateY(0)}
-.dlg-main{position:relative;min-height:120px;padding:20px 28px 22px 138px;
+.dlg-main{position:relative;min-height:120px;padding:20px 24px 22px 118px;
   background:var(--ui-window-surface);border:5px solid var(--ui-frame);border-radius:18px;
   box-shadow:0 0 0 3px var(--ui-outline),var(--ui-window-inset),0 18px 34px rgba(0,0,0,.5)}
 /* portrait: own square wood frame, neatly inset on the left */
-.dlg-portrait{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:104px;height:104px;
-  background:#b9a079;border:5px solid var(--ui-frame);border-radius:14px;
+.dlg-portrait{position:absolute;left:16px;top:16px;width:88px;height:88px;
+  background:#b9a079;border:4px solid var(--ui-frame);border-radius:12px;
   box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d);
   display:grid;place-items:center;overflow:hidden}
-#dlgPortrait{width:80px;height:80px;image-rendering:pixelated}
-/* name plate: own small wood panel attached top-left */
-.dlg-name{position:absolute;top:-22px;left:18px;padding:5px 18px;
-  font-size:20px;letter-spacing:1px;color:var(--ui-ink);font-weight:600;
-  background:var(--ui-window-surface);border:4px solid var(--ui-frame);border-radius:12px;
+#dlgPortrait{width:64px;height:64px;image-rendering:pixelated}
+/* Keep the nameplate and portrait on one shared edge and width. */
+.dlg-name{position:absolute;top:-18px;left:16px;width:88px;min-height:36px;padding:4px 6px;
+  display:grid;place-items:center;text-align:center;
+  font-size:18px;letter-spacing:1px;color:var(--ui-ink);font-weight:600;
+  background:var(--ui-window-surface);border:4px solid var(--ui-frame);border-radius:11px;
   box-shadow:0 0 0 3px var(--ui-outline),inset 0 2px 0 rgba(255,255,255,.18)}
-.dlg-body{display:flex;align-items:center;min-height:78px}
+.dlg-body{display:flex;align-items:center;min-height:78px;padding-inline-end:32px}
 #dlgText{margin:0;font-size:20px;line-height:1.45;color:var(--ui-ink);font-weight:500;text-wrap:pretty}
 #dlgText .cursor{color:var(--ui-gold);animation:blink .55s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
-.dlg-close{position:absolute;top:8px;right:12px;width:28px;height:28px;font-size:16px;color:var(--ui-ink-soft);
-  background:none;transition:color .2s, transform .2s}
-.dlg-close:hover{color:#b5442f;transform:rotate(90deg) scale(1.1)}
+.dlg-close{position:absolute;top:8px;right:12px;width:28px;height:28px;padding:0;border-radius:8px;
+  display:grid;place-items:center;font-family:'Silkscreen',monospace;font-size:12px;line-height:1;color:var(--ui-ink);
+  background:rgba(90,60,35,.14);border:2px solid var(--ui-frame);box-shadow:0 3px 0 var(--ui-frame-d);
+  transition:background-color .15s ease,border-color .15s ease,transform .12s ease,box-shadow .12s ease}
+.dlg-close:hover{background:rgba(156,90,37,.2);border-color:var(--ui-frame-d);transform:translateY(-1px);box-shadow:0 4px 0 var(--ui-frame-d)}
+.dlg-close:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ui-frame-d)}
 .dlg-next{position:absolute;bottom:6px;right:14px;font-size:18px;color:var(--ui-gold);
   animation:bobN 1s ease-in-out infinite;opacity:0;transition:opacity .2s}
 .dlg-next.show{opacity:1}
@@ -89,13 +93,12 @@
   transition:transform .46s cubic-bezier(.22,1,.36,1)}
 #panel.in .panel-card{transform:scale(1) translateY(0) rotate(0deg)}
 
-.panel-close{position:absolute;top:13px;right:13px;z-index:4;width:34px;height:34px;border-radius:10px;
-  font-size:14px;color:var(--ui-ink-soft);background:rgba(255,255,255,.08);display:grid;place-items:center;
-  box-shadow:inset 0 0 0 1px rgba(74,53,38,.13),0 2px 5px rgba(74,53,38,.12);
-  transition-property:background-color,color,transform,box-shadow;transition-duration:.16s;transition-timing-function:ease-out}
-.panel-close:hover{background:rgba(181,68,47,.86);color:#fff;transform:translateY(-1px);
-  box-shadow:inset 0 0 0 1px rgba(94,26,16,.55),0 4px 8px rgba(74,53,38,.18)}
-.panel-close:active{transform:scale(.96);box-shadow:inset 0 0 0 1px rgba(94,26,16,.55)}
+.panel-close{position:absolute;top:13px;right:13px;z-index:4;width:28px;height:28px;border-radius:8px;
+  display:grid;place-items:center;font-family:'Silkscreen',monospace;font-size:12px;line-height:1;color:var(--ui-ink);
+  background:rgba(90,60,35,.14);border:2px solid var(--ui-frame);box-shadow:0 3px 0 var(--ui-frame-d);
+  transition:background-color .15s ease,border-color .15s ease,transform .12s ease,box-shadow .12s ease}
+.panel-close:hover{background:rgba(156,90,37,.2);border-color:var(--ui-frame-d);transform:translateY(-1px);box-shadow:0 4px 0 var(--ui-frame-d)}
+.panel-close:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ui-frame-d)}
 .panel-close:focus-visible{outline:2px solid var(--ui-gold);outline-offset:2px}
 
 #panelInner{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:34px 36px 32px;
@@ -110,7 +113,7 @@
 @keyframes pnRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
 /* shared header bits */
-.pn-title{font-size:33px;line-height:1.06;margin:0 0 12px;color:#392815;letter-spacing:.3px}
+.pn-title{font-size:33px;line-height:1.06;margin:0 0 12px;padding-inline-end:32px;color:#392815;letter-spacing:.3px}
 .pn-lead{font-size:17px;line-height:1.55;color:var(--ui-ink-soft);margin:0 0 24px;max-width:46ch;
   animation:pnRise .5s ease .1s both}
 .ltr-sp{white-space:pre}
@@ -139,7 +142,7 @@
 .ab-photo{transition:transform .3s cubic-bezier(.22,1,.36,1)}
 .ab-photo:hover{transform:rotate(-2.5deg) scale(1.03)}
 .ab-photo img{width:100%;height:100%;object-fit:cover;display:block}
-.ab-name{font-size:26px;line-height:1.12;margin:0 0 5px;color:#392815;letter-spacing:.2px}
+.ab-name{font-size:26px;line-height:1.12;margin:0 0 5px;padding-inline-end:32px;color:#392815;letter-spacing:.2px}
 .ab-name .ltr{display:inline-block;animation:ltrIn .38s cubic-bezier(.22,1,.36,1) backwards;
   animation-delay:calc(.05s + var(--i)*14ms);
   transition:transform .25s cubic-bezier(.22,1,.36,1), color .2s ease;
@@ -494,10 +497,7 @@ body.touch #toasts{bottom:150px} /* clear the round action button */
 .toast-title{font-family:'Pixelify Sans',sans-serif;font-weight:700;font-size:17px;color:var(--ui-ink)}
 
 /* ---------------- Trophy Shelf panel ---------------- */
-.tr-summary{margin:0 0 16px;padding:14px 16px 15px;border-radius:15px;
-  background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(74,53,38,.035));
-  box-shadow:inset 0 0 0 1px rgba(74,53,38,.13),inset 0 1px 0 rgba(255,255,255,.17),
-             0 7px 16px rgba(74,53,38,.08);
+.tr-summary{margin:0 0 18px;padding:0 12px 16px;border-bottom:1px solid rgba(74,53,38,.16);
   animation:pnRise .5s ease .14s both}
 .tr-stats{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;margin:0 0 14px;padding:0}
 .tr-stat{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 2px;
