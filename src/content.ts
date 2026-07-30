@@ -35,7 +35,9 @@ export const CONTENT: Content = {
     kicker: "Experience",
     title: "Where I've worked",
     items: [
-      { company: "Inherity", role: "Software Engineer", logo: "assets/logos/inherity.jpeg", period: "Apr 2026 – Present", accent: "#3aa88f",
+      { company: "CTGT", role: "Software Engineer", logo: "assets/logos/ctgt.jpeg", period: "Jun 2026 – Present", accent: "#34363d",
+        p: "Building deterministic AI governance for highly regulated industries." },
+      { company: "Inherity", role: "Software Engineer", logo: "assets/logos/inherity.jpeg", period: "Apr 2026 – Jun 2026", accent: "#3aa88f",
         p: "Built a secure document parser for a fintech platform, automating document extraction and verification to support faster approvals and early access to funds." },
       { company: "Lyra", role: "Forward Deployed Engineer", logo: "assets/logos/lyra.jpeg", period: "Feb 2026 – Present", accent: "#6c5ce7",
         p: "Founding engineer for Silicon Valley startups." },
