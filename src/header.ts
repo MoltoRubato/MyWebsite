@@ -184,9 +184,11 @@ function trophiesHTML(): string {
     .join("");
   return (
     panelHead("Trophy Shelf", "Everything you've poked, played, and petted in Ryan's place.") +
-    `<dl class="tr-stats">${stats}</dl>
-     <div class="tr-count">${got}/${all.length} unlocked</div>
-     <div class="tr-bar" role="presentation"><span style="--p:${all.length ? got / all.length : 0}"></span></div>
+    `<section class="tr-summary" aria-label="Trophy progress">
+       <dl class="tr-stats">${stats}</dl>
+       <div class="tr-count">${got}/${all.length} unlocked</div>
+       <div class="tr-bar" role="presentation"><span style="--p:${all.length ? got / all.length : 0}"></span></div>
+     </section>
      <ol class="tr-list">${items}</ol>`
   );
 }

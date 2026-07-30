@@ -1,6 +1,7 @@
 /* ===== Shared wood panel (Modern_UI_Style_1 look) ===== */
 :root{
-  --ui-ink:#4a3526; --ui-ink-soft:#6f5840; --ui-gold:#9c5a25;
+  --ui-ink:#4a3526; --ui-ink-soft:#6f5840; --ui-text-secondary:#523825;
+  --ui-gold:#9c5a25; --ui-gold-ink:#6e3b17;
   --ui-fill:#cdb389; --ui-frame:#b87b42; --ui-frame-d:#8a5a30; --ui-outline:#2f2b39;
   --ui-window-surface:
     radial-gradient(120% 88% at 16% -14%,rgba(255,248,226,.24) 0%,rgba(255,248,226,0) 46%),
@@ -276,7 +277,7 @@
 }
 @media(prefers-reduced-motion:reduce){
   .panel-card,.pn-title,.pn-lead,.ab-hero,.ab-tagline,.ab-bio,.ab-facts,.ab-skills,
-  .xp-row,.pj-row,.ct-row,.tr-row,.tr-stats,.tr-count,.tr-bar,.tr-bar span,.toast,
+  .xp-row,.pj-row,.ct-row,.tr-row,.tr-summary,.tr-bar span,.toast,
   .pn-title .ltr,.ab-name .ltr,.pn-tag{animation:none !important}
   #panel.in .panel-card{transform:none}
   .panel-close:hover,.pn-tag:hover,.ab-photo:hover,
@@ -493,42 +494,54 @@ body.touch #toasts{bottom:150px} /* clear the round action button */
 .toast-title{font-family:'Pixelify Sans',sans-serif;font-weight:700;font-size:17px;color:var(--ui-ink)}
 
 /* ---------------- Trophy Shelf panel ---------------- */
-.tr-stats{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;margin:0 0 18px;padding:0;
+.tr-summary{margin:0 0 16px;padding:14px 16px 15px;border-radius:15px;
+  background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(74,53,38,.035));
+  box-shadow:inset 0 0 0 1px rgba(74,53,38,.13),inset 0 1px 0 rgba(255,255,255,.17),
+             0 7px 16px rgba(74,53,38,.08);
   animation:pnRise .5s ease .14s both}
+.tr-stats{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;margin:0 0 14px;padding:0}
 .tr-stat{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 2px;
   border-top:1px solid rgba(74,53,38,.16)}
+.tr-stat:nth-child(-n+2){border-top:none}
 .tr-stat dt{font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--ui-gold);padding-top:2px;margin:0}
+  color:var(--ui-gold-ink);padding-top:2px;margin:0}
 .tr-stat dd{margin:0;font-size:14.5px;font-weight:700;color:var(--ui-ink);text-align:right}
-.tr-count{font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;color:var(--ui-ink-soft);
-  margin:0 0 8px;animation:pnRise .5s ease .18s both}
+.tr-count{font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:2px;color:var(--ui-text-secondary);
+  margin:0 0 8px}
 /* wooden progress groove with a gold fill, like the loader bar */
-.tr-bar{height:10px;border-radius:6px;margin:0 0 18px;overflow:hidden;
-  background:rgba(58,38,22,.22);box-shadow:inset 0 1px 3px rgba(0,0,0,.28),inset 0 0 0 1px rgba(74,53,38,.2);
-  animation:pnRise .5s ease .2s both}
+.tr-bar{height:10px;border-radius:6px;margin:0;overflow:hidden;
+  background:rgba(58,38,22,.18);box-shadow:inset 0 1px 3px rgba(0,0,0,.24),inset 0 0 0 1px rgba(74,53,38,.2)}
 .tr-bar span{display:block;height:100%;border-radius:6px;
   background:linear-gradient(90deg,#d59a37,var(--accent));box-shadow:0 0 10px rgba(231,163,62,.45);
   transform:scaleX(var(--p,0));transform-origin:left;
   animation:trFill .7s cubic-bezier(.22,1,.36,1) .35s both}
 @keyframes trFill{from{transform:scaleX(0)}to{transform:scaleX(var(--p,0))}}
-.tr-list{list-style:none;margin:0;padding:0}
+.tr-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .tr-row{--pc:#d59a37;--pc-ink:oklch(from var(--pc) min(l, 0.58) c h);
-  display:flex;align-items:center;gap:14px;padding:12px 10px;margin:0 -10px;border-radius:12px;
-  border-top:1px solid rgba(74,53,38,.16);
-  animation:pnRise .5s ease both;animation-delay:var(--d);transition:background .2s ease}
+  display:flex;align-items:center;gap:13px;padding:11px 12px;margin:0;border-radius:12px;
+  background:rgba(255,255,255,.055);
+  box-shadow:inset 0 0 0 1px rgba(74,53,38,.11),0 2px 0 rgba(107,73,42,.08);
+  animation:pnRise .5s ease both;animation-delay:var(--d);
+  transition-property:background-color,box-shadow;transition-duration:.16s;transition-timing-function:ease-out}
 .tr-row.got{--fx-color:var(--pc)}
-.tr-row:hover{background:rgba(156,90,37,.06)}
-.tr-row.got:hover{background:color-mix(in srgb, var(--pc) 8%, transparent)}
-.tr-row:hover+.tr-row,.tr-row:hover{border-top-color:transparent}
+.tr-row:hover{background:rgba(255,255,255,.11);box-shadow:inset 0 0 0 1px rgba(74,53,38,.17),0 3px 0 rgba(107,73,42,.1)}
+.tr-row.got:hover{background:color-mix(in srgb,var(--pc) 8%,rgba(255,255,255,.08))}
 .tr-row.got .tr-badge{color:var(--pc)}
-.tr-row.got:hover .tr-badge{transform:scale(1.2) rotate(-6deg)}
+.tr-row.got:hover .tr-badge{transform:scale(1.08) rotate(-3deg)}
 .tr-row.got:hover .tr-name{color:var(--pc-ink)}
-.tr-badge{width:30px;height:30px;flex:none;color:var(--ui-gold);
+.tr-badge{width:38px;height:38px;padding:8px;flex:none;color:var(--ui-gold);display:grid;place-items:center;
+  border-radius:10px;background:rgba(255,255,255,.08);
+  box-shadow:inset 0 0 0 1px rgba(74,53,38,.12),0 2px 5px rgba(74,53,38,.08);
   transition:transform .25s cubic-bezier(.22,1,.36,1)}
 .tr-badge svg{width:100%;height:100%;fill:currentColor;display:block}
-.tr-row.locked .tr-badge{color:rgba(74,53,38,.32)}
-.tr-row.locked .tr-name,.tr-row.locked .tr-desc{color:rgba(74,53,38,.45)}
+.tr-row.locked .tr-badge{color:var(--ui-text-secondary)}
+.tr-row.locked .tr-name{color:var(--ui-text-secondary)}
 .tr-name{margin:0;font-size:16px;line-height:1.2;color:var(--ui-ink);transition:color .2s ease}
-.tr-desc{margin:1px 0 0;font-size:13px;line-height:1.4;color:var(--ui-ink-soft)}
-.tr-tick{margin-left:auto;font-weight:700;color:var(--ui-gold)}
-@media (max-width:640px){ .tr-stats{grid-template-columns:1fr} }
+.tr-desc{margin:1px 0 0;font-size:13px;line-height:1.4;color:var(--ui-text-secondary)}
+.tr-tick{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;border-radius:8px;
+  font-weight:700;color:#3a2410;background:color-mix(in srgb,var(--pc) 32%,rgba(255,255,255,.18));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 55%,transparent)}
+@media (max-width:640px){
+  .tr-stats{grid-template-columns:1fr}
+  .tr-stat:nth-child(2){border-top:1px solid rgba(74,53,38,.16)}
+}
