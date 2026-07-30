@@ -82,7 +82,7 @@
   opacity:0;pointer-events:none;transition:opacity .28s ease}
 #panel.in{opacity:1;pointer-events:auto}
 
-.panel-card{position:relative;width:min(620px,100%);max-height:min(840px,92dvh);
+.panel-card{position:relative;width:min(620px,100%);min-width:0;max-height:min(840px,92dvh);
   display:flex;flex-direction:column;
   background:var(--ui-window-surface);
   border:5px solid var(--ui-frame);border-radius:20px;
@@ -274,9 +274,14 @@
   .ab-tagline{font-size:18px}
   .ab-fact{grid-template-columns:1fr;gap:3px}
   .pj-row,.xp-row{gap:13px}
+  /* Mobile headings wrap between words, never between animated letters. */
+  .pn-title .ltr,.ab-name .ltr,.xp-role .ltr,.pj-title .ltr{display:inline}
+  .pj-link{display:inline}
 }
 @media(max-width:430px){
   .ab-hero{flex-direction:column;align-items:flex-start;gap:14px}
+  .dlg-main{padding:112px 18px 22px}
+  .dlg-body{min-height:0;padding-inline-end:0}
 }
 @media(prefers-reduced-motion:reduce){
   .panel-card,.pn-title,.pn-lead,.ab-hero,.ab-tagline,.ab-bio,.ab-facts,.ab-skills,
