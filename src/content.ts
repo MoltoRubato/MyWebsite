@@ -52,10 +52,10 @@ export const CONTENT: Content = {
     title: "Side Projects",
     lead: "Things I build on my own time, outside of work.",
     items: [
+      { h: "Lyriks", link: "https://lyriks-plum.vercel.app/", logo: "assets/projects/lyriks.png", accent: "#21a78c", p: "Live lyrics that follow supported music players in a click-through desktop overlay." },
+      { h: "Half Chess", link: "https://half-chess.vercel.app/", logo: "assets/projects/halfchess.png", accent: "#bd7410", p: "Chess where any two pieces can merge, split apart, and move as either piece." },
+      { h: "Ryloom", link: "https://ryloom-web.vercel.app/", logo: "assets/projects/ryloom.svg", accent: "#625df5", p: "Loom clone for recording your screen in the browser or desktop app, with a shareable link ready when you stop." },
       { h: "Airtable Clone", link: "https://airtable-clone-ryan.vercel.app/", logo: "assets/projects/airtable.png", accent: "#2d7ff9", p: "Airtable clone built with the T3 stack." },
-      { h: "Ryloom", link: "https://ryloom-web.vercel.app/", logo: "assets/projects/ryloom.svg", accent: "#625df5", p: "Loom clone — record your screen in the browser or the desktop app, get a shareable link the moment you stop." },
-      { h: "Pinochle", link: "https://github.com/MoltoRubato/Pinochle", accent: "#c94f4f", p: "Desktop card game featuring GUI gameplay and an intelligent computer opponent." },
-      { h: "This Website", link: "https://github.com/MoltoRubato/MyWebsite", logo: "assets/projects/mywebsite.png", accent: "#e7a33e", p: "The interactive pixel-art world you're exploring right now — built with vanilla JavaScript and an HTML5 canvas." },
     ],
   },
   contact: {
