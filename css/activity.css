@@ -2,9 +2,8 @@
    ACTIVITY CSS — chess + music overlays (Modern UI wood)
    ============================================================ */
 .chess-wrap,.mz-wrap,.pool-wrap{display:flex;gap:20px;padding:24px;
-  background:var(--ui-fill);border:6px solid var(--ui-frame);border-radius:22px;
-  box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),
-             inset 0 3px 0 2px rgba(255,255,255,.14),0 26px 70px rgba(0,0,0,.6)}
+  background:var(--ui-window-surface);border:6px solid var(--ui-frame);border-radius:22px;
+  box-shadow:0 0 0 3px var(--ui-outline),var(--ui-window-inset),0 26px 70px rgba(0,0,0,.6)}
 
 /* ---- chess ---- */
 .chess-left{display:flex;flex-direction:column;gap:14px;align-items:center}
@@ -16,11 +15,11 @@
 /* Close button — a proper wood button INSIDE the panel corner, so it can
    never fall off-screen, and it presses like every other control. */
 .chess-wrap,.mz-wrap,.pool-wrap,.wk-wrap{position:relative}
-.chess-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:10px;z-index:6;
-  display:grid;place-items:center;font-family:'Silkscreen',monospace;font-size:15px;line-height:1;color:var(--ui-ink);
+.chess-x{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:8px;z-index:6;
+  display:grid;place-items:center;font-family:'Silkscreen',monospace;font-size:12px;line-height:1;color:var(--ui-ink);
   background:rgba(90,60,35,.14);border:2px solid var(--ui-frame);box-shadow:0 3px 0 var(--ui-frame-d);
   transition:background .15s,color .15s,transform .12s,box-shadow .12s}
-.chess-x:hover{background:rgba(181,68,47,.85);color:#fff;border-color:#7d2417;box-shadow:0 3px 0 #5e1a10}
+.chess-x:hover{background:rgba(156,90,37,.2);border-color:var(--ui-frame-d);transform:translateY(-1px);box-shadow:0 4px 0 var(--ui-frame-d)}
 .chess-x:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ui-frame-d)}
 /* two-column shells anchor the X to their right column — nudge to the corner */
 .chess-right .chess-x,.pool-right .chess-x,.wk-right .chess-x{top:-8px;right:-8px}
@@ -84,8 +83,8 @@
   background:rgba(10,14,20,.5);backdrop-filter:blur(2px)}
 .cb-over.hidden{display:none}
 .promo-card{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 22px;
-  background:var(--ui-fill);border:4px solid var(--ui-frame);border-radius:16px;
-  box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),0 16px 40px rgba(0,0,0,.55)}
+  background:var(--ui-window-surface);border:4px solid var(--ui-frame);border-radius:16px;
+  box-shadow:0 0 0 3px var(--ui-outline),var(--ui-window-inset),0 16px 40px rgba(0,0,0,.55)}
 .promo-title{font-size:15px;letter-spacing:1px;text-transform:uppercase;color:var(--ui-ink-soft);font-weight:600}
 .promo-row{display:flex;gap:10px}
 .promo-btn{display:grid;place-items:center;width:52px;height:62px;border-radius:11px;
@@ -213,8 +212,8 @@
   opacity:0;transition:opacity .25s cubic-bezier(.23,1,.32,1)}
 .pl-over.show{opacity:1}
 .pl-over-card{display:flex;flex-direction:column;align-items:center;gap:12px;padding:26px 34px;
-  background:var(--ui-fill);border:5px solid var(--ui-frame);border-radius:18px;
-  box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),0 20px 50px rgba(0,0,0,.6);
+  background:var(--ui-window-surface);border:5px solid var(--ui-frame);border-radius:18px;
+  box-shadow:0 0 0 3px var(--ui-outline),var(--ui-window-inset),0 20px 50px rgba(0,0,0,.6);
   transform:scale(.94);opacity:0;transition:transform .3s cubic-bezier(.23,1,.32,1),opacity .3s ease}
 .pl-over.show .pl-over-card{transform:scale(1);opacity:1}
 .pl-over-title{font-size:34px;letter-spacing:3px;font-weight:700;color:var(--ui-gold)}
@@ -238,9 +237,8 @@
 
 /* ---- workout (combo trainer) ---- */
 .wk-wrap{display:flex;gap:22px;padding:24px;width:min(720px,94vw);
-  background:var(--ui-fill);border:6px solid var(--ui-frame);border-radius:22px;
-  box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 0 2px var(--ui-frame-d),
-             inset 0 3px 0 2px rgba(255,255,255,.14),0 26px 70px rgba(0,0,0,.6)}
+  background:var(--ui-window-surface);border:6px solid var(--ui-frame);border-radius:22px;
+  box-shadow:0 0 0 3px var(--ui-outline),var(--ui-window-inset),0 26px 70px rgba(0,0,0,.6)}
 .wk-left{flex:none;display:flex;justify-content:center;align-items:center;
   background:linear-gradient(180deg,#2c2118,#171009);border:4px solid var(--ui-frame);border-radius:14px;
   box-shadow:0 0 0 3px var(--ui-outline),inset 0 0 28px rgba(0,0,0,.6);padding:6px}
@@ -465,3 +463,6 @@ body:not(.touch) .wk-dpad{display:none}
 .rk-done-stars{font-size:34px;letter-spacing:5px;color:var(--ui-gold)}
 .rk-done-sub{font-size:14px;color:var(--ui-ink-soft)}
 .rk-done .ctl-btn{flex:none;min-width:200px}
+
+/* ---- guestbook moderation (appended) ---- */
+.gb-hint{font-size:12px;color:var(--ui-ink-soft);font-style:italic;line-height:1.4;text-align:center}

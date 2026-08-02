@@ -14,9 +14,12 @@ import { GAME } from "./game";
 import * as HEADER from "./header";
 import * as EDITOR from "./editor";
 import * as SF from "./stockfish-engine";
+import { initFX } from "./fx";
 
 // expose GAME for debugging / preview tooling (matches the old window.GAME)
 (window as unknown as { GAME: typeof GAME }).GAME = GAME;
+
+initFX(); // pixel-particle layer: hover sparkles + click bursts, site-wide
 
 const loader = document.getElementById("loader") as HTMLElement;
 const lc = document.getElementById("loadCanvas") as HTMLCanvasElement;

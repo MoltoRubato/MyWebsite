@@ -74,10 +74,24 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .hd-nav{display:flex;gap:4px;margin-left:8px}
 .hd-link{position:relative;padding:9px 14px;font-size:17px;color:#c9d2e2;border-radius:8px;transition:color .2s ease, background .2s ease, transform .15s ease}
 .hd-link span{position:relative;z-index:2}
-.hd-link::after{content:"";position:absolute;left:14px;right:14px;bottom:6px;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .28s cubic-bezier(.22,1,.36,1)}
+/* pixel-dash underline: draws in stepped chunks like a game menu cursor */
+.hd-link::after{content:"";position:absolute;left:14px;right:14px;bottom:6px;height:2px;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 5px,transparent 5px 8px);
+  transform:scaleX(0);transform-origin:left;transition:transform .28s steps(6,jump-end)}
 .hd-link:hover{color:#fff;background:rgba(255,255,255,.05)}
 .hd-link:hover::after{transform:scaleX(1)}
 .hd-link:active{transform:translateY(1px)}
+/* letters do a quick staggered hop, stepped so it reads as pixels not physics */
+.hd-link{--fx-color:var(--accent)}
+.hd-link .ltr{display:inline-block}
+.hd-link:hover .ltr{animation:ltrHop .34s steps(2,jump-none) both;animation-delay:calc(var(--i)*26ms)}
+@keyframes ltrHop{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+/* ---------------- FX particle layer (src/fx.ts) ---------------- */
+/* fixed overlay above everything incl. the loader; hard squares, no rounding —
+   they must read as pixels, not dust */
+#fxLayer{position:fixed;inset:0;z-index:80;pointer-events:none;overflow:hidden}
+.fx-p{position:absolute;display:block;will-change:transform,opacity}
 .hd-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .hd-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:9px;background:rgba(255,255,255,.04);
   transition:transform .18s ease, background .2s ease, box-shadow .2s}
@@ -116,3 +130,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   #hint{bottom:200px;animation:hintBobM 1.6s ease-in-out infinite}
 }
 @keyframes hintBobM{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+
+@media(prefers-reduced-motion:reduce){
+  .hd-link:hover .ltr{animation:none}
+  .hd-link::after{transition:none}
+  #hint{animation:none}
+}

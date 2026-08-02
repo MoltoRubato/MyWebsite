@@ -2,6 +2,8 @@
    GUESTBOOK — a real book on the lounge side table that real
    visitors sign. Backend: a Cloudflare Pages Function at
    /api/guestbook backed by KV (see functions/api/guestbook.ts).
+   New signatures wait for Ryan's approval before they appear
+   publicly; the freshly-signed row stays visibly "pending".
    In local dev (vite has no Functions runtime) a localStorage
    mock takes over so the overlay stays fully playable.
    SECURITY RULE: entry text only ever reaches the DOM through
@@ -88,6 +90,7 @@ function shell(): string {
         <input id="gbHp" name="website" class="gb-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="gb-err" id="gbErr"></div>
         <button class="ctl-btn" id="gbSubmit">✒ Sign the book</button>
+        <div class="gb-hint">Ryan reads every entry before it goes in the book — yours shows up once he approves it.</div>
       </div>
     </div>`;
 }
@@ -254,8 +257,15 @@ async function submit(): Promise<void> {
       if (r.status === 429) throw new Error("One signature per visit — the ink needs to dry.");
       if (!r.ok) throw new Error("The pen is out of ink (server said " + r.status + "). Try again later.");
     }
-    row.classList.remove("pending");
-    row.querySelector(".gb-row-when")!.textContent = "just now";
+    if (mockMode) {
+      // dev mock: no moderation queue, treat as instantly approved
+      row.classList.remove("pending");
+      row.querySelector(".gb-row-when")!.textContent = "just now";
+    } else {
+      // real backend holds it for approval — keep the row pending
+      row.querySelector(".gb-row-when")!.textContent = "awaiting approval";
+      page?.prepend(note("Signed! Ryan checks every page before it goes in the book — yours is on his desk."));
+    }
     try {
       localStorage.setItem(SIGNED_AT_KEY, String(Date.now()));
     } catch {

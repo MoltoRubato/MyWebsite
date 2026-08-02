@@ -6,6 +6,7 @@
 import { CONTENT as C } from "./content";
 import { ROOMS } from "./world";
 import * as P from "./progress";
+import { cheer } from "./fx";
 import type { GameApi, PanelKey, RoomKey } from "./core/types";
 
 const header = document.getElementById("siteHeader") as HTMLElement;
@@ -33,9 +34,19 @@ const ICON: Record<string, string> = {
   instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c2.67 0 2.99.01 4.04.06 1.05.05 1.77.22 2.4.46.64.25 1.18.58 1.72 1.12.54.54.87 1.08 1.12 1.72.24.63.41 1.35.46 2.4.05 1.05.06 1.37.06 4.04s-.01 2.99-.06 4.04c-.05 1.05-.22 1.77-.46 2.4-.25.64-.58 1.18-1.12 1.72-.54.54-1.08.87-1.72 1.12-.63.24-1.35.41-2.4.46-1.05.05-1.37.06-4.04.06s-2.99-.01-4.04-.06c-1.05-.05-1.77-.22-2.4-.46a4.8 4.8 0 0 1-1.72-1.12 4.8 4.8 0 0 1-1.12-1.72c-.24-.63-.41-1.35-.46-2.4C2.21 14.99 2.2 14.67 2.2 12s.01-2.99.06-4.04c.05-1.05.22-1.77.46-2.4.25-.64.58-1.18 1.12-1.72.54-.54 1.08-.87 1.72-1.12.63-.24 1.35-.41 2.4-.46C9.01 2.21 9.33 2.2 12 2.2zm0 1.8c-2.62 0-2.93.01-3.96.06-.96.04-1.48.2-1.82.34-.46.18-.79.39-1.13.74-.35.34-.56.67-.74 1.13-.13.34-.3.86-.34 1.82C4.01 9.07 4 9.38 4 12s.01 2.93.06 3.96c.04.96.2 1.48.34 1.82.18.46.39.79.74 1.13.34.35.67.56 1.13.74.34.13.86.3 1.82.34 1.03.05 1.34.06 3.96.06s2.93-.01 3.96-.06c.96-.04 1.48-.2 1.82-.34.46-.18.79-.39 1.13-.74.35-.34.56-.67.74-1.13.13-.34.3-.86.34-1.82.05-1.03.06-1.34.06-3.96s-.01-2.93-.06-3.96c-.04-.96-.2-1.48-.34-1.82a3 3 0 0 0-.74-1.13 3 3 0 0 0-1.13-.74c-.34-.13-.86-.3-1.82-.34C14.93 4.01 14.62 4 12 4zm0 3.06a4.94 4.94 0 1 1 0 9.88 4.94 4.94 0 0 1 0-9.88zm0 1.8a3.14 3.14 0 1 0 0 6.28 3.14 3.14 0 0 0 0-6.28zm5.13-2.96a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3z"/></svg>',
 };
 
-function panelHead(kicker: string, title?: string, lead?: string): string {
-  let h = `<div class="pn-kicker">${kicker}</div>`;
-  if (title) h += `<h2 class="pn-title">${title}</h2>`;
+// Split a (trusted, content.ts-authored) heading into per-letter spans so CSS
+// can stagger them. Screen readers get the plain string via aria-label.
+// Spaces become their own span (white-space:pre) — flex parents like .pj-link
+// drop whitespace-only text nodes, which would glue the words together.
+function lettersHTML(text: string): string {
+  return [...text]
+    .map((ch, i) => (ch === " " ? `<span class="ltr-sp"> </span>` : `<span class="ltr" style="--i:${i}">${ch}</span>`))
+    .join("");
+}
+
+function panelHead(title?: string, lead?: string): string {
+  let h = "";
+  if (title) h += `<h2 class="pn-title" aria-label="${title}">${lettersHTML(title)}</h2>`;
   if (lead) h += `<p class="pn-lead">${lead}</p>`;
   return h;
 }
@@ -43,13 +54,12 @@ function panelHead(kicker: string, title?: string, lead?: string): string {
 function aboutHTML(): string {
   const a = C.about;
   const facts = (a.facts || []).map((f) => `<div class="ab-fact"><dt>${f.label}</dt><dd>${f.value}</dd></div>`).join("");
-  const skills = (a.skills || []).map((s) => `<li class="pn-tag">${s}</li>`).join("");
+  const skills = (a.skills || []).map((s, i) => `<li class="pn-tag" style="--d:${0.28 + i * 0.022}s">${s}</li>`).join("");
   return `
       <div class="ab-hero">
         <span class="ab-photo"><img src="${a.photo}" alt="Portrait of ${a.name}" width="132" height="132" loading="lazy" draggable="false"></span>
         <div class="ab-id">
-          <div class="pn-kicker">${a.kicker}</div>
-          <h2 class="ab-name">${a.name}</h2>
+          <h2 class="ab-name" aria-label="${a.name}">${lettersHTML(a.name)}</h2>
           <p class="ab-role">${a.role}</p>
           <p class="ab-loc">${a.location}</p>
         </div>
@@ -63,15 +73,15 @@ function aboutHTML(): string {
 function experienceHTML(): string {
   const e = C.experience;
   const rows = (e.items || []).map((it, i) => `
-      <li class="xp-row" style="--d:${0.06 + i * 0.05}s">
+      <li class="xp-row" style="--d:${0.06 + i * 0.05}s${it.accent ? `;--pc:${it.accent}` : ""}">
         <span class="xp-logo"><img src="${it.logo}" alt="${it.company} logo" loading="lazy" draggable="false"></span>
         <div class="xp-body">
-          <div class="xp-line"><h3 class="xp-role">${it.role}</h3><span class="xp-period">${it.period}</span></div>
+          <div class="xp-line"><h3 class="xp-role" aria-label="${it.role}">${lettersHTML(it.role)}</h3><span class="xp-period">${it.period}</span></div>
           <div class="xp-company">${it.company}</div>
           <p class="xp-desc">${it.p}</p>
         </div>
       </li>`).join("");
-  return panelHead(e.kicker, e.title) + `<ol class="xp-list">${rows}</ol>`;
+  return panelHead(e.title) + `<ol class="xp-list">${rows}</ol>`;
 }
 
 function projectsHTML(): string {
@@ -79,34 +89,38 @@ function projectsHTML(): string {
   const ext = 'target="_blank" rel="noopener"';
   const rows = (p.items || []).map((it, i) => {
     const title = it.link
-      ? `<h3 class="pj-title"><a class="pj-link" href="${it.link}" ${ext}>${it.h}<span class="pj-ext" aria-hidden="true">↗</span></a></h3>`
-      : `<h3 class="pj-title">${it.h}</h3>`;
+      ? `<h3 class="pj-title"><a class="pj-link" href="${it.link}" ${ext} aria-label="${it.h}">${lettersHTML(it.h)}<span class="pj-ext" aria-hidden="true">↗</span></a></h3>`
+      : `<h3 class="pj-title" aria-label="${it.h}">${lettersHTML(it.h)}</h3>`;
+    const mark = it.logo
+      ? `<span class="pj-logo"><img src="${it.logo}" alt="" loading="lazy" draggable="false"></span>`
+      : `<span class="pj-logo pj-logo--glyph" aria-hidden="true">${it.h.charAt(0)}</span>`;
     return `
-      <li class="pj-row" style="--d:${0.06 + i * 0.045}s">
+      <li class="pj-row" style="--d:${0.06 + i * 0.045}s${it.accent ? `;--pc:${it.accent}` : ""}">
         <span class="pj-num">${String(i + 1).padStart(2, "0")}</span>
+        ${mark}
         <div class="pj-body">${title}<p class="pj-desc">${it.p}</p></div>
       </li>`;
   }).join("");
-  return panelHead(p.kicker, p.title, p.lead) + `<ol class="pj-list">${rows}</ol>`;
+  return panelHead(p.title, p.lead) + `<ol class="pj-list">${rows}</ol>`;
 }
 
 function contactHTML(): string {
   const c = C.contact, o = C.owner;
   const ext = 'target="_blank" rel="noopener"';
   const rows = [
-    { ic: "mail", label: "Email", val: o.email, href: "mailto:" + o.email },
-    { ic: "phone", label: "Phone", val: o.phoneDisplay, href: "tel:" + o.phoneIntl },
-    { ic: "linkedin", label: "LinkedIn", val: "kerui-huang", href: o.linkedin, ext: true },
-    { ic: "instagram", label: "Instagram", val: "@itsryianx", href: o.instagram, ext: true },
+    { ic: "mail", label: "Email", val: o.email, href: "mailto:" + o.email, pc: "#e7a33e" },
+    { ic: "phone", label: "Phone", val: o.phoneDisplay, href: "tel:" + o.phoneIntl, pc: "#69b06a" },
+    { ic: "linkedin", label: "LinkedIn", val: "kerui-huang", href: o.linkedin, ext: true, pc: "#3d7dc4" },
+    { ic: "instagram", label: "Instagram", val: "@itsryianx", href: o.instagram, ext: true, pc: "#d6449b" },
   ].map((r, i) => `
-      <li class="ct-row" style="--d:${0.06 + i * 0.05}s">
+      <li class="ct-row" style="--d:${0.06 + i * 0.05}s;--pc:${r.pc}">
         <a class="ct-link" href="${r.href}" ${r.ext ? ext : ""}>
           <span class="ct-ic">${ICON[r.ic]}</span>
           <span class="ct-text"><span class="ct-label">${r.label}</span><span class="ct-val">${r.val}</span></span>
           <span class="ct-go" aria-hidden="true">→</span>
         </a>
       </li>`).join("");
-  return panelHead(c.kicker, c.title, c.lead) + `<ul class="ct-list">${rows}</ul>`;
+  return panelHead(c.title, c.lead) + `<ul class="ct-list">${rows}</ul>`;
 }
 
 // ---------- trophies (stats + achievements from src/progress.ts) ----------
@@ -124,6 +138,10 @@ const ACH_BADGE: Record<string, string> = {
   "drod-slayer": "crown", "card-shark": "crown", "trick-artist": "star", "combo-machine": "star",
   "good-human": "paw", "resident-dj": "note", "open-mic": "note", "producer": "note",
   "bankrupt": "skull", "humbled": "skull", "warned-you": "skull",
+};
+// per-badge hue for unlocked rows (hover tint, badge color, particles)
+const BADGE_COLOR: Record<string, string> = {
+  trophy: "#d59a37", crown: "#e7a33e", star: "#5fb0c9", paw: "#e58aa6", note: "#b07acb", skull: "#c94f4f",
 };
 
 function trophiesHTML(): string {
@@ -152,11 +170,12 @@ function trophiesHTML(): string {
   const got = all.filter((a) => a.unlocked).length;
   const items = all
     .map(({ def, unlocked }, i) => {
-      const icon = BADGE[ACH_BADGE[def.id] || "trophy"];
+      const kind = ACH_BADGE[def.id] || "trophy";
+      const icon = BADGE[kind];
       const title = !unlocked && def.hidden ? "???" : def.title;
       const desc = !unlocked && def.hidden ? "Keep poking around…" : def.desc;
       return `
-      <li class="tr-row ${unlocked ? "got" : "locked"}" style="--d:${0.06 + i * 0.035}s">
+      <li class="tr-row ${unlocked ? "got" : "locked"}" style="--d:${0.06 + i * 0.035}s;--pc:${BADGE_COLOR[kind]}">
         <span class="tr-badge">${icon}</span>
         <div class="tr-body"><h3 class="tr-name">${title}</h3><p class="tr-desc">${desc}</p></div>
         ${unlocked ? '<span class="tr-tick" aria-hidden="true">✓</span>' : ""}
@@ -164,9 +183,12 @@ function trophiesHTML(): string {
     })
     .join("");
   return (
-    panelHead("Trophies", "Trophy Shelf", "Everything you've poked, played, and petted in Ryan's place.") +
-    `<dl class="tr-stats">${stats}</dl>
-     <div class="tr-count">${got}/${all.length} unlocked</div>
+    panelHead("Trophy Shelf", "Everything you've poked, played, and petted in Ryan's place.") +
+    `<section class="tr-summary" aria-label="Trophy progress">
+       <dl class="tr-stats">${stats}</dl>
+       <div class="tr-count">${got}/${all.length} unlocked</div>
+       <div class="tr-bar" role="presentation"><span style="--p:${all.length ? got / all.length : 0}"></span></div>
+     </section>
      <ol class="tr-list">${items}</ol>`
   );
 }
@@ -175,6 +197,13 @@ const RENDER: Record<PanelKey, () => string> = { about: aboutHTML, experience: e
 // The trophies panel has no Content entry, so kickers live here, not on C.
 const PANEL_KICKER: Record<PanelKey, string> = { about: "About", experience: "Experience", projects: "Projects", contact: "Contact", trophies: "Trophies" };
 let panelHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+// bottom-edge fade: shown only while there is more content below the fold
+function updatePanelFade(): void {
+  const more = panelInner.scrollHeight - panelInner.clientHeight > 4 &&
+    panelInner.scrollTop + panelInner.clientHeight < panelInner.scrollHeight - 4;
+  panel.classList.toggle("has-more", more);
+}
 
 export function openPanel(kind: PanelKey): void {
   const render = RENDER[kind];
@@ -185,6 +214,7 @@ export function openPanel(kind: PanelKey): void {
   }
   panelInner.innerHTML = render();
   panelInner.scrollTop = 0;
+  requestAnimationFrame(updatePanelFade);
   panel.setAttribute("aria-hidden", "false");
   panel.setAttribute("aria-label", PANEL_KICKER[kind] || "Section");
   panel.classList.remove("hidden");
@@ -193,6 +223,8 @@ export function openPanel(kind: PanelKey): void {
     panel.classList.add("in");
     scrim.classList.add("in");
   });
+  // confetti off the top corners once the card has landed
+  setTimeout(() => cheer(panel.querySelector(".panel-card")!), 250);
   game?.pause(true);
 }
 export function closePanel(): void {
@@ -283,6 +315,16 @@ function setMenu(open: boolean): void {
 // ---------- wiring ----------
 export function init(g: GameApi): void {
   game = g;
+  // per-letter spans on the nav labels so hover can ripple through them;
+  // the button keeps a plain aria-label for screen readers.
+  document.querySelectorAll<HTMLElement>(".hd-link > span").forEach((sp) => {
+    const label = sp.textContent || "";
+    const btn = sp.parentElement;
+    if (btn && !btn.getAttribute("aria-label")) btn.setAttribute("aria-label", label);
+    sp.setAttribute("aria-hidden", "true");
+    sp.innerHTML = lettersHTML(label);
+  });
+  panelInner.addEventListener("scroll", updatePanelFade, { passive: true });
   document.querySelectorAll<HTMLElement>("[data-nav]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const k = btn.getAttribute("data-nav");

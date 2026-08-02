@@ -1,10 +1,16 @@
 /* ============================================================
    Cloudflare Pages Function — /api/guestbook
-   GET  -> { entries: Entry[] }  (newest first, max 50)
+   GET  -> { entries: Entry[] }  (approved only, newest first, max 50)
    POST -> { name<=20, msg<=80, website:"" (honeypot) }
-   Storage: one KV key "entries" (JSON array capped at 200).
+           lands in KV key "pending" until the owner approves it
+           at /admin/guestbook (see functions/admin/guestbook.ts).
+   Storage: KV key "entries" (approved, capped 200) + "pending"
+   (awaiting approval, capped 100).
    OWNER SETUP (one-time, dashboard): create a KV namespace and
    bind it to this Pages project as `GUESTBOOK` — see README.
+   Optional notification env vars: NTFY_TOPIC, or
+   RESEND_API_KEY + GUESTBOOK_NOTIFY_EMAIL; GUESTBOOK_ADMIN_KEY
+   unlocks the admin page and is linked in notifications.
    ============================================================ */
 
 // Minimal local declarations so the root tsc (DOM lib) checks this file
@@ -15,20 +21,28 @@ interface KVNamespace {
 }
 interface Env {
   GUESTBOOK?: KVNamespace;
+  GUESTBOOK_ADMIN_KEY?: string;
+  NTFY_TOPIC?: string;
+  RESEND_API_KEY?: string;
+  GUESTBOOK_NOTIFY_EMAIL?: string;
 }
 interface PagesContext {
   request: Request;
   env: Env;
+  waitUntil(p: Promise<unknown>): void;
 }
 interface Entry {
   name: string;
   msg: string;
   ts: number;
 }
+interface PendingEntry extends Entry {
+  id: string;
+}
 
 const NAME_MAX = 20;
 const MSG_MAX = 80;
-const KEEP = 200; // stored cap; GET returns the newest 50
+const PENDING_KEEP = 100; // pending cap; approved cap lives in the admin function
 const RL_TTL = 600; // one signature per IP per 10 minutes
 
 // URL spam + a small profanity net. The client renders via textContent, so
@@ -85,16 +99,52 @@ export async function onRequestPost(ctx: PagesContext): Promise<Response> {
   if (!name || !msg) return json({ error: "name and message required" }, 422);
   if (BLOCK.test(name) || BLOCK.test(msg)) return json({ error: "keep it cozy — no links, no bile" }, 422);
 
-  const raw = await kv.get("entries");
-  let entries: Entry[] = [];
+  const raw = await kv.get("pending");
+  let pending: PendingEntry[] = [];
   try {
-    entries = raw ? (JSON.parse(raw) as Entry[]) : [];
+    pending = raw ? (JSON.parse(raw) as PendingEntry[]) : [];
   } catch {
-    entries = [];
+    pending = [];
   }
-  const entry: Entry = { name, msg, ts: Date.now() };
-  entries.unshift(entry);
-  await kv.put("entries", JSON.stringify(entries.slice(0, KEEP)));
+  const entry: PendingEntry = { id: crypto.randomUUID(), name, msg, ts: Date.now() };
+  pending.unshift(entry);
+  await kv.put("pending", JSON.stringify(pending.slice(0, PENDING_KEEP)));
   await kv.put(rlKey, "1", { expirationTtl: RL_TTL });
-  return json({ ok: true, entry }, 201);
+  ctx.waitUntil(notifyOwner(ctx.env, new URL(req.url).origin, entry));
+  return json({ ok: true, pending: true }, 201);
+}
+
+/* ---------------- owner notification (fire-and-forget) ---------------- */
+async function notifyOwner(env: Env, origin: string, e: PendingEntry): Promise<void> {
+  const adminUrl = `${origin}/admin/guestbook?key=${encodeURIComponent(env.GUESTBOOK_ADMIN_KEY || "")}`;
+  if (env.NTFY_TOPIC) {
+    try {
+      await fetch(`https://ntfy.sh/${env.NTFY_TOPIC}`, {
+        method: "POST",
+        headers: { Title: "New guestbook entry", Tags: "memo", Click: adminUrl },
+        body: `${e.name}: ${e.msg}`,
+      });
+    } catch {
+      /* notification failure never fails the submit */
+    }
+  }
+  if (env.RESEND_API_KEY && env.GUESTBOOK_NOTIFY_EMAIL) {
+    try {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "Guestbook <onboarding@resend.dev>",
+          to: env.GUESTBOOK_NOTIFY_EMAIL,
+          subject: "New guestbook entry pending approval",
+          text: `${e.name}: ${e.msg}\n\nApprove or reject: ${adminUrl}`,
+        }),
+      });
+    } catch {
+      /* ditto */
+    }
+  }
 }
